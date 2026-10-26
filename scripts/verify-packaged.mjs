@@ -4,7 +4,8 @@ import {spawnSync} from 'node:child_process';
 const directory=resolve('release');
 let executable;
 if(process.platform==='darwin'){
- for(const folder of readdirSync(directory,{withFileTypes:true}).filter(e=>e.isDirectory()&&e.name.startsWith('mac'))){
+ const nativeFolder=process.arch==='arm64'?'mac-arm64':'mac';
+ for(const folder of readdirSync(directory,{withFileTypes:true}).filter(e=>e.isDirectory()&&e.name===nativeFolder)){
   const apps=readdirSync(join(directory,folder.name)).filter(n=>n==='ZeroWaste Listening Studio.app');
   if(apps.length)executable=join(directory,folder.name,apps[0],'Contents','MacOS','ZeroWaste Listening Studio');
  }

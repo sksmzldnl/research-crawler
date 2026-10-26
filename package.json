@@ -1,6 +1,6 @@
 {
   "name": "zerowaste-listening-studio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "로컬 우선 제로웨이스트 사용자 리서치 도구",
   "author": "ZeroWaste Listening Studio contributors",
@@ -63,6 +63,7 @@
     ],
     "asar": true,
     "mac": {
+      "identity": "-",
       "category": "public.app-category.education",
       "target": [
         "dmg",

@@ -2,6 +2,12 @@
 
 제로웨이스트 소비자 경험을 조사하는 한국어 데스크톱 연구 도구입니다. **Electron 45 + React 19 + TypeScript + Node.js 내장 SQLite**로 구현했습니다. Python 워커나 별도 DB 서버가 필요하지 않습니다. macOS·Windows는 동일한 소스로 빌드합니다.
 
+## Liquid Glass 0.2.0
+
+참고 디자인의 라벤더·핑크·블루 색감을 반투명 유리 표면과 함께 적용했습니다. 실제 조사 데이터 기반 대시보드, 수집 그래프·소스별 전환·달력, 자료 검색 단축키, 투명도 줄이기·고대비 옵션을 제공합니다. [화면·배포 안내](docs/GLASS_RELEASE.md)를 확인하세요.
+
+최신 배포 페이지: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-liquid-glass-v0.2.0
+
 ## 먼저 알아두세요
 
 - API 키 없이 **합성 데모 12건**으로 모든 주요 화면과 조사·필터·저장·검토·내보내기를 체험할 수 있습니다. 실제 경험의 연구 근거로 쓰면 안 됩니다.
@@ -11,11 +17,11 @@
 
 ## 비개발자용 설치와 첫 실행
 
-GitHub Actions의 **ZeroWaste Listening Studio downloads**는 Apple Silicon Mac·Intel Mac·Windows x64에서 각각 설치 파일을 빌드하고, 패키징한 앱의 데모를 검사한 뒤 GitHub Releases에 게시하도록 준비했습니다. **실제 배포 페이지:** https://github.com/sksmzldnl/research-crawler/releases/tag/listening-studio-electron-0f62e2409679
+GitHub Actions의 **ZeroWaste Listening Studio downloads**는 Apple Silicon Mac·Intel Mac·Windows x64에서 각각 설치 파일을 빌드하고, 패키징한 앱의 데모를 검사한 뒤 GitHub Releases에 게시하도록 준비했습니다. **실제 배포 페이지:** https://github.com/sksmzldnl/research-crawler/releases/tag/studio-liquid-glass-v0.2.0
 
 Windows·Intel Mac 패키징 앱의 데모 검사는 통과했습니다. Apple Silicon 파일은 Intel Mac에서 실제 arm64 런타임으로 빌드하고 코드·아키텍처·서명 무결성을 확인했습니다. Apple Silicon 기기에서의 직접 실행은 아직 미검증입니다. Mac은 macOS 13 이상이 필요합니다.
 
-파일 이름은 `ZeroWaste-Listening-Studio-0.1.0-mac-arm64.dmg`, `…-mac-x64.dmg`, `…-win-x64.exe` 형태입니다. `ZeroWasteListener`라는 별도 Python/Qt 배포본과 혼동하지 마세요. 소스 ZIP과 설치 파일은 다릅니다. 자세한 구분은 [배포 안내](docs/RELEASE_NOTES.md)를 확인하세요.
+파일 이름은 `ZeroWaste-Listening-Studio-0.2.0-mac-arm64.dmg`, `…-mac-x64.dmg`, `…-win-x64.exe` 형태입니다. `ZeroWasteListener`라는 별도 Python/Qt 배포본과 혼동하지 마세요. 소스 ZIP과 설치 파일은 다릅니다. 자세한 구분은 [배포 안내](docs/RELEASE_NOTES.md)를 확인하세요.
 
 ### macOS
 
@@ -28,7 +34,7 @@ Windows·Intel Mac 패키징 앱의 데모 검사는 통과했습니다. Apple S
 
 ### Windows
 
-1. `ZeroWaste-Listening-Studio-0.1.0-win-x64.exe`를 내려받아 실행합니다.
+1. `ZeroWaste-Listening-Studio-0.2.0-win-x64.exe`를 내려받아 실행합니다.
 2. 설치 위치를 선택하고 앱을 실행합니다. 관리자 권한이 꼭 필요한 전역 설치를 강제하지 않습니다.
 3. 데모로 확인한 뒤 API 설정에서 키를 입력합니다.
 

@@ -1,0 +1,90 @@
+name: Liquid Glass Studio installers
+on:
+  push:
+    branches: [codex/studio-liquid-glass]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: studio-liquid-glass-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15-intel
+            target: mac
+          - os: windows-latest
+            target: win
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: node scripts/ci-step.mjs npm ci
+      - run: node scripts/ci-step.mjs npm test
+      - run: node scripts/ci-step.mjs npm run build
+      - run: node scripts/ci-step.mjs npm run test:desktop
+      - name: Build Mac installers with valid ad-hoc signatures
+        if: matrix.target == 'mac'
+        run: node scripts/ci-step.mjs npm run package:mac -- --x64 --arm64
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Build Windows installer
+        if: matrix.target == 'win'
+        run: node scripts/ci-step.mjs npm run package:win -- --x64
+      - name: Verify the packaged app on its native build host
+        run: node scripts/ci-step.mjs node scripts/verify-packaged.mjs
+      - name: Inspect both Mac architectures, signatures and actual Liquid Glass assets
+        if: matrix.target == 'mac'
+        run: node scripts/ci-step.mjs node scripts/verify-mac-packages.mjs
+      - name: Record Windows installer identity and checksums
+        if: matrix.target == 'win'
+        run: node scripts/ci-step.mjs node scripts/release-artifacts.mjs win-x64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Liquid-Glass-Studio-${{ matrix.target }}
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.exe
+            release/*.sha256
+            release/*-build.json
+          if-no-files-found: error
+      - name: Record build outcome
+        if: always()
+        run: node scripts/ci-delivery-report.mjs glass-${{ matrix.target }} ${{ job.status }}
+  publish:
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Liquid-Glass-Studio-*
+          path: release
+          merge-multiple: true
+      - run: node scripts/source-archive.mjs
+      - name: Publish this verified Liquid Glass version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          tag="studio-liquid-glass-v${version}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            published_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" --jq '.object.sha')"
+            test "$published_sha" = "$GITHUB_SHA" || { echo 'Version already published from a different commit; bump the version.'; exit 1; }
+            gh release upload "$tag" release/*.dmg release/*.zip release/*.exe release/*.sha256 release/*-build.json --clobber
+          else
+            gh release create "$tag" release/*.dmg release/*.zip release/*.exe release/*.sha256 release/*-build.json \
+              --target "$GITHUB_SHA" --prerelease --title "ZeroWaste Listening Studio ${version} · Liquid Glass" --notes-file docs/GLASS_RELEASE.md
+          fi
+      - name: Record publication outcome
+        if: always()
+        run: node scripts/ci-delivery-report.mjs glass-publish ${{ job.status }}
