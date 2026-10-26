@@ -43,12 +43,15 @@ def run(options, provider, translator, loader, cancel, emit, progress):
     urls, hashes = set(), set()
     count = scanned = 0
     errors = []
+    blocked_engines = set()
     # Fair round robin across engine/query searches; result target is global, not per engine.
     while streams and count < options.limit:
         for stream in list(streams):
             if cancel.is_set():
                 raise Cancelled()
             bundle, engine, iterator = stream
+            if engine in blocked_engines:
+                continue
             try:
                 doc = next(iterator)
             except StopIteration:
@@ -56,8 +59,13 @@ def run(options, provider, translator, loader, cancel, emit, progress):
                 continue
             except (ServiceError, ValueError, KeyError, TypeError) as error:
                 errors.append(f"{ENGINE_NAMES[engine]} 검색 실패: {error if isinstance(error, ServiceError) else 'API 응답 형식 오류'}")
+                if isinstance(error, ServiceError) and error.blocks_service:
+                    blocked_engines.add(engine)
+                    streams = [s for s in streams if s[1] != engine]
+                    errors[-1] += " 이번 조사의 해당 엔진 요청을 중단합니다. 설정을 수정한 뒤 새로 시작하세요."
+                else:
+                    streams.remove(stream)
                 progress(count, scanned, errors[-1])
-                streams.remove(stream)
                 continue
             scanned += 1
             progress(count, scanned, f"{ENGINE_NAMES[engine]} 자료 확인 중")

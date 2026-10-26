@@ -116,3 +116,22 @@ def test_cancel_does_not_emit():
 
 def test_canonical_keeps_meaningful_query_parameters():
     assert canonical_url("https://Example.com/p/?id=1&utm_medium=x#top") == "https://example.com/p?id=1"
+
+
+@pytest.mark.parametrize("status", [401, 403, 429])
+def test_blocked_engine_is_not_repeated_for_remaining_boolean_queries(status):
+    calls = []
+    class LimitedProvider:
+        def search(self, engine, query):
+            calls.append(engine)
+            if engine == "naver":
+                raise ServiceError("원인 안내", status_code=status)
+            yield doc("리필 다음 경험", "https://example.com/1", engine="daum")
+    settings = options()
+    settings.bundles = [parse_bundle("리필 OR refill OR 재사용")]
+    settings.engines = ["naver", "daum"]
+    rows, result, messages = execute(settings, LimitedProvider())
+    assert calls.count("naver") == 1
+    assert calls.count("daum") == 3
+    assert len(rows) == 1 and len(result[2]) == 1
+    assert "요청을 중단" in messages[0]

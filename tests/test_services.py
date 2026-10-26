@@ -111,3 +111,34 @@ def test_compressed_api_responses_are_decoded_once():
     http = transport(lambda r: httpx.Response(200, content=gzip.compress(b'{"items":[]}'),
                                              headers={"Content-Encoding": "gzip", "Content-Type": "application/json"}))
     assert http.request("GET", "https://example.com").json() == {"items": []}
+
+
+@pytest.mark.parametrize("host,status,expected", [
+    ("openapi.naver.com", 401, "Client ID와 Client Secret"),
+    ("dapi.kakao.com", 401, "REST API 키"),
+    ("oauth.reddit.com", 401, "OAuth 액세스 토큰"),
+    ("oauth.reddit.com", 403, "사용 승인"),
+    ("openapi.naver.com", 429, "요청 속도 제한"),
+])
+def test_search_errors_explain_actual_status_without_exposing_response(host, status, expected):
+    calls = []
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(status, text="server accidentally echoed private-key", headers={"Retry-After": "0"})
+    http = transport(handler)
+    with pytest.raises(ServiceError) as failure:
+        http.request("GET", f"https://{host}/search")
+    error = failure.value
+    assert error.status_code == status and error.blocks_service
+    assert expected in str(error) and f"HTTP {status}" in str(error)
+    assert "private-key" not in str(error)
+    if status in {401, 403}:
+        assert len(calls) == 1
+        assert "할당량" not in str(error) and "호출 한도" not in str(error)
+
+
+def test_long_retry_after_keeps_status_for_engine_circuit_breaker():
+    http = transport(lambda r: httpx.Response(429, headers={"Retry-After": "3600"}))
+    with pytest.raises(ServiceError) as failure:
+        http.request("GET", "https://openapi.naver.com/search")
+    assert failure.value.status_code == 429 and failure.value.blocks_service
