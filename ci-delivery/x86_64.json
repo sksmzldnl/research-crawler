@@ -1,9 +1,10 @@
 {
   "state": "running",
-  "stage": "setup",
+  "stage": "tests-passed",
   "architecture": "x86_64",
   "source_sha": "69c596ade1652f2f33c4db82191493d612365fbd",
   "run_id": "40299849014",
   "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40299849014",
-  "updated_at": "2026-10-26T09:28:52.828406+00:00"
+  "updated_at": "2026-10-26T09:29:06.003834+00:00",
+  "test_log_tail": ".........................................                                [100%]\n41 passed in 2.70s"
 }
