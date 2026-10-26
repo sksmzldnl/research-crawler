@@ -1,0 +1,70 @@
+name: Publish verified Listening Studio installers
+on:
+  push:
+    branches: [codex/studio-publish-ready-20261026]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0f62e2409679ac36594efebaf7396421cdd41ac6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ZeroWaste-Listening-Studio-*
+          path: release
+          merge-multiple: true
+          run-id: 40343091583
+          github-token: ${{ github.token }}
+      - name: Verify exact project, tested source revision and installer hashes
+        run: |
+          mkdir -p .local
+          python3 - <<'PY' 2>&1 | tee .local/ci-step.log
+          import hashlib,json
+          from pathlib import Path
+          expected='0f62e2409679ac36594efebaf7396421cdd41ac6'
+          manifests=list(Path('release').glob('*-build.json'))
+          assert manifests,'No verified native build manifests were downloaded'
+          for path in manifests:
+              manifest=json.loads(path.read_text())
+              assert manifest['product']=='ZeroWaste Listening Studio'
+              assert manifest['app_id']=='org.zerowaste.listeningstudio'
+              assert manifest['source_sha']==expected
+              assert manifest['packaged_demo_verified'] is True
+              for artifact in manifest['artifacts']:
+                  name=artifact['filename']
+                  assert Path(name).name==name
+                  file=Path('release')/name
+                  assert file.stat().st_size==artifact['bytes']
+                  with file.open('rb') as stream: digest=hashlib.file_digest(stream,'sha256').hexdigest()
+                  assert digest==artifact['sha256']
+              print('Verified native installer:',manifest['channel'])
+          PY
+      - name: Archive the tested Electron source
+        run: node scripts/source-archive.mjs
+      - name: Publish the verified files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="listening-studio-electron-0f62e2409679"
+          for attempt in 1 2 3; do
+            if gh release view "$tag" >/dev/null 2>&1; then
+              gh release upload "$tag" release/*.zip release/*.dmg release/*.exe release/*.sha256 release/*-build.json --clobber && exit 0
+            elif gh release create "$tag" release/*.zip release/*.dmg release/*.exe release/*.sha256 release/*-build.json \
+              --target 0f62e2409679ac36594efebaf7396421cdd41ac6 --prerelease --title "ZeroWaste Listening Studio 0.1.0 · Electron test" --notes-file docs/RELEASE_NOTES.md; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+      - name: Record publication outcome
+        if: always()
+        run: node scripts/ci-delivery-report.mjs publish-ready ${{ job.status }}
