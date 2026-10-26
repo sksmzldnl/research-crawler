@@ -1,3 +1,5 @@
+> 0.3.0의 이전 배포 기록입니다. 최신 버전은 [0.4.0 검색 수집 작업실](SEARCH_RELEASE.md)을 참고하세요.
+
 # ZeroWaste Listening Studio 0.3.0 · 검색 API 없는 자료 작업실
 
 - CSV·텍스트 파일/붙여넣기, 공개 RSS/Atom, 지정한 공개 URL 가져오기.

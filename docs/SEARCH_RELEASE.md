@@ -1,0 +1,19 @@
+# ZeroWaste Listening Studio 0.4.0 · 검색 수집 작업실
+
+프로그램의 중심 기능인 **검색 엔진 선택 → 쿼리 번들 자동 검색 → 페이지 순회 → 자료 수집**을 검색 API 없이 복원했습니다.
+
+- 네이버·다음·Bing·Google 공개 검색 화면용 브라우저 어댑터. 별도의 검색 창에서 실행하며 검색 API 키는 필요 없습니다.
+- AND·OR 번들을 검색어 조합으로 나누고, 수집 결과에 전체 Boolean 식·제외어·날짜·광고·중복 조건을 로컬에서 적용합니다. 사이트 도메인을 추가하면 site: 검색과 결과 도메인 검증을 함께 적용합니다.
+- 다음 페이지 자동 순회, 목표 수량/최대 페이지, 현재 위치 저장, 일시정지·재개·중지, 검색 경로와 제외 근거 보존.
+- 검색 엔진의 접근 확인·차단·결과 구조 변경은 빈 결과 성공으로 처리하지 않고 일시정지합니다. 검색 창에서 확인한 뒤 재개할 수 있으며 로그인·CAPTCHA를 자동으로 우회하지 않습니다.
+- 메뉴는 **수집 작업실 / 설정** 두 개. 번들 편집·수집 상태·기존 결과·원문 검토·번역·CSV 정리·내보내기를 작업실에 모았습니다. 통계 대시보드와 별도 번들/기록/도움말 메뉴는 제거했습니다. 참고 디자인은 유리 질감과 색감에만 반영했습니다.
+- GPT·Gemini는 선택 행의 번역·CSV 정리에만 사용합니다. 자동 검색은 AI를 호출하지 않습니다.
+- CSV·텍스트·RSS·URL 직접 가져오기는 접을 수 있는 보조 영역으로 유지합니다. 원래 CSV 열을 보존합니다.
+
+검증: 엔진별 DOM fixture, 실제 Electron 검색 창에서 로컬 HTTPS fixture를 통한 자동 검색·2페이지 순회·조건 적용·접근 확인 일시정지/재개, SQLite 및 CSV 보존을 검사합니다. fixture 검증은 실서비스 검색 엔진의 항상 정상 동작을 보장하지 않습니다. 별도 live-search-build.json은 빌드 시 실제 Bing 검색 시도 결과이며 completed 및 valid > 0일 때에만 그 엔진의 실제 수집을 확인한 것입니다. 다른 엔진·지역·시점의 접근 조건과 DOM은 달라질 수 있습니다.
+
+Apple Silicon: `ZeroWaste-Listening-Studio-0.4.0-mac-arm64.dmg`
+Intel Mac: `ZeroWaste-Listening-Studio-0.4.0-mac-x64.dmg`
+Windows: `ZeroWaste-Listening-Studio-0.4.0-win-x64.exe`
+
+Mac은 macOS 13 이상. ad-hoc 서명을 사용하며 Apple Developer ID 공증은 없습니다. Apple Silicon은 Intel Mac에서 arm64로 교차 빌드하고 파일·아키텍처·서명 무결성을 확인합니다. Apple Silicon 기기의 직접 실행과 실제 AI 키 호출은 미검증입니다. 기존 자료 저장 위치와 앱 식별자는 유지합니다.

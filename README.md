@@ -1,32 +1,36 @@
-# ZeroWaste Listening Studio 0.3.0
+# ZeroWaste Listening Studio 0.4.0
 
-검색 API 키 없이 CSV·텍스트와 공개 RSS·URL을 가져오는 macOS/Windows 데스크톱 도구입니다. 기존 Liquid Glass 인터페이스를 유지합니다. GPT와 Gemini는 사용자가 선택한 행의 **한국어 번역·CSV 정리**에만 사용합니다.
+검색 엔진을 고르고 쿼리 번들로 자료를 자동 검색·수집하는 macOS/Windows 앱입니다. 검색 API는 사용하지 않습니다. GPT·Gemini는 사용자가 선택한 행의 번역·CSV 정리에만 사용합니다.
 
-## 설치
+설치 파일: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-search-v0.4.0
 
-설치 파일 배포: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-local-v0.3.0
+- Apple Silicon: `ZeroWaste-Listening-Studio-0.4.0-mac-arm64.dmg`
+- Intel Mac: `ZeroWaste-Listening-Studio-0.4.0-mac-x64.dmg`
+- Windows: `ZeroWaste-Listening-Studio-0.4.0-win-x64.exe`
 
-- Apple Silicon Mac: `ZeroWaste-Listening-Studio-0.3.0-mac-arm64.dmg`
-- Intel Mac: `ZeroWaste-Listening-Studio-0.3.0-mac-x64.dmg`
-- Windows: `ZeroWaste-Listening-Studio-0.3.0-win-x64.exe`
+Mac은 macOS 13 이상이며 ad-hoc 서명, Developer ID 공증 없음. Apple Silicon 직접 실행 여부는 플랫폼별 build.json을 확인하세요. [배포·검증 설명](docs/SEARCH_RELEASE.md).
 
-Mac은 macOS 13 이상이 필요합니다. Mac 빌드는 ad-hoc 서명을 사용하며 Developer ID 공증은 없습니다. Apple Silicon 파일은 Intel Mac에서 교차 빌드하므로 Apple Silicon에서의 직접 실행 검증과 구분합니다. 빌드와 검증의 실제 완료 여부는 릴리스와 플랫폼별 `build.json`을 확인하세요.
+## 한 화면에서 수집하기
 
-## 사용 방법
+1. **수집 작업실**에서 네이버·다음·Bing·Google 중 검색 엔진을 선택합니다.
+2. 쿼리 번들을 체크합니다. 같은 영역에서 번들 이름·AND/OR/NOT 논리식·제외어를 추가하고 편집할 수 있습니다. 실행 검색어 확인으로 실제 엔진에 보낼 조합을 확인합니다.
+3. 목표 유효 자료 수와 검색어당 최대 페이지를 정합니다. 필요하면 범위 설정에서 사이트 도메인, 게시 기간, 광고 제외, 원문 수집을 설정합니다. 도메인을 지정하면 site: 검색과 결과 도메인 검증을 함께 사용합니다.
+4. **자동 검색·수집 시작**을 누르면 앱의 검색 창에서 검색어와 페이지를 순회합니다. 제목·URL·검색 스니펫·검색 경로를 저장하고 전체 논리식과 품질 조건을 적용합니다. 검색 결과 한도·차단·제외 조건 때문에 목표 수량은 보장하지 않습니다.
+5. 작업실 아래에서 진행 상태, 일시정지·현재 위치 재개·중지, 이전 자료 모음 선택과 원문 검토를 처리합니다. 검색 창을 닫거나 접근 확인/차단 화면 또는 모르는 결과 구조가 나타나면 현재 위치에서 일시정지합니다. 자동으로 로그인하거나 CAPTCHA를 우회하지 않습니다.
+6. 필요한 행을 체크하고 접힌 **번역·CSV 정리**를 펼쳐 GPT 또는 Gemini를 선택합니다. 설정에서 AI 키 등록과 외부 전송 동의를 먼저 저장해야 합니다. 자동 검색 중에는 AI를 호출하지 않습니다.
+7. CSV 또는 Excel로 저장합니다. 원본 행 전체가 필요하면 전체 결과를 선택하세요. 제외 행도 로컬에 보존합니다.
 
-1. **새 조사 → CSV 파일**: 파일을 선택하거나 CSV 내용을 붙여 넣고 `열 확인·미리보기`를 누릅니다. 본문 열을 지정하고 자료를 가져옵니다. UTF-8·EUC-KR/CP949·UTF-16 LE, 쉼표·세미콜론·탭을 지원합니다. 최대 5MB·1,000행·150열입니다. 헤더가 필요하며 잘못된 따옴표·중복 머리글·행별 열 개수 불일치는 오류로 알립니다.
-2. **텍스트**: 붙여 넣은 텍스트 또는 TXT/MD 파일을 하나의 자료로 저장합니다.
-3. **공개 RSS**: RSS/Atom HTTPS 주소를 한 줄에 하나씩 입력합니다. 최대 20개 주소, 1,000건입니다. 피드에 포함된 내용만 저장하며 전문으로 표시하지 않습니다.
-4. **웹페이지 URL**: AI·수집 설정에서 원문 수집 허용 도메인을 먼저 등록합니다. robots.txt와 공개 HTML 본문을 확인합니다. 로그인·CAPTCHA·리디렉션·비공개 페이지를 우회하지 않으며 JavaScript 본문 수집은 지원하지 않습니다. 검색 결과 전체를 자동 탐색하지 않습니다.
-5. **데이터 검토**: 검색·정렬·중복 표시와 수동 포함/제외는 로컬에서 처리합니다. 날짜가 없는 가져온 자료도 보존합니다.
-6. **AI 선택 사용**: AI·수집 설정에서 GPT 또는 Gemini 키 등록 → 연결 테스트·모델 조회 → 외부 전송 동의 → 설정 저장. 검토 화면에서 행을 선택하고 `한국어 번역` 또는 `CSV 정리·요약·분류`를 실행합니다. 자동 수집 중에는 AI를 호출하지 않습니다. 완료한 행은 저장되며 실패한 행만 재선택해 재시도할 수 있습니다. 중지 버튼을 제공합니다.
-7. **내보내기**: CSV/Excel, 전체·유효·제외 자료를 저장합니다. 원래 CSV의 모든 열과 값은 `original_column:` 접두어로 보존합니다. 중복 행도 삭제하지 않고 제외로 표시합니다. 모든 원본 행을 내보내려면 `전체 결과`를 선택하세요. 위험한 수식 앞에는 작은따옴표가 추가됩니다. 원본 CSV는 별도로 보관하세요.
+원문 수집을 켜면 **설정**의 허용 도메인과 robots.txt/저장 제한을 확인합니다. 실패하면 검색 스니펫과 사유를 보존합니다. JavaScript 렌더링 원문·로그인·비공개 문서는 지원하지 않습니다. 게시일은 확인된 값만 저장하며 미확인 포함 여부를 선택할 수 있습니다.
 
-검색 API와 Reddit OAuth는 이 버전에서 사용하지 않습니다. 이전 조사 자료는 보존하지만 이전 검색 API 조사를 재개하지 않습니다. 합성 데모 12건은 실제 사용자 경험의 증거가 아닙니다.
+검색 엔진의 DOM과 접근 정책은 바뀔 수 있습니다. 이 앱은 브라우저 공개 검색 화면을 읽으며, 탐지를 피하기 위한 프록시 순환·지문 변경·CAPTCHA 자동 풀이 기능을 사용하지 않습니다. 브라우저 개발용 웹 UI에서는 자동 검색 창을 사용할 수 없으므로 설치형 Electron 앱을 실행하세요.
+
+## 보조 가져오기
+
+작업실의 접힌 CSV·텍스트·RSS·URL 영역을 사용합니다. CSV는 최대 5MB·1,000행·150열, UTF-8/EUC-KR/UTF-16 LE, 쉼표/탭/세미콜론을 지원합니다. 열 미리보기 후 본문 열을 지정하세요. 원래 열은 `original_column:` 접두어로 내보내기에 보존하고 위험한 수식 값에는 작은따옴표를 추가합니다. RSS는 피드에 제공된 내용을 스니펫으로 보존합니다. URL은 공개 HTTPS 주소만 직접 요청합니다.
 
 ## AI 키와 비용
 
-[API 안내](docs/API.md)를 참고하세요. 네이버·Kakao·Reddit 키나 Ncloud 결제수단은 필요하지 않습니다. 외부 AI 사용료는 제공자 정책에 따르며 ChatGPT/Gemini 앱 구독과 API는 별개입니다. API 없이도 가져오기·검토·내보내기를 사용할 수 있습니다. AI 모델 목록 조회는 인증 확인이며 생성 성공 보장은 아닙니다. 실제 요금은 제공자 콘솔에서 확인하세요. 이 버전은 토큰 수를 기록하지만 단가 미설정 시 비용을 계산하지 않습니다.
+[API 안내](docs/API.md)를 참고하세요. 검색 API 키나 Ncloud 결제수단은 필요하지 않습니다. 외부 AI 사용료는 제공자 정책에 따르며 ChatGPT/Gemini 앱 구독과 API는 별개입니다. API 없이도 가져오기·검토·내보내기를 사용할 수 있습니다. AI 모델 목록 조회는 인증 확인이며 생성 성공 보장은 아닙니다. 실제 요금은 제공자 콘솔에서 확인하세요. 이 버전은 토큰 수를 기록하지만 단가 미설정 시 비용을 계산하지 않습니다.
 
 ## 개발 및 검증
 
@@ -41,6 +45,6 @@ npm run test:ui
 npm run desktop
 ```
 
-Linux CI에서는 Electron 확인에 `STUDIO_DESKTOP_HEADLESS=1 npm run test:desktop`을 사용할 수 있습니다. 패키징은 `npm run package:mac` / `npm run package:win`입니다. 소스 ZIP은 설치 파일과 다릅니다.
+Linux CI에서는 로컬 HTTPS fixture를 이용한 Electron 검색 창 검증에 `STUDIO_DESKTOP_HEADLESS=1 npm run test:desktop`을 사용할 수 있습니다. 패키징은 `npm run package:mac` / `npm run package:win`입니다. 소스 ZIP은 설치 파일과 다릅니다.
 
 자료는 로컬 SQLite에, 키는 지원되는 OS 암호화 저장소에 저장합니다. OS 암호화를 사용할 수 없으면 키는 세션 메모리에만 보관합니다. CSV/백업에는 키가 포함되지 않습니다. 파일 내용은 브라우저 localStorage에 저장하지 않습니다. 창을 닫으면 저장하지 않은 가져오기 입력은 사라집니다.

@@ -1,12 +1,12 @@
-name: Local import Studio installers
+name: Unified search Studio installers
 on:
   push:
-    branches: [codex/studio-local-import]
+    branches: [codex/studio-search-workspace]
   workflow_dispatch:
 permissions:
   contents: write
 concurrency:
-  group: studio-local-import-${{ github.ref }}
+  group: studio-search-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   package:
@@ -30,6 +30,11 @@ jobs:
       - run: node scripts/ci-step.mjs npm test
       - run: node scripts/ci-step.mjs npm run build
       - run: node scripts/ci-step.mjs npm run test:desktop
+      - name: Probe live public Bing search without API keys
+        if: matrix.target == 'mac'
+        continue-on-error: true
+        timeout-minutes: 2
+        run: node scripts/ci-step.mjs node scripts/live-search-check.mjs
       - name: Build Mac installers with valid ad-hoc signatures
         if: matrix.target == 'mac'
         run: node scripts/ci-step.mjs npm run package:mac -- --x64 --arm64
@@ -48,7 +53,7 @@ jobs:
         run: node scripts/ci-step.mjs node scripts/release-artifacts.mjs win-x64
       - uses: actions/upload-artifact@v4
         with:
-          name: Local-Import-Studio-${{ matrix.target }}
+          name: Search-Workspace-Studio-${{ matrix.target }}
           path: |
             release/*.dmg
             release/*.zip
@@ -66,7 +71,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          pattern: Local-Import-Studio-*
+          pattern: Search-Workspace-Studio-*
           path: release
           merge-multiple: true
       - run: node scripts/source-archive.mjs
@@ -76,14 +81,14 @@ jobs:
         run: |
           set -euo pipefail
           version="$(node -p "require('./package.json').version")"
-          tag="studio-local-v${version}"
+          tag="studio-search-v${version}"
           if gh release view "$tag" >/dev/null 2>&1; then
             published_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" --jq '.object.sha')"
             test "$published_sha" = "$GITHUB_SHA" || { echo 'Version already published from a different commit; bump the version.'; exit 1; }
             gh release upload "$tag" release/*.dmg release/*.zip release/*.exe release/*.sha256 release/*-build.json --clobber
           else
             gh release create "$tag" release/*.dmg release/*.zip release/*.exe release/*.sha256 release/*-build.json \
-              --target "$GITHUB_SHA" --prerelease --title "ZeroWaste Listening Studio ${version} · Local Import" --notes-file docs/LOCAL_RELEASE.md
+              --target "$GITHUB_SHA" --prerelease --title "ZeroWaste Listening Studio ${version} · Search Workspace" --notes-file docs/SEARCH_RELEASE.md
           fi
       - name: Record publication outcome
         if: always()

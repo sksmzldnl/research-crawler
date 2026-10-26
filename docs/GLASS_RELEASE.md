@@ -1,4 +1,4 @@
-> 이전 버전의 기록입니다. 현재 0.3.0의 동작과 설치는 [자료 가져오기 버전 안내](LOCAL_RELEASE.md), [최신 README](../README.md)를 참고하세요.
+> 이전 버전의 기록입니다. 현재 0.4.0의 동작과 설치는 [검색 수집 버전 안내](SEARCH_RELEASE.md), [최신 README](../README.md)를 참고하세요.
 
 # ZeroWaste Listening Studio 0.2.0 · Liquid Glass
 
