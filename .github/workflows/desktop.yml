@@ -7,9 +7,11 @@ permissions:
   contents: read
 concurrency:
   group: listening-studio-downloads-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   package:
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -30,18 +32,18 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
-      - run: npm run test:desktop
+      - run: node scripts/ci-step.mjs npm ci
+      - run: node scripts/ci-step.mjs npm test
+      - run: node scripts/ci-step.mjs npm run build
+      - run: node scripts/ci-step.mjs npm run test:desktop
       - name: Build installer on its native operating system
-        run: npm run package:${{ matrix.target }} -- --${{ matrix.arch }}
+        run: node scripts/ci-step.mjs npm run package:${{ matrix.target }} -- --${{ matrix.arch }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - name: Verify packaged Electron app
-        run: node scripts/verify-packaged.mjs
+        run: node scripts/ci-step.mjs node scripts/verify-packaged.mjs
       - name: Record project identity and checksums
-        run: node scripts/release-artifacts.mjs ${{ matrix.target }}-${{ matrix.arch }}
+        run: node scripts/ci-step.mjs node scripts/release-artifacts.mjs ${{ matrix.target }}-${{ matrix.arch }}
       - uses: actions/upload-artifact@v4
         with:
           name: ZeroWaste-Listening-Studio-${{ matrix.target }}-${{ matrix.arch }}
@@ -61,6 +63,9 @@ jobs:
             test-results/
             release/builder-debug.yml
           if-no-files-found: ignore
+      - name: Record outcome for delivery diagnosis
+        if: always()
+        run: node scripts/ci-delivery-report.mjs ${{ matrix.target }}-${{ matrix.arch }} ${{ job.status }}
   publish:
     needs: package
     runs-on: ubuntu-latest
@@ -87,3 +92,6 @@ jobs:
             gh release create "$tag" release/*.dmg release/*.zip release/*.exe release/*.sha256 release/*-build.json \
               --target "$GITHUB_SHA" --prerelease --title "ZeroWaste Listening Studio 0.1.0 · Electron test" --notes-file docs/RELEASE_NOTES.md
           fi
+      - name: Record publication outcome
+        if: always()
+        run: node scripts/ci-delivery-report.mjs publish ${{ job.status }}
