@@ -1,0 +1,10 @@
+import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+const pkg=JSON.parse(readFileSync('package.json','utf8'));
+if(pkg.name!=='zerowaste-listening-studio')throw Error('This script is only for ZeroWaste Listening Studio.');
+const committed=JSON.parse(execFileSync('git',['show','HEAD:package.json'],{encoding:'utf8'}));if(committed.name!==pkg.name)throw Error('The current Electron source must be committed before archiving.');
+mkdirSync('release',{recursive:true});const filename=`ZeroWaste-Listening-Studio-${pkg.version}-source.zip`;
+execFileSync('git',['archive','--format=zip','--prefix=ZeroWaste-Listening-Studio/',`--output=release/${filename}`,'HEAD']);
+const sha256=createHash('sha256').update(readFileSync('release/'+filename)).digest('hex');writeFileSync('release/'+filename+'.sha256',`${sha256}  ${filename}\n`);
+console.log('Archived the exact committed Electron project:',filename);

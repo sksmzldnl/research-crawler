@@ -1,0 +1,4 @@
+import type { Bridge } from '../core/types';
+declare global { interface Window {studio?:Bridge;} }
+export const bridge:Bridge={async call<T>(method:string,args?:unknown):Promise<T>{if(window.studio)return window.studio.call<T>(method,args);const response=await fetch('/api/call',{method:'POST',headers:{'Content-Type':'application/json','X-Studio-Client':'local-ui'},body:JSON.stringify({method,args})});const body=await response.json();if(!response.ok)throw Error(body.error||'요청 실패');return body.result;}};
+export function download(result:{data?:string;filename?:string;mime?:string;saved?:boolean}){if(result.data){const bytes=Uint8Array.from(atob(result.data),c=>c.charCodeAt(0));const url=URL.createObjectURL(new Blob([bytes],{type:result.mime}));const a=document.createElement('a');a.href=url;a.download=result.filename||'export.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}return result.saved===false?'저장을 취소했습니다.':'파일을 저장했습니다.';}

@@ -1,0 +1,11 @@
+import {it,expect} from 'vitest';
+import ExcelJS from 'exceljs';
+import {canonicalUrl,dateReason,normalizedDate,similarity,adReasons} from '../core/quality.js';
+import {anonymize} from '../core/connectors.js';
+import {safeCell,exportData} from '../core/export.js';
+import {csvColumns,type RecordItem} from '../core/types.js';
+it('normalizes tracking parameters but preserves content IDs',()=>{expect(canonicalUrl('https://Example.com/post/?id=1&utm_source=foo#frag')).toBe('https://example.com/post?id=1');expect(canonicalUrl('https://example.com/post?id=2')).not.toBe(canonicalUrl('https://example.com/post?id=1'));});
+it('never invents missing dates',()=>{expect(normalizedDate(null)).toBeNull();expect(normalizedDate('20261002')).toBe('2026-10-02T00:00:00.000Z');expect(dateReason(null,'','')).toContain('미확인');expect(dateReason('2022-01-01','','2021-12-31')).toContain('기간');});
+it('marks advertisements and masks simple personal identifiers',()=>{expect(adReasons('제품을 제공받아 작성, 할인 코드')).toHaveLength(2);expect(anonymize('test@example.com 010-1234-5678')).toBe('[이메일 삭제] [전화번호 삭제]');expect(similarity('긴 문장의 동일한 예시입니다','긴 문장의 동일한 예시입니다')).toBe(1);});
+it.each(['=CMD()',' +CMD()','\t@SUM(A1)','-1+1','\n=1'])('defends spreadsheet formulas: %s',s=>expect(safeCell(s).startsWith("'")).toBe(true));
+it('exports all mandatory columns, BOM, multiline quoting and explicit demo provenance',async()=>{const row=Object.fromEntries(csvColumns.map(c=>[c,''])) as unknown as RecordItem;Object.assign(row,{research_id:'r',title:'=2+2',original_full_text:'첫 줄,"인용"\n둘째 줄',mode:'demo',review_status:'included',published_at:null});const request={researchId:'r',scope:'all' as const,korean:false,bom:true,format:'csv' as const};const csv=(await exportData([row],request)).toString();expect(csv.charCodeAt(0)).toBe(0xfeff);for(const c of csvColumns)expect(csv).toContain('"'+c+'"');expect(csv).toContain('"\'=2+2"');expect(csv).toContain('"첫 줄,""인용""\n둘째 줄"');expect(csv).toContain('"demo"');const xlsx=await exportData([row],{...request,format:'xlsx'});const workbook=new ExcelJS.Workbook();await workbook.xlsx.load(xlsx as any);expect(workbook.worksheets[0].rowCount).toBe(2);expect(workbook.worksheets[0].getRow(2).getCell(10).value).toBe("'=2+2");});
