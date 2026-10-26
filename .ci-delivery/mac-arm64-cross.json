@@ -1,0 +1,11 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "success",
+  "channel": "mac-arm64-cross",
+  "source_sha": "0f62e2409679ac36594efebaf7396421cdd41ac6",
+  "workflow_sha": "4be551f28519f6f5572d3e62d7513f2f5ed3162d",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40347427271",
+  "updated_at": "2026-10-26T15:25:12.964Z",
+  "log_tail": "Verified actual arm64 Electron app and byte-identical packaged source. Native Apple Silicon execution remains unverified.\n"
+}
