@@ -1,0 +1,96 @@
+name: Package Apple Silicon Studio on an available Mac
+on:
+  push:
+    branches: [codex/studio-publish-ready-20261026]
+    paths: [.github/workflows/apple-silicon-cross.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  mac-arm64:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0f62e2409679ac36594efebaf7396421cdd41ac6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: node scripts/ci-step.mjs npm ci
+      - run: node scripts/ci-step.mjs npm test
+      - run: node scripts/ci-step.mjs npm run build
+      - name: Verify this exact application's demo on the build Mac
+        run: node scripts/ci-step.mjs npm run test:desktop
+      - name: Build the actual Apple Silicon Electron runtime and installers
+        run: node scripts/ci-step.mjs npm run package:mac -- --arm64
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify the Apple Silicon runtime, bundle identity and packaged source
+        run: |
+          set -euo pipefail
+          mkdir -p .local
+          app="release/mac-arm64/ZeroWaste Listening Studio.app"
+          {
+            test "$(lipo -archs "$app/Contents/MacOS/ZeroWaste Listening Studio")" = arm64
+            test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$app/Contents/Info.plist")" = org.zerowaste.listeningstudio
+            test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleName' "$app/Contents/Info.plist")" = 'ZeroWaste Listening Studio'
+            codesign --verify --deep --strict "$app"
+            node --input-type=module - <<'JS'
+          import {createRequire}from'node:module';import{readFileSync,writeFileSync,readdirSync,createReadStream}from'node:fs';import{createHash}from'node:crypto';import{execFileSync}from'node:child_process';
+          const require=createRequire(import.meta.url),asar=require('@electron/asar');
+          const packagePath='release/mac-arm64/ZeroWaste Listening Studio.app/Contents/Resources/app.asar';
+          const pkg=JSON.parse(asar.extractFile(packagePath,'package.json').toString());
+          if(pkg.name!=='zerowaste-listening-studio'||pkg.build.appId!=='org.zerowaste.listeningstudio'||pkg.main!=='build/desktop/main.js')throw Error('Wrong packaged application');
+          for(const file of ['build/desktop/main.js','build/core/engine.js','build/core/query.js','desktop/preload.cjs']){const packed=file==='desktop/preload.cjs'?'build/desktop/preload.cjs':file;if(!asar.extractFile(packagePath,packed).equals(readFileSync(file)))throw Error('Packaged code differs: '+file);}
+          const files=readdirSync('release').filter(n=>n.startsWith('ZeroWaste-Listening-Studio-0.1.0-mac-arm64.')&&/\.(dmg|zip)$/.test(n));if(files.length!==2)throw Error('Both DMG and ZIP are required');
+          const artifacts=[];for(const filename of files){const h=createHash('sha256');let bytes=0;for await(const part of createReadStream('release/'+filename)){h.update(part);bytes+=part.length;}const sha256=h.digest('hex');writeFileSync('release/'+filename+'.sha256',`${sha256}  ${filename}\n`);artifacts.push({filename,bytes,sha256});}
+          const manifest={product:pkg.build.productName,app_id:pkg.build.appId,implementation:'Electron + React + TypeScript + Node SQLite',version:pkg.version,electron:pkg.devDependencies.electron,source_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),channel:'mac-arm64',platform:'darwin',architecture:'arm64',build_host_architecture:process.arch,arm64_runtime_verified:true,packaged_source_verified:true,packaged_demo_verified:false,same_source_demo_verified_on:'darwin-x64',native_apple_silicon_execution:'not_verified_runner_queued',code_signed:'ad-hoc; no Developer ID or notarization',live_api_verified:false,artifacts};
+          writeFileSync('release/ZeroWaste-Listening-Studio-mac-arm64-build.json',JSON.stringify(manifest,null,2)+'\n');console.log('Verified actual arm64 Electron app and byte-identical packaged source. Native Apple Silicon execution remains unverified.');
+          JS
+          } 2>&1 | tee .local/ci-step.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZeroWaste-Listening-Studio-mac-arm64-cross-built
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.sha256
+            release/*-build.json
+          if-no-files-found: error
+      - name: Publish the verified arm64 package with its exact validation limits
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=listening-studio-electron-0f62e2409679
+          mkdir -p .local/native-existing
+          if gh release download "$tag" --pattern ZeroWaste-Listening-Studio-mac-arm64-build.json --dir .local/native-existing --clobber; then
+            if node -e "const m=require('./.local/native-existing/ZeroWaste-Listening-Studio-mac-arm64-build.json');process.exit(m.source_sha==='0f62e2409679ac36594efebaf7396421cdd41ac6'&&m.app_id==='org.zerowaste.listeningstudio'&&m.packaged_demo_verified===true?0:1)"; then
+              echo 'Native Apple Silicon build is already published; keeping that verified package.'
+              exit 0
+            fi
+          fi
+          gh release upload "$tag" release/ZeroWaste-Listening-Studio-0.1.0-mac-arm64.dmg release/ZeroWaste-Listening-Studio-0.1.0-mac-arm64.dmg.sha256 release/ZeroWaste-Listening-Studio-0.1.0-mac-arm64.zip release/ZeroWaste-Listening-Studio-0.1.0-mac-arm64.zip.sha256 release/ZeroWaste-Listening-Studio-mac-arm64-build.json --clobber
+          {
+            echo '# ZeroWaste Listening Studio · Electron test'
+            echo
+            echo '이 배포는 이번에 만든 Electron 프로그램입니다. 앱 ID: org.zerowaste.listeningstudio. Python/Qt의 ZeroWasteListener와 다른 프로그램입니다.'
+            echo
+            echo 'Apple Silicon Mac은 mac-arm64.dmg 또는 mac-arm64.zip, Intel Mac은 mac-x64.dmg, Windows는 win-x64.exe를 선택하세요.'
+            echo
+            echo 'Apple Silicon 패키지: Intel Mac에서 실제 arm64 Electron 런타임으로 빌드했고, Mach-O 아키텍처·번들 ID·패키징된 소스·ad-hoc 서명 무결성을 검사했습니다. 같은 소스의 데모는 Intel Mac에서 통과했습니다. Apple Silicon 기기에서의 직접 실행은 실행기 대기로 미검증입니다.'
+            echo
+            echo 'Intel Mac·Windows 패키징 앱의 데모 실행 검사는 통과했습니다. 실제 검색/AI 키 연결은 미검증입니다. Developer ID 서명·공증 없는 테스트 배포판입니다.'
+          } > .local/release-notes.md
+          gh release edit "$tag" --notes-file .local/release-notes.md
+      - name: Record the arm64 packaging and publication result
+        if: always()
+        env:
+          STUDIO_JOB_STATE: ${{ job.status }}
+        run: |
+          node --input-type=module - <<'JS'
+          import{mkdirSync,existsSync,readFileSync,writeFileSync}from'node:fs';import{execFileSync as git}from'node:child_process';
+          const report={product:'ZeroWaste Listening Studio',implementation:'Electron',state:process.env.STUDIO_JOB_STATE,channel:'mac-arm64-cross',source_sha:git('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),workflow_sha:process.env.GITHUB_SHA,run_url:`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,updated_at:new Date().toISOString(),log_tail:existsSync('.local/ci-step.log')?readFileSync('.local/ci-step.log','utf8').split('\n').slice(-180).join('\n').slice(-32000):''};
+          mkdirSync('.ci-delivery',{recursive:true});const file='.ci-delivery/mac-arm64-cross.json';writeFileSync(file,JSON.stringify(report,null,2)+'\n');git('git',['add','--',file],{stdio:'inherit'});git('git',['-c','user.name=github-actions[bot]','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com','commit','--only','-m',`Report arm64 packaging: ${report.state}`,'--',file],{stdio:'inherit'});git('git',['push','origin',`HEAD:refs/heads/codex/studio-delivery-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-mac-arm64-cross`],{stdio:'inherit'});
+          JS
