@@ -1,0 +1,18 @@
+{
+  "version": "3.12.15",
+  "release": "20261003",
+  "source": "https://github.com/astral-sh/python-build-standalone/releases/download/20261003",
+  "checksum_source": "https://github.com/astral-sh/python-build-standalone/releases/download/20261003/SHA256SUMS",
+  "architectures": {
+    "arm64": {
+      "platform": "aarch64-apple-darwin",
+      "filename": "cpython-3.12.15+20261003-aarch64-apple-darwin-install_only_stripped.tar.gz",
+      "sha256": "ad8d0c637c0a36b967b310e2c07254f4d2ca8cabaa7699e55ed6290aceb481a2"
+    },
+    "x86_64": {
+      "platform": "x86_64-apple-darwin",
+      "filename": "cpython-3.12.15+20261003-x86_64-apple-darwin-install_only_stripped.tar.gz",
+      "sha256": "562c30864ece2cb1d3e0ad66a1acd498611a47e5a10ce81b99158bef1ccbd355"
+    }
+  }
+}

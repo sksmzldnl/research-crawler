@@ -1,0 +1,73 @@
+name: Desktop checks and installers
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      build_windows:
+        description: 'Build Windows after the Mac installer succeeds'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.23'
+          python-version: '3.12'
+      - run: uv sync --frozen --extra dev
+      - run: uv run --frozen --extra dev pytest -q
+        env:
+          QT_QPA_PLATFORM: offscreen
+      - run: uv run --frozen --extra dev python scripts/build.py
+      - run: uv run --frozen --extra dev python scripts/smoke_frozen.py dist/ZeroWasteListener.app/Contents/MacOS/ZeroWasteListener
+      - name: Build self-contained Mac app ZIP
+        run: uv run --frozen --extra dev python scripts/build_mac_bundle.py --arch "$(uname -m)"
+      - name: Check copied app through macOS LaunchServices
+        run: uv run --frozen --extra dev python scripts/smoke_mac_install.py "dist/mac-$(uname -m)/ZeroWasteListener.app"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac-installer
+          path: |
+            dist/*.dmg
+            dist/*macOS*-test.zip
+            dist/*.sha256
+  windows:
+    needs: mac
+    if: github.event_name == 'workflow_dispatch' && inputs.build_windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.23'
+          python-version: '3.12'
+      - run: uv sync --frozen --extra dev
+      - run: uv run --frozen --extra dev pytest -q
+        env:
+          QT_QPA_PLATFORM: offscreen
+      - run: uv run --frozen --extra dev python scripts/build.py
+      - run: uv run --frozen --extra dev python scripts/smoke_frozen.py dist/ZeroWasteListener/ZeroWasteListener.exe
+      - name: Build per-user installer
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" packaging/windows.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $file = Get-Item dist/*-Setup.exe
+          $hash = (Get-FileHash $file -Algorithm SHA256).Hash.ToLower()
+          "$hash  $($file.Name)" | Set-Content "$($file.FullName).sha256" -Encoding utf8
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: |
+            dist/*.exe
+            dist/*.zip
+            dist/*.sha256

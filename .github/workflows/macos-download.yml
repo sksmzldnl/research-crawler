@@ -1,0 +1,91 @@
+name: Build and publish Mac test downloads
+
+on:
+  push:
+    branches: [codex/macos-installer-download]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Report build start
+        run: python3 scripts/ci_delivery_status.py --state running --stage setup
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.23'
+          python-version: '3.12'
+      - name: Install and test
+        run: |
+          set -o pipefail
+          mkdir -p build
+          uv sync --frozen --extra dev 2>&1 | tee build/ci-step.log
+          QT_QPA_PLATFORM=offscreen uv run --frozen --extra dev pytest -q 2>&1 | tee build/ci-step.log
+          python3 scripts/ci_delivery_status.py --state running --stage tests-passed --log build/ci-step.log
+      - name: Build native architecture package
+        run: |
+          set -o pipefail
+          uv run --frozen --extra dev python scripts/build_mac_bundle.py --arch "$(uname -m)" 2>&1 | tee build/ci-step.log
+          python3 scripts/ci_delivery_status.py --state running --stage bundle-built --log build/ci-step.log
+      - name: Verify installed app through macOS LaunchServices
+        run: |
+          set -o pipefail
+          uv run --frozen --extra dev python scripts/smoke_mac_install.py "dist/mac-$(uname -m)/ZeroWasteListener.app" 2>&1 | tee build/ci-step.log
+          python3 scripts/ci_delivery_status.py --state running --stage mac-launch-passed --log build/ci-step.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac-test-${{ runner.arch }}
+          path: |
+            dist/*macOS*-test.zip
+            dist/*macOS*-test.zip.sha256
+          if-no-files-found: error
+          retention-days: 7
+      - name: Report native Mac readiness
+        run: python3 scripts/ci_delivery_status.py --state passed --stage uploaded --log build/ci-step.log
+      - name: Report failure
+        if: failure()
+        run: |
+          if [ -f "$HOME/Library/Logs/ZeroWasteListener/app.log" ]; then
+            tail -150 "$HOME/Library/Logs/ZeroWasteListener/app.log" >> build/ci-step.log
+          fi
+          python3 scripts/ci_delivery_status.py --state failed --stage mac-build-or-launch --log build/ci-step.log
+
+  release:
+    needs: mac
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mac-test-*
+          path: dist
+          merge-multiple: true
+      - name: Include source and installation notes
+        run: |
+          python3 scripts/source_archive.py
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          path = Path('dist/ZeroWasteListener-0.1.0-source.zip')
+          path.with_suffix('.zip.sha256').write_text(hashlib.sha256(path.read_bytes()).hexdigest() + '  ' + path.name + '\n')
+          PY
+      - name: Publish downloadable test release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="macos-test-${GITHUB_SHA:0:12}"
+          gh release create "$tag" dist/*macOS*-test.zip dist/*macOS*-test.zip.sha256 dist/*source.zip dist/*source.zip.sha256 \
+            --target "$GITHUB_SHA" --prerelease --title "새로듣기 · Mac 테스트 설치 패키지" --notes-file packaging/MAC_INSTALL_KO.txt
+          python3 scripts/ci_delivery_status.py --state published --stage release-published --channel release \
+            --release-url "https://github.com/${GITHUB_REPOSITORY}/releases/tag/$tag"
+      - name: Report release failure
+        if: failure()
+        run: python3 scripts/ci_delivery_status.py --state failed --stage release-upload --channel release
