@@ -1,0 +1,11 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "failure",
+  "channel": "mac-arm64-cross",
+  "source_sha": "0f62e2409679ac36594efebaf7396421cdd41ac6",
+  "workflow_sha": "6ec4d67beeef6394f7a709f4ffbabcd49174f715",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40346976600",
+  "updated_at": "2026-10-26T15:16:56.344Z",
+  "log_tail": "release/mac-arm64/ZeroWaste Listening Studio.app: code has no resources but signature indicates they must be present\n"
+}
