@@ -1,0 +1,10 @@
+{
+  "state": "published",
+  "stage": "release-published",
+  "architecture": "x86_64",
+  "source_sha": "3b4d76931599b239e4b6b376c4583d08a9cb84e3",
+  "run_id": "40318831387",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40318831387",
+  "updated_at": "2026-10-26T11:59:28.796536+00:00",
+  "release_url": "https://github.com/sksmzldnl/research-crawler/releases/tag/macos-test-3b4d76931599"
+}
