@@ -1,0 +1,12 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "success",
+  "channel": "publish-ready",
+  "source_sha": "f001ef74b7d563b13af8b121a92dc6b8ba10c6a8",
+  "run_id": "40345013571",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40345013571",
+  "updated_at": "2026-10-26T15:00:38.743Z",
+  "release_url": null,
+  "log_tail": "Verified native installer: win-x64\nVerified native installer: mac-x64\n"
+}
