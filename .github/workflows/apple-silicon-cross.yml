@@ -26,7 +26,7 @@ jobs:
       - name: Verify this exact application's demo on the build Mac
         run: node scripts/ci-step.mjs npm run test:desktop
       - name: Build the actual Apple Silicon Electron runtime and installers
-        run: node scripts/ci-step.mjs npm run package:mac -- --arm64
+        run: node scripts/ci-step.mjs npm run package:mac -- --arm64 --config.mac.identity=-
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - name: Verify the Apple Silicon runtime, bundle identity and packaged source
