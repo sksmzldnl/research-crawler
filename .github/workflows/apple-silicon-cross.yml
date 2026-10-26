@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: listening-studio-arm64-cross
+  cancel-in-progress: true
 jobs:
   mac-arm64:
     runs-on: macos-15-intel
@@ -40,12 +43,12 @@ jobs:
           import {createRequire}from'node:module';import{readFileSync,writeFileSync,readdirSync,createReadStream}from'node:fs';import{createHash}from'node:crypto';import{execFileSync}from'node:child_process';
           const require=createRequire(import.meta.url),asar=require('@electron/asar');
           const packagePath='release/mac-arm64/ZeroWaste Listening Studio.app/Contents/Resources/app.asar';
-          const pkg=JSON.parse(asar.extractFile(packagePath,'package.json').toString());
-          if(pkg.name!=='zerowaste-listening-studio'||pkg.build.appId!=='org.zerowaste.listeningstudio'||pkg.main!=='build/desktop/main.js')throw Error('Wrong packaged application');
+          const original=JSON.parse(readFileSync('package.json','utf8')),pkg=JSON.parse(asar.extractFile(packagePath,'package.json').toString());
+          if(pkg.name!=='zerowaste-listening-studio'||pkg.main!=='build/desktop/main.js'||pkg.version!==original.version)throw Error('Wrong packaged application');
           for(const file of ['build/desktop/main.js','build/core/engine.js','build/core/query.js','desktop/preload.cjs']){const packed=file==='desktop/preload.cjs'?'build/desktop/preload.cjs':file;if(!asar.extractFile(packagePath,packed).equals(readFileSync(file)))throw Error('Packaged code differs: '+file);}
           const files=readdirSync('release').filter(n=>n.startsWith('ZeroWaste-Listening-Studio-0.1.0-mac-arm64.')&&/\.(dmg|zip)$/.test(n));if(files.length!==2)throw Error('Both DMG and ZIP are required');
           const artifacts=[];for(const filename of files){const h=createHash('sha256');let bytes=0;for await(const part of createReadStream('release/'+filename)){h.update(part);bytes+=part.length;}const sha256=h.digest('hex');writeFileSync('release/'+filename+'.sha256',`${sha256}  ${filename}\n`);artifacts.push({filename,bytes,sha256});}
-          const manifest={product:pkg.build.productName,app_id:pkg.build.appId,implementation:'Electron + React + TypeScript + Node SQLite',version:pkg.version,electron:pkg.devDependencies.electron,source_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),channel:'mac-arm64',platform:'darwin',architecture:'arm64',build_host_architecture:process.arch,arm64_runtime_verified:true,packaged_source_verified:true,packaged_demo_verified:false,same_source_demo_verified_on:'darwin-x64',native_apple_silicon_execution:'not_verified_runner_queued',code_signed:'ad-hoc; no Developer ID or notarization',live_api_verified:false,artifacts};
+          const manifest={product:original.build.productName,app_id:original.build.appId,implementation:'Electron + React + TypeScript + Node SQLite',version:pkg.version,electron:original.devDependencies.electron,source_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),channel:'mac-arm64',platform:'darwin',architecture:'arm64',build_host_architecture:process.arch,arm64_runtime_verified:true,packaged_source_verified:true,packaged_demo_verified:false,same_source_demo_verified_on:'darwin-x64',native_apple_silicon_execution:'not_verified_runner_queued',code_signed:'ad-hoc; no Developer ID or notarization',live_api_verified:false,artifacts};
           writeFileSync('release/ZeroWaste-Listening-Studio-mac-arm64-build.json',JSON.stringify(manifest,null,2)+'\n');console.log('Verified actual arm64 Electron app and byte-identical packaged source. Native Apple Silicon execution remains unverified.');
           JS
           } 2>&1 | tee .local/ci-step.log
