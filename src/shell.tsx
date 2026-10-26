@@ -8,7 +8,7 @@ const navigation:{name:string;icon:IconName}[]=[
   {name:'쿼리 번들',icon:'bundles'},
   {name:'데이터 검토',icon:'data'},
   {name:'조사 기록',icon:'history'},
-  {name:'API 설정',icon:'settings'},
+  {name:'AI·수집 설정',icon:'settings'},
   {name:'도움말',icon:'help'},
 ];
 
@@ -35,7 +35,7 @@ export function StudioShell({page,navigate,onSearch,state,contrast,setContrast,r
         <div className="sidebar-note"><span className="note-orb"><Icon name="spark" size={20}/></span><strong>변화는 듣는 것부터.</strong><p>일상 속 작은 경험을<br/>새로운 가능성으로 연결하세요.</p><button onClick={()=>navigate(6)}>스튜디오 사용 안내<Icon name="arrow" size={14}/></button></div>
         <div className="local-indicator"><span/>내 컴퓨터에 저장</div>
         <div className="appearance-options" aria-label="화면 가독성 설정"><button className="subtle" aria-label="투명도 줄이기" onClick={()=>setReduceGlass(!reduceGlass)} aria-pressed={reduceGlass} title="배경 투명도와 흐림 효과 줄이기"><Icon name="glass" size={15}/><span>투명도 줄이기</span><span className="setting-switch"/></button><button className="subtle" aria-label="고대비" onClick={()=>setContrast(!contrast)} aria-pressed={contrast}><Icon name="contrast" size={15}/><span>고대비 {contrast?'켜짐':'꺼짐'}</span><span className="setting-switch"/></button></div>
-        <small className="app-version">ZeroWaste Listening Studio · 0.2</small>
+        <small className="app-version">ZeroWaste Listening Studio · 0.3</small>
       </div>
     </aside>
     <main id="content" tabIndex={-1}>

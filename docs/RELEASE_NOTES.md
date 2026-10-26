@@ -1,3 +1,5 @@
+> 이전 버전의 기록입니다. 현재 0.3.0의 동작과 설치는 [자료 가져오기 버전 안내](LOCAL_RELEASE.md), [최신 README](../README.md)를 참고하세요.
+
 # ZeroWaste Listening Studio · Electron 테스트판
 
 이 배포 파일은 Electron 45 + React + TypeScript + Node SQLite로 만든 **ZeroWaste Listening Studio**입니다. 앱 ID는 `org.zerowaste.listeningstudio`입니다. `ZeroWasteListener`라는 이름의 Python/Qt 프로그램과는 다른 구현입니다.

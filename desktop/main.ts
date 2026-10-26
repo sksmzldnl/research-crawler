@@ -21,6 +21,6 @@ ipcMain.handle('studio:call',async(event,method:string,args:unknown)=>{if(event.
   return service.call(method,args);
 });
 await window.loadURL('studio://app/');
-let closing=false;app.on('before-quit',event=>{if(closing)return;event.preventDefault();closing=true;service.close();void service.engine.idle().then(()=>{service.store.close();app.quit();});});app.on('window-all-closed',()=>app.quit());
+let closing=false;app.on('before-quit',event=>{if(closing)return;event.preventDefault();closing=true;service.close();void service.idle().then(()=>{service.store.close();app.quit();});});app.on('window-all-closed',()=>app.quit());
 
 }).catch((error:Error)=>{console.error("Studio startup failed:",error.message);app.exit(1);});

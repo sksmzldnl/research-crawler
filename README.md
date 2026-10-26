@@ -1,106 +1,46 @@
-# ZeroWaste Listening Studio
+# ZeroWaste Listening Studio 0.3.0
 
-제로웨이스트 소비자 경험을 조사하는 한국어 데스크톱 연구 도구입니다. **Electron 45 + React 19 + TypeScript + Node.js 내장 SQLite**로 구현했습니다. Python 워커나 별도 DB 서버가 필요하지 않습니다. macOS·Windows는 동일한 소스로 빌드합니다.
+검색 API 키 없이 CSV·텍스트와 공개 RSS·URL을 가져오는 macOS/Windows 데스크톱 도구입니다. 기존 Liquid Glass 인터페이스를 유지합니다. GPT와 Gemini는 사용자가 선택한 행의 **한국어 번역·CSV 정리**에만 사용합니다.
 
-## Liquid Glass 0.2.0
+## 설치
 
-참고 디자인의 라벤더·핑크·블루 색감을 반투명 유리 표면과 함께 적용했습니다. 실제 조사 데이터 기반 대시보드, 수집 그래프·소스별 전환·달력, 자료 검색 단축키, 투명도 줄이기·고대비 옵션을 제공합니다. [화면·배포 안내](docs/GLASS_RELEASE.md)를 확인하세요.
+설치 파일 배포: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-local-v0.3.0
 
-최신 배포 페이지: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-liquid-glass-v0.2.0
+- Apple Silicon Mac: `ZeroWaste-Listening-Studio-0.3.0-mac-arm64.dmg`
+- Intel Mac: `ZeroWaste-Listening-Studio-0.3.0-mac-x64.dmg`
+- Windows: `ZeroWaste-Listening-Studio-0.3.0-win-x64.exe`
 
-## 먼저 알아두세요
+Mac은 macOS 13 이상이 필요합니다. Mac 빌드는 ad-hoc 서명을 사용하며 Developer ID 공증은 없습니다. Apple Silicon 파일은 Intel Mac에서 교차 빌드하므로 Apple Silicon에서의 직접 실행 검증과 구분합니다. 빌드와 검증의 실제 완료 여부는 릴리스와 플랫폼별 `build.json`을 확인하세요.
 
-- API 키 없이 **합성 데모 12건**으로 모든 주요 화면과 조사·필터·저장·검토·내보내기를 체험할 수 있습니다. 실제 경험의 연구 근거로 쓰면 안 됩니다.
-- 실제 수집은 네이버/다음 공식 검색 API, 승인된 Reddit Data API, 사용 권한이 있는 RSS를 사용합니다. Google/Bing 검색은 구현하지 않았으며 연결 성공으로 표시하지 않습니다.
-- 실제 API 인증·과금·최신 제공 정책과 macOS/Windows 설치는 이 Linux 개발 환경에서 **미검증**입니다. [검증 보고서](docs/VALIDATION.md)를 확인하세요.
-- 목표 1~1,000건은 필터 통과 수량이며 확보를 보장하지 않습니다. 부족 원인은 조사 기록에 남습니다.
+## 사용 방법
 
-## 비개발자용 설치와 첫 실행
+1. **새 조사 → CSV 파일**: 파일을 선택하거나 CSV 내용을 붙여 넣고 `열 확인·미리보기`를 누릅니다. 본문 열을 지정하고 자료를 가져옵니다. UTF-8·EUC-KR/CP949·UTF-16 LE, 쉼표·세미콜론·탭을 지원합니다. 최대 5MB·1,000행·150열입니다. 헤더가 필요하며 잘못된 따옴표·중복 머리글·행별 열 개수 불일치는 오류로 알립니다.
+2. **텍스트**: 붙여 넣은 텍스트 또는 TXT/MD 파일을 하나의 자료로 저장합니다.
+3. **공개 RSS**: RSS/Atom HTTPS 주소를 한 줄에 하나씩 입력합니다. 최대 20개 주소, 1,000건입니다. 피드에 포함된 내용만 저장하며 전문으로 표시하지 않습니다.
+4. **웹페이지 URL**: AI·수집 설정에서 원문 수집 허용 도메인을 먼저 등록합니다. robots.txt와 공개 HTML 본문을 확인합니다. 로그인·CAPTCHA·리디렉션·비공개 페이지를 우회하지 않으며 JavaScript 본문 수집은 지원하지 않습니다. 검색 결과 전체를 자동 탐색하지 않습니다.
+5. **데이터 검토**: 검색·정렬·중복 표시와 수동 포함/제외는 로컬에서 처리합니다. 날짜가 없는 가져온 자료도 보존합니다.
+6. **AI 선택 사용**: AI·수집 설정에서 GPT 또는 Gemini 키 등록 → 연결 테스트·모델 조회 → 외부 전송 동의 → 설정 저장. 검토 화면에서 행을 선택하고 `한국어 번역` 또는 `CSV 정리·요약·분류`를 실행합니다. 자동 수집 중에는 AI를 호출하지 않습니다. 완료한 행은 저장되며 실패한 행만 재선택해 재시도할 수 있습니다. 중지 버튼을 제공합니다.
+7. **내보내기**: CSV/Excel, 전체·유효·제외 자료를 저장합니다. 원래 CSV의 모든 열과 값은 `original_column:` 접두어로 보존합니다. 중복 행도 삭제하지 않고 제외로 표시합니다. 모든 원본 행을 내보내려면 `전체 결과`를 선택하세요. 위험한 수식 앞에는 작은따옴표가 추가됩니다. 원본 CSV는 별도로 보관하세요.
 
-GitHub Actions의 **ZeroWaste Listening Studio downloads**는 Apple Silicon Mac·Intel Mac·Windows x64에서 각각 설치 파일을 빌드하고, 패키징한 앱의 데모를 검사한 뒤 GitHub Releases에 게시하도록 준비했습니다. **실제 배포 페이지:** https://github.com/sksmzldnl/research-crawler/releases/tag/studio-liquid-glass-v0.2.0
+검색 API와 Reddit OAuth는 이 버전에서 사용하지 않습니다. 이전 조사 자료는 보존하지만 이전 검색 API 조사를 재개하지 않습니다. 합성 데모 12건은 실제 사용자 경험의 증거가 아닙니다.
 
-Windows·Intel Mac 패키징 앱의 데모 검사는 통과했습니다. Apple Silicon 파일은 Intel Mac에서 실제 arm64 런타임으로 빌드하고 코드·아키텍처·서명 무결성을 확인했습니다. Apple Silicon 기기에서의 직접 실행은 아직 미검증입니다. Mac은 macOS 13 이상이 필요합니다.
+## AI 키와 비용
 
-파일 이름은 `ZeroWaste-Listening-Studio-0.2.0-mac-arm64.dmg`, `…-mac-x64.dmg`, `…-win-x64.exe` 형태입니다. `ZeroWasteListener`라는 별도 Python/Qt 배포본과 혼동하지 마세요. 소스 ZIP과 설치 파일은 다릅니다. 자세한 구분은 [배포 안내](docs/RELEASE_NOTES.md)를 확인하세요.
+[API 안내](docs/API.md)를 참고하세요. 네이버·Kakao·Reddit 키나 Ncloud 결제수단은 필요하지 않습니다. 외부 AI 사용료는 제공자 정책에 따르며 ChatGPT/Gemini 앱 구독과 API는 별개입니다. API 없이도 가져오기·검토·내보내기를 사용할 수 있습니다. AI 모델 목록 조회는 인증 확인이며 생성 성공 보장은 아닙니다. 실제 요금은 제공자 콘솔에서 확인하세요. 이 버전은 토큰 수를 기록하지만 단가 미설정 시 비용을 계산하지 않습니다.
 
-### macOS
+## 개발 및 검증
 
-1. 자신의 Mac에 맞는 arm64(Apple Silicon) 또는 x64(Intel) `.dmg`를 내려받습니다.
-2. DMG를 열고 `.app`을 응용 프로그램 폴더로 옮깁니다.
-3. 앱 실행 → 새 조사 → 데모로 체험하기 → 데모 조사 시작.
-4. API 설정에서 공식 발급 안내를 보고 키를 연결합니다.
-
-서명·공증이 없는 테스트 빌드는 Gatekeeper 경고가 발생할 수 있습니다. 정식 배포 전 Apple Developer 인증서와 공증을 구성해야 합니다. 경고를 일괄 해제하거나 운영체제 보안을 끄는 스크립트는 제공하지 않습니다.
-
-### Windows
-
-1. `ZeroWaste-Listening-Studio-0.2.0-win-x64.exe`를 내려받아 실행합니다.
-2. 설치 위치를 선택하고 앱을 실행합니다. 관리자 권한이 꼭 필요한 전역 설치를 강제하지 않습니다.
-3. 데모로 확인한 뒤 API 설정에서 키를 입력합니다.
-
-서명 없는 빌드에는 SmartScreen/백신 경고가 발생할 수 있습니다. 정식 배포는 신뢰할 수 있는 코드 서명이 필요합니다. 현재 Windows는 NSIS `.exe` 대상이며 **MSI 대상은 제공하지 않습니다**. Windows 설치 파일은 Windows CI에서 빌드합니다.
-
-설치 파일을 아직 받지 못한 소스 이용자는 Node.js 24 이상 설치 후 Mac의 `시작-mac.command` 또는 Windows의 `시작-Windows.cmd`를 실행하면 의존성 설치·빌드·테스트·실행을 자동 진행할 수 있습니다. 이 경로는 인터넷이 필요합니다.
-
-## 사용 흐름
-
-1. **쿼리 번들**: 이름·우선순위·Boolean 논리식·제외어를 저장합니다. 수동 키워드/괄호 OR 그룹을 추가하고 문법 검사로 실제 요청 검색어를 확인합니다.
-2. **API 설정**: 키를 등록하고 연결을 테스트합니다. 키는 채팅에 입력하지 않습니다. AI 제안은 승인하기 전 검색식에 들어가지 않습니다.
-3. **새 조사**: 데모/실제 모드, 번들, 소스, 게시 기간, 목표 수량, 필터, AI 모델을 선택합니다. 설정은 자동 임시 저장되며 키는 임시 저장하지 않습니다.
-4. **조사 기록**: 검색 → 원문 확보 → 날짜·품질 필터 → 중복 제거 → AI 처리 → 저장을 표시합니다. 일시정지/재개/중지를 지원합니다. 검색 작업 진행률과 목표 수량 확보율은 별개입니다.
-5. **데이터 검토**: 원문/번역/근거를 비교하고 수동 포함·제외합니다. 제외 자료도 보존합니다.
-6. **내보내기**: 전체/유효/제외/번들별 CSV 또는 XLSX를 원하는 위치에 저장합니다. CSV는 기본 UTF-8 BOM, 표준 인용, 수식 주입 방어를 적용합니다. 필수 32열과 모드·댓글 관계·발견 경로·제외 근거 등을 제공합니다.
-
-자세한 API 발급·제약·비용은 [API 안내](docs/API.md), 동작과 보안 범위는 [구조 및 제한사항](docs/ARCHITECTURE.md)에 있습니다. 앱 도움말에도 한국어 안내가 들어 있습니다.
-
-## 개발 환경
-
-필수: Node.js **24 이상**, npm, 의존성 다운로드용 인터넷. Linux 데스크톱 실행에는 GTK/NSS/X11 또는 지원되는 디스플레이 환경이 필요합니다. 웹 개발·테스트에는 OS 보안 저장소를 사용하지 않으며 키는 세션 메모리에만 저장합니다.
+Electron 45 + React 19 + TypeScript + Node 24 SQLite. Node.js 24 이상이 필요합니다.
 
 ```sh
 npm ci
-npm run dev          # 로컬 전용 API + React 개발 서버
-npm run desktop      # 프로덕션 빌드 후 Electron 실행
 npm run build
-npm test             # 실제 외부 호출 없는 단위/통합 테스트
-npm run test:ui      # Playwright Chromium으로 GUI 흐름 검사
-npm run test:desktop # Electron preload/IPC/SQLite 실제 데모 검사
+npm test
+npx playwright install chromium
+npm run test:ui
+npm run desktop
 ```
 
-Playwright 브라우저는 `npx playwright install chromium`으로 설치하거나 Linux에서 `CHROMIUM_PATH=/usr/bin/chromium npm run test:ui`로 이미 설치된 Chromium을 사용할 수 있습니다. 로컬 개발 서버는 127.0.0.1만 바인딩합니다. 공개 서버로 배포하지 마세요.
+Linux CI에서는 Electron 확인에 `STUDIO_DESKTOP_HEADLESS=1 npm run test:desktop`을 사용할 수 있습니다. 패키징은 `npm run package:mac` / `npm run package:win`입니다. 소스 ZIP은 설치 파일과 다릅니다.
 
-```sh
-npm run package:mac -- --x64 --arm64   # macOS에서 .app/.dmg/.zip
-npm run package:win -- --x64 --arm64   # Windows에서 NSIS .exe
-npm run package:linux                # 개발 검증용 unpacked Linux 앱
-```
-
-실제 한국어 검색 엔진 + AI 통합 검사는 `npm run test:live`입니다. 개발자 전용이며 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `STUDIO_OPENAI_KEY`, `STUDIO_AI_MODEL`이 필요합니다. 값 없이 실행하면 `SKIPPED / 미검증`과 종료 코드 2를 출력합니다. 키 값을 로그에 출력하지 않습니다. 실제 호출·과금과 개인정보의 외부 전송이 발생합니다. 일반 사용자는 앱에서 키를 입력하고 실제 조사를 실행하면 됩니다.
-
-## 프로젝트 구조
-
-```text
-src/                    한국어 UI, 접근성, 입력 임시 저장
-core/query.ts           Boolean 파서, 분할 검색 계획, 로컬 필터
-core/connectors.ts      네이버·다음·Reddit·RSS
-core/engine.ts          수집/정제/분석, 체크포인트, 중단·재개
-core/store.ts           SQLite 저장, 복원, 백업
-core/ai.ts              GPT/Gemini 구조화 응답, 검증, 청크 처리
-core/network.ts         프록시 지원, 타임아웃, Retry-After, 백오프
-core/extract.ts         허용 도메인·robots 확인, Readability 원문 추출
-core/export.ts          32필수열 CSV/XLSX, 수식 주입 방어
-core/vault.ts           OS 암호화 키 저장 / 메모리 대체
-desktop/                Electron 프로토콜·IPC·저장 대화상자
-server/                 로컬 개발용 API (배포용 아님)
-tests/                  단위, 통합, 실제 브라우저 테스트
-scripts/                설치 자동화, 빌드, 실제 API 검사
-.github/workflows/      OS별 패키징, 빌드·테스트 CI
-```
-
-## 데이터와 안전
-
-앱 데이터는 Electron `userData` 아래 `studio.sqlite`, 키는 `credentials.enc`에 저장됩니다. Mac은 Keychain 기반 Electron safeStorage, Windows는 사용자 DPAPI를 사용합니다. Linux `basic_text`는 보안 저장으로 취급하지 않습니다. 키는 renderer로 되돌려 보내지 않으며 CSV·DB 백업에 포함하지 않습니다. OS 암호화 저장을 쓸 수 없으면 메모리만 사용하고 UI에서 알립니다.
-
-연구 DB·백업은 암호화되지 않습니다. 디스크 암호화와 적절한 파일 관리를 권장합니다. 작성자 필드는 수집하지 않으며 이메일/한국 휴대전화 형식은 마스킹하지만 자유 문장의 모든 식별정보 제거는 보장하지 않습니다. API 설정에서 기간 지난 자료 삭제·Reddit 삭제 상태 동기화·전체 자료/키 삭제를 실행할 수 있습니다. CSV·백업의 사본은 별도로 삭제해야 합니다.
-
-CAPTCHA·로그인 우회, IP 회전, 지문 위조는 구현하지 않습니다. 원문 권한을 확인하지 않은 도메인은 스니펫만 저장합니다. AI는 사용자 동의 후 텍스트만 처리하며, 번역과 요약은 별도 저장합니다. 출처와 근거를 사람이 검토해야 합니다.
+자료는 로컬 SQLite에, 키는 지원되는 OS 암호화 저장소에 저장합니다. OS 암호화를 사용할 수 없으면 키는 세션 메모리에만 보관합니다. CSV/백업에는 키가 포함되지 않습니다. 파일 내용은 브라우저 localStorage에 저장하지 않습니다. 창을 닫으면 저장하지 않은 가져오기 입력은 사라집니다.

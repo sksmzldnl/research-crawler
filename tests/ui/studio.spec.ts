@@ -1,12 +1,12 @@
 import {test,expect} from '@playwright/test';
 test('Korean demo workflow, review, CSV, query validation and navigation',async({page})=>{
  await page.goto('/');await expect(page.getByRole('heading',{name:'경험을 듣고, 변화를 설계하세요.'})).toBeVisible();
- await page.getByRole('button',{name:'새 조사 시작',exact:false}).click();await page.getByLabel('조사 이름',{exact:true}).fill('브라우저 통합 테스트');await page.getByRole('button',{name:'데모 조사 시작 →',exact:true}).click();
- await expect(page.getByRole('heading',{name:'브라우저 통합 테스트'})).toBeVisible();await expect(page.getByText('저장 완료',{exact:true})).toBeVisible({timeout:15000});
+ await page.getByRole('button',{name:'새 조사 시작',exact:false}).click();await page.getByRole('button',{name:'합성 데모',exact:true}).click();await page.getByLabel('자료 모음 이름',{exact:true}).fill('브라우저 통합 테스트');await page.getByRole('button',{name:'데모 조사 시작 →',exact:true}).click();await expect(page.getByRole('heading',{name:'원문을 보며, 단서를 검토하세요.'})).toBeVisible();
+ await page.getByRole('navigation').getByRole('button',{name:'조사 기록',exact:true}).click();await expect(page.getByRole('heading',{name:'브라우저 통합 테스트'})).toBeVisible();await expect(page.getByText('저장 완료',{exact:true})).toBeVisible({timeout:15000});
  await page.getByRole('navigation',{name:'주 메뉴'}).getByRole('button',{name:'데이터 검토'}).click();await expect(page.getByRole('table')).toBeVisible();await page.getByRole('button',{name:'[합성 데모] 리필 가게에서 겪은 불편',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();await expect(page.getByRole('heading',{name:'한국어 전체 번역'})).toBeVisible();await page.getByRole('button',{name:'유효 자료로 포함'}).click();await page.getByRole('button',{name:'자료 상세 닫기'}).click();
  const downloading=page.waitForEvent('download');await page.getByRole('button',{name:'↓ 파일로 저장'}).click();const file=await downloading;expect(file.suggestedFilename()).toMatch(/\.csv$/);
- await page.getByRole('navigation').getByRole('button',{name:'쿼리 번들'}).click();await page.getByLabel('검색 논리식',{exact:true}).fill('A OR NOT B');await page.getByRole('button',{name:'문법 검사·실행 쿼리 보기'}).click();await expect(page.getByRole('alert')).toContainText('긍정 검색어');await page.getByLabel('검색 논리식',{exact:true}).fill('(제로웨이스트 OR 재사용) AND 후기');await page.getByRole('button',{name:'문법 검사·실행 쿼리 보기'}).click();await expect(page.getByText('검증 완료 · 실제 API 검색어')).toBeVisible();
- await page.getByRole('navigation').getByRole('button',{name:'API 설정'}).click();await expect(page.getByText('현재 보안 저장소를 사용할 수 없어', {exact:false})).toBeVisible();await page.getByRole('navigation').getByRole('button',{name:'도움말'}).click();await expect(page.getByRole('heading',{name:'처음 시작하는 리서처를 위해'})).toBeVisible();await page.screenshot({path:'test-results/help.png',fullPage:true});
+ await page.getByRole('navigation').getByRole('button',{name:'쿼리 번들'}).click();await page.getByLabel('검색 논리식',{exact:true}).fill('A OR NOT B');await page.getByRole('button',{name:'문법 검사·실행 쿼리 보기'}).click();await expect(page.getByRole('alert')).toContainText('긍정 검색어');await page.getByLabel('검색 논리식',{exact:true}).fill('(제로웨이스트 OR 재사용) AND 후기');await page.getByRole('button',{name:'문법 검사·실행 쿼리 보기'}).click();await expect(page.getByText('검증 완료 · 로컬 논리식')).toBeVisible();
+ await page.getByRole('navigation').getByRole('button',{name:'AI·수집 설정'}).click();await expect(page.getByText('현재 보안 저장소를 사용할 수 없어', {exact:false})).toBeVisible();await page.getByRole('navigation').getByRole('button',{name:'도움말'}).click();await expect(page.getByRole('heading',{name:'키 없이 시작하는 자료 정리'})).toBeVisible();await page.screenshot({path:'test-results/help.png',fullPage:true});
  await page.getByRole('navigation').getByRole('button',{name:'대시보드'}).click();await page.getByRole('status').getByRole('button',{name:'닫기',exact:true}).click();await page.setViewportSize({width:1600,height:1200});await page.evaluate(()=>{window.scrollTo(0,0);(document.activeElement as HTMLElement)?.blur();});await page.screenshot({path:'test-results/dashboard.png',fullPage:true});
 });
 test('blocks cross-origin or headerless mutations',async({request})=>{const r=await request.post('http://127.0.0.1:4317/api/call',{data:{method:'data.delete',args:'DELETE ALL'}});expect(r.status()).toBe(403);});
@@ -35,13 +35,25 @@ test('real dashboard statistics, calendar keyboard navigation, search shortcut a
 
 test('small window keeps navigation accessible and research fields usable without page overflow',async({page})=>{
  await page.setViewportSize({width:390,height:844});await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/');
- await page.getByRole('navigation').getByRole('button',{name:'새 조사',exact:true}).click();await expect(page.getByLabel('조사 이름',{exact:true})).toBeVisible();
- await page.getByLabel('조사 이름',{exact:true}).fill('좁은 창에서도 편집');await page.getByRole('navigation').getByRole('button',{name:'대시보드',exact:true}).click();
+ await page.getByRole('navigation').getByRole('button',{name:'새 조사',exact:true}).click();await expect(page.getByLabel('자료 모음 이름',{exact:true})).toBeVisible();
+ await page.getByLabel('자료 모음 이름',{exact:true}).fill('좁은 창에서도 편집');await page.getByRole('navigation').getByRole('button',{name:'대시보드',exact:true}).click();
  await expect(page.getByRole('heading',{name:'경험을 듣고, 변화를 설계하세요.'})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  expect(await page.locator('.page').evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
  await page.getByRole('button',{name:'고대비',exact:true}).click();await expect(page.locator('.app')).toHaveClass(/high-contrast/);
  await page.getByRole('button',{name:'고대비',exact:true}).click();await page.screenshot({path:'test-results/mobile-dashboard.png',fullPage:true});
- await page.getByRole('navigation').getByRole('button',{name:'새 조사',exact:true}).click();await expect(page.getByLabel('조사 이름',{exact:true})).toHaveValue('좁은 창에서도 편집');
+ await page.getByRole('navigation').getByRole('button',{name:'새 조사',exact:true}).click();await expect(page.getByLabel('자료 모음 이름',{exact:true})).toHaveValue('좁은 창에서도 편집');
  await page.setViewportSize({width:900,height:620});await expect(page.getByRole('button',{name:'고대비',exact:true})).toBeInViewport();await expect(page.getByRole('navigation').getByRole('button',{name:'도움말',exact:true})).toBeInViewport();
+});
+
+test('CSV import maps columns without search keys, selects AI rows and exports originals',async({page})=>{
+ await page.goto('/');await page.getByRole('navigation').getByRole('button',{name:'새 조사',exact:true}).click();
+ await page.getByLabel('자료 모음 이름',{exact:true}).fill('키 없는 CSV 작업');
+ await page.getByLabel('CSV 내용 (첫 행은 열 이름)',{exact:true}).fill('제목,본문,사용자열\n원문 A,"My reusable cup is hard to wash.",keep\n원문 B,"Another experience",=1+1');
+ await page.getByRole('button',{name:'열 확인·미리보기',exact:true}).click();await expect(page.getByRole('heading',{name:'2행 · 3열'})).toBeVisible();
+ await page.getByRole('button',{name:'자료 가져오기',exact:true}).click();await expect(page.getByRole('button',{name:'원문 A',exact:true})).toBeVisible();
+ await page.getByLabel('표시한 행 모두 선택',{exact:true}).check();await expect(page.getByRole('button',{name:'선택 2건 AI 처리 실행',exact:true})).toBeDisabled();
+ const downloading=page.waitForEvent('download');await page.getByRole('button',{name:'↓ 파일로 저장',exact:true}).click();const file=await downloading;const {readFile}=await import('node:fs/promises');const csv=await readFile((await file.path())!,'utf8');expect(csv).toContain('original_column:사용자열');expect(csv).toContain('My reusable cup is hard to wash.');expect(csv).toContain("'=1+1");
+ await page.getByRole('navigation').getByRole('button',{name:'AI·수집 설정',exact:true}).click();await expect(page.getByRole('heading',{name:'네이버 검색',exact:true})).toHaveCount(0);await expect(page.getByRole('heading',{name:'Google Gemini',exact:true})).toBeVisible();
+ await page.getByRole('navigation').getByRole('button',{name:'데이터 검토',exact:true}).click();await page.getByRole('button',{name:'원문 A',exact:true}).click();await expect(page.getByRole('dialog')).toContainText('My reusable cup is hard to wash.');await page.getByRole('button',{name:'자료 상세 닫기',exact:true}).click();await page.screenshot({path:'test-results/local-csv-workspace.png',fullPage:true});
 });

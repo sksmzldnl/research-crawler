@@ -488,3 +488,7 @@ th { color: #816190; font-size: 11px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 @media (prefers-reduced-transparency: reduce) { .app { --glass: #fbf9ff; --glass-strong: #fff; --field: #fff; --blur: 0px; backdrop-filter: none; -webkit-backdrop-filter: none; } .panel { background: #fcfaff; } }
 @media (forced-colors: active) { .app,.sidebar,.panel,.record-dialog { background: Canvas; color: CanvasText; border: 1px solid CanvasText; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; } button { border: 1px solid ButtonText; } .primary,.collection-tile { background: ButtonFace; color: ButtonText; } nav button.active { border: 2px solid Highlight; } .bloom-petal { display: none; } .bloom-value { stroke: Highlight; } }
+
+/* Reserve a compact selection column in the data workbench. */
+.table-panel th:first-child, .table-panel td:first-child { width: 44px; min-width: 44px; }
+.table-panel td:nth-child(2) { width: 43%; }

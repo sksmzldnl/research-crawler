@@ -15,5 +15,5 @@ export async function extract(raw:string,allowedHosts:string[],net:Network,signa
   const doc=new JSDOM(await limitedText(response),{url:u.href}).window.document;
   if(doc.querySelector('input[type="password"]')||doc.querySelector('meta[name="robots"][content*="noarchive"]'))throw Error('로그인 또는 저장 제한 문서');
   const date=normalizedDate(doc.querySelector('meta[property="article:published_time"],meta[name="datePublished"]')?.getAttribute('content'));
-  const parsed=new Readability(doc).parse();if(!parsed?.textContent||parsed.textContent.trim().length<100)throw Error('공개 본문을 확인할 수 없음');return {text:anonymize(parsed.textContent.trim()),date};
+  const parsed=new Readability(doc).parse();if(!parsed?.textContent||parsed.textContent.trim().length<100)throw Error('공개 본문을 확인할 수 없음');return {title:anonymize(parsed.title||doc.title||u.hostname),text:anonymize(parsed.textContent.trim()),date};
 }

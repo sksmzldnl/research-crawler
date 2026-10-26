@@ -1,3 +1,5 @@
+> 이전 버전의 기록입니다. 현재 0.3.0의 동작과 설치는 [자료 가져오기 버전 안내](LOCAL_RELEASE.md), [최신 README](../README.md)를 참고하세요.
+
 # ZeroWaste Listening Studio 0.2.0 · Liquid Glass
 
 이번 버전은 라벤더·핑크·블루 배경, 반투명 유리 사이드바와 카드, 빛 반사와 얇은 테두리, 부드러운 그림자를 적용한 인터페이스 개선판입니다. Electron 기반의 같은 프로그램이며 앱 식별자 `org.zerowaste.listeningstudio`와 SQLite 저장 구조를 유지합니다.
