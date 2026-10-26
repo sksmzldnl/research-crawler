@@ -1,10 +1,10 @@
 {
-  "state": "running",
-  "stage": "mac-launch-passed",
+  "state": "passed",
+  "stage": "uploaded",
   "architecture": "x86_64",
   "source_sha": "69c596ade1652f2f33c4db82191493d612365fbd",
   "run_id": "40299849014",
   "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40299849014",
-  "updated_at": "2026-10-26T09:30:00.710665+00:00",
+  "updated_at": "2026-10-26T09:30:12.543406+00:00",
   "test_log_tail": "{\"macos\": \"15.7.9\", \"architecture\": \"x86_64\", \"launch_services\": \"passed\", \"copied_app_ui_and_csv\": \"passed\"}"
 }
