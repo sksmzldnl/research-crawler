@@ -7,7 +7,7 @@ export class SearchBrowser implements BrowserSearch {
   signal.throwIfAborted();const url=searchUrl(engine,query,page);
   if(!this.window||this.window.isDestroyed()){
    const browserSession=session.fromPartition('studio-search');
-   if(!this.configured){const proxy=process.env.HTTPS_PROXY||process.env.HTTP_PROXY;if(proxy)await browserSession.setProxy({proxyRules:proxy});this.configured=true;}
+   if(!this.configured){browserSession.setPermissionRequestHandler((_contents,_permission,callback)=>callback(false));browserSession.setPermissionCheckHandler(()=>false);browserSession.on('will-download',event=>event.preventDefault());const proxy=process.env.HTTPS_PROXY||process.env.HTTP_PROXY;if(proxy)await browserSession.setProxy({proxyRules:proxy});this.configured=true;}
    this.window=new BrowserWindow({width:1100,height:780,title:'ZeroWaste · 검색 수집 창',webPreferences:{session:browserSession,nodeIntegration:false,contextIsolation:true,sandbox:true}});
    this.window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
    const allowed=(raw:string)=>{try{const u=new URL(raw);return u.protocol==='https:'&&['search.naver.com','search.daum.net','www.bing.com','www.google.com','consent.google.com'].includes(u.hostname)&&!u.username&&!u.password;}catch{return false;}};
