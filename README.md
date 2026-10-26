@@ -11,7 +11,9 @@
 
 ## 비개발자용 설치와 첫 실행
 
-GitHub Actions의 **ZeroWaste Listening Studio downloads**는 Apple Silicon Mac·Intel Mac·Windows x64에서 각각 설치 파일을 빌드하고, 패키징한 앱의 데모를 검사한 뒤 GitHub Releases에 게시하도록 준비했습니다. **현재 이 Electron 프로젝트의 원격 업로드·OS별 빌드·배포는 아직 실행하지 않았습니다.**
+GitHub Actions의 **ZeroWaste Listening Studio downloads**는 Apple Silicon Mac·Intel Mac·Windows x64에서 각각 설치 파일을 빌드하고, 패키징한 앱의 데모를 검사한 뒤 GitHub Releases에 게시하도록 준비했습니다. **실제 배포 페이지:** https://github.com/sksmzldnl/research-crawler/releases/tag/listening-studio-electron-0f62e2409679
+
+Windows·Intel Mac 패키징 앱의 데모 검사는 통과했습니다. Apple Silicon 파일은 Intel Mac에서 실제 arm64 런타임으로 빌드하고 코드·아키텍처·서명 무결성을 확인했습니다. Apple Silicon 기기에서의 직접 실행은 아직 미검증입니다. Mac은 macOS 13 이상이 필요합니다.
 
 파일 이름은 `ZeroWaste-Listening-Studio-0.1.0-mac-arm64.dmg`, `…-mac-x64.dmg`, `…-win-x64.exe` 형태입니다. `ZeroWasteListener`라는 별도 Python/Qt 배포본과 혼동하지 마세요. 소스 ZIP과 설치 파일은 다릅니다. 자세한 구분은 [배포 안내](docs/RELEASE_NOTES.md)를 확인하세요.
 

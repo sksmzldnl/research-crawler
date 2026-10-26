@@ -1,5 +1,18 @@
 # 검증 보고서
 
+## 2026-10-27 배포 확인 (한국 시간)
+
+이번 Electron 프로젝트를 GitHub에 업로드하고 실제 설치 파일을 게시했습니다. 배포 소스는 `0f62e2409679ac36594efebaf7396421cdd41ac6`, 앱 ID는 `org.zerowaste.listeningstudio`입니다. 배포 페이지: https://github.com/sksmzldnl/research-crawler/releases/tag/listening-studio-electron-0f62e2409679
+
+- Windows x64·Intel Mac: 해당 OS에서 설치 파일 생성 및 패키징된 앱의 데모 실행 검사 통과. 실제 설치 마법사의 수동 조작까지 검증했다는 뜻은 아닙니다.
+- Apple Silicon Mac: Intel Mac에서 실제 arm64 Electron 런타임으로 DMG/ZIP 생성. Mach-O arm64, 앱 식별자, 실제 포함된 코드, ad-hoc 서명 무결성 검사 통과. **Apple Silicon 기기에서의 직접 실행은 실행기 대기로 미검증**입니다.
+- 게시된 M용 DMG 134,266,219바이트와 ZIP 130,145,491바이트를 직접 다운로드해 SHA256을 대조했습니다. ZIP의 앱 이름·번들 ID·arm64 실행 파일·ASAR에 포함된 main/engine/query/UI 파일이 이번 프로젝트와 일치함을 확인했습니다.
+- 최소 macOS 버전은 실제 앱 Info.plist 기준 **13.0**입니다. Developer ID 서명·공증, 실제 API 인증은 미검증입니다.
+- DMG SHA256: `9d752a1e8d51a908badb7ac53467fca7c28c3b9f0ace4fae935c8a07b1cf5405`
+- ZIP SHA256: `d24ff7c564076acc47f1ab0f82f3d2f91e4c75448d4b3d51edf5f96ac759b998`
+
+아래는 배포 전 클라우드 검증 기록입니다. 당시 미실행이었던 배포 항목은 위 결과로 갱신하며, 나머지 제한사항은 유지합니다.
+
 검증일: 2026-10-26. 실행 환경: Debian 13 x64 / Node.js 24.19.0 / Electron 45.0.0. 이 보고서는 현재 클라우드 인스턴스의 결과이며, 새 작업에서의 스냅샷 복원이나 macOS/Windows 실행 결과를 뜻하지 않습니다.
 
 | 검사 | 결과 | 확인한 동작 |

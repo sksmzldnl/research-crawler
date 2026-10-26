@@ -10,13 +10,14 @@ concurrency:
   cancel-in-progress: true
 jobs:
   package:
+    if: ${{ !contains(github.event.head_commit.message, '[delivery-maintenance]') }}
     permissions:
       contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-15
             target: mac
             arch: arm64
           - os: macos-15-intel
@@ -37,9 +38,15 @@ jobs:
       - run: node scripts/ci-step.mjs npm run build
       - run: node scripts/ci-step.mjs npm run test:desktop
       - name: Build installer on its native operating system
-        run: node scripts/ci-step.mjs npm run package:${{ matrix.target }} -- --${{ matrix.arch }}
+        run: node scripts/ci-step.mjs npm run package:${{ matrix.target }} -- --${{ matrix.arch }} ${{ matrix.target == 'mac' && '--config.mac.identity=-' || '' }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Require valid Mac package signatures
+        if: matrix.target == 'mac'
+        run: |
+          for app in release/mac*/'ZeroWaste Listening Studio.app'; do
+            codesign --verify --deep --strict "$app"
+          done
       - name: Verify packaged Electron app
         run: node scripts/ci-step.mjs node scripts/verify-packaged.mjs
       - name: Record project identity and checksums
@@ -67,6 +74,7 @@ jobs:
         if: always()
         run: node scripts/ci-delivery-report.mjs ${{ matrix.target }}-${{ matrix.arch }} ${{ job.status }}
   publish:
+    if: ${{ !contains(github.event.head_commit.message, '[delivery-maintenance]') }}
     needs: package
     runs-on: ubuntu-latest
     permissions:
@@ -95,3 +103,11 @@ jobs:
       - name: Record publication outcome
         if: always()
         run: node scripts/ci-delivery-report.mjs publish ${{ job.status }}
+  verify-existing-release:
+    if: contains(github.event.head_commit.message, '[delivery-maintenance]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Preserve the verified release and replace the obsolete queued build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view listening-studio-electron-0f62e2409679 --repo "$GITHUB_REPOSITORY" --json url,assets --jq '{url:.url, assets:[.assets[].name]}'
