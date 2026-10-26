@@ -2,6 +2,7 @@ name: Publish verified Listening Studio installers
 on:
   push:
     branches: [codex/studio-publish-ready-20261026]
+    paths: [.github/workflows/publish-ready.yml]
   workflow_dispatch:
 permissions:
   contents: write

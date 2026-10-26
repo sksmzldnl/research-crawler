@@ -1,0 +1,70 @@
+name: Build verified Apple Silicon Listening Studio
+on:
+  push:
+    branches: [codex/studio-publish-ready-20261026]
+    paths: [.github/workflows/apple-silicon.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: listening-studio-apple-silicon
+  cancel-in-progress: true
+jobs:
+  mac-arm64:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0f62e2409679ac36594efebaf7396421cdd41ac6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Require a native Apple Silicon Mac runner
+        run: node -e "if(process.platform!=='darwin'||process.arch!=='arm64')throw Error('A native Apple Silicon runner is required');console.log(process.platform,process.arch)"
+      - run: node scripts/ci-step.mjs npm ci
+      - run: node scripts/ci-step.mjs npm test
+      - run: node scripts/ci-step.mjs npm run build
+      - run: node scripts/ci-step.mjs npm run test:desktop
+      - name: Build Apple Silicon DMG and app ZIP
+        run: node scripts/ci-step.mjs npm run package:mac -- --arm64
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify the packaged Electron app on Apple Silicon
+        run: node scripts/ci-step.mjs node scripts/verify-packaged.mjs
+      - name: Record verified source identity and installer checksums
+        run: node scripts/ci-step.mjs node scripts/release-artifacts.mjs mac-arm64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZeroWaste-Listening-Studio-mac-arm64
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.sha256
+            release/*-build.json
+          if-no-files-found: error
+      - name: Add Apple Silicon downloads to this Electron release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release upload listening-studio-electron-0f62e2409679 \
+            release/ZeroWaste-Listening-Studio-0.1.0-mac-arm64.dmg \
+            release/ZeroWaste-Listening-Studio-0.1.0-mac-arm64.dmg.sha256 \
+            release/ZeroWaste-Listening-Studio-0.1.0-mac-arm64.zip \
+            release/ZeroWaste-Listening-Studio-0.1.0-mac-arm64.zip.sha256 \
+            release/ZeroWaste-Listening-Studio-mac-arm64-build.json --clobber
+      - name: Record Apple Silicon outcome
+        if: always()
+        env:
+          STUDIO_JOB_STATE: ${{ job.status }}
+        run: |
+          node --input-type=module - <<'JS'
+          import{mkdirSync,existsSync,readFileSync,writeFileSync}from'node:fs';
+          import{execFileSync as git}from'node:child_process';
+          const source=git('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+          const report={product:'ZeroWaste Listening Studio',implementation:'Electron',state:process.env.STUDIO_JOB_STATE,channel:'mac-arm64',source_sha:source,workflow_sha:process.env.GITHUB_SHA,run_url:`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,updated_at:new Date().toISOString(),log_tail:existsSync('.local/ci-step.log')?readFileSync('.local/ci-step.log','utf8').split('\n').slice(-180).join('\n').slice(-32000):''};
+          mkdirSync('.ci-delivery',{recursive:true});const file='.ci-delivery/mac-arm64.json';writeFileSync(file,JSON.stringify(report,null,2)+'\n');
+          git('git',['add','--',file],{stdio:'inherit'});git('git',['-c','user.name=github-actions[bot]','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com','commit','--only','-m',`Report Apple Silicon delivery: ${report.state}`,'--',file],{stdio:'inherit'});
+          git('git',['push','origin',`HEAD:refs/heads/codex/studio-delivery-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}-mac-arm64`],{stdio:'inherit'});
+          JS
