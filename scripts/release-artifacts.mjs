@@ -1,10 +1,11 @@
+import {assertPackageIdentity} from './package-identity.mjs';
 import {readFileSync,readdirSync,writeFileSync,createReadStream} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {join} from 'node:path';
 const channel=process.argv[2];if(!/^[a-z0-9-]+$/.test(channel||''))throw Error('A safe platform channel is required.');
 const pkg=JSON.parse(readFileSync('package.json','utf8'));
-if(pkg.name!=='zerowaste-listening-studio'||pkg.build.appId!=='org.zerowaste.listeningstudio'||pkg.main!=='build/desktop/main.js')throw Error('Unexpected project identity.');
+assertPackageIdentity(pkg,pkg);
 const files=readdirSync('release').filter(n=>n.startsWith(`ZeroWaste-Listening-Studio-${pkg.version}-${channel}.`) && /\.(dmg|zip|exe)$/.test(n));
 if(!files.length)throw Error('No installers for this Electron project were found.');
 const artifacts=[];
