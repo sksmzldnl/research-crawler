@@ -1,0 +1,12 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "cancelled",
+  "channel": "glass-mac",
+  "source_sha": "07b56a82a6e9e07889b8bad1c21e8f148fd8703a",
+  "run_id": "40443462009",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40443462009",
+  "updated_at": "2026-10-27T03:20:18.319Z",
+  "release_url": null,
+  "log_tail": "COMMAND: npm run package:mac -- --x64 --arm64\n\n> zerowaste-listening-studio@0.5.0 package:mac\n> npm run build && electron-builder --mac --publish never --x64 --arm64\n\n\n> zerowaste-listening-studio@0.5.0 build\n> tsc -p tsconfig.node.json && tsc -p tsconfig.json && vite build && node scripts/postbuild.mjs\n\n\u001b[36mvite v7.3.7 \u001b[32mbuilding client environment for production...\u001b[36m\u001b[39m\ntransforming...\n\u001b[32m✓\u001b[39m 35 modules transformed.\nrendering chunks...\ncomputing gzip size...\n\u001b[2mdist/\u001b[22m\u001b[32mindex.html                 \u001b[39m\u001b[1m\u001b[2m  0.61 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  0.39 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[2massets/\u001b[22m\u001b[35mindex-CWnryFX6.css  \u001b[39m\u001b[1m\u001b[2m 52.32 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip: 12.24 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mindex-OCsFk08v.js   \u001b[39m\u001b[1m\u001b[2m270.86 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip: 86.65 kB\u001b[22m\n\u001b[32m✓ built in 1.47s\u001b[39m\n  • electron-builder  version=26.18.0 os=24.6.0\n  • loaded configuration  file=package.json (\"build\" field)\n  • executing @electron/rebuild  electronVersion=45.0.0 arch=x64 buildFromSource=false workspaceRoot=/Users/runner/work/research-crawler/research-crawler projectDir=./ appDir=./\n  • installing native dependencies  arch=x64\n  • completed installing native dependencies\n  • packaging       platform=darwin arch=x64 electron=45.0.0 appOutDir=release/mac\n  • downloaded      label=electron progress=100%\n"
+}
