@@ -12,7 +12,7 @@
   },
   "scripts": {
     "dev": "concurrently --kill-others \"tsx server/index.ts\" \"vite --host 127.0.0.1\"",
-    "desktop": "npm run build && electron .",
+    "desktop": "npm run build && node scripts/ensure-electron.mjs && electron .",
     "build": "tsc -p tsconfig.node.json && tsc -p tsconfig.json && vite build && node scripts/postbuild.mjs",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json --noEmit",
     "test": "vitest run",
@@ -21,7 +21,7 @@
     "package:mac": "npm run build && electron-builder --mac --publish never",
     "package:win": "npm run build && electron-builder --win --publish never",
     "package:linux": "npm run build && electron-builder --linux dir --publish never",
-    "test:desktop": "node scripts/desktop-smoke.mjs"
+    "test:desktop": "node scripts/ensure-electron.mjs && node scripts/desktop-smoke.mjs"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
