@@ -30,11 +30,14 @@ jobs:
       - run: node scripts/ci-step.mjs npm test
       - run: node scripts/ci-step.mjs npm run build
       - run: node scripts/ci-step.mjs npm run test:desktop
-      - name: Probe live public Bing search without API keys
+      - name: Probe live public search engines without API keys
         if: matrix.target == 'mac'
         continue-on-error: true
-        timeout-minutes: 2
-        run: node scripts/ci-step.mjs node scripts/live-search-check.mjs
+        timeout-minutes: 5
+        run: |
+          for engine in bing naver daum google; do
+            STUDIO_PROBE_ENGINE="$engine" node scripts/ci-step.mjs node scripts/live-search-check.mjs
+          done
       - name: Build Mac installers with valid ad-hoc signatures
         if: matrix.target == 'mac'
         run: node scripts/ci-step.mjs npm run package:mac -- --x64 --arm64

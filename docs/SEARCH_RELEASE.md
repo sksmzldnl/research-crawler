@@ -10,7 +10,7 @@
 - GPT·Gemini는 선택 행의 번역·CSV 정리에만 사용합니다. 자동 검색은 AI를 호출하지 않습니다.
 - CSV·텍스트·RSS·URL 직접 가져오기는 접을 수 있는 보조 영역으로 유지합니다. 원래 CSV 열을 보존합니다.
 
-검증: 엔진별 DOM fixture, 실제 Electron 검색 창에서 로컬 HTTPS fixture를 통한 자동 검색·2페이지 순회·조건 적용·접근 확인 일시정지/재개, SQLite 및 CSV 보존을 검사합니다. fixture 검증은 실서비스 검색 엔진의 항상 정상 동작을 보장하지 않습니다. 별도 live-search-build.json은 빌드 시 실제 Bing 검색 시도 결과이며 completed 및 valid > 0일 때에만 그 엔진의 실제 수집을 확인한 것입니다. 다른 엔진·지역·시점의 접근 조건과 DOM은 달라질 수 있습니다.
+검증: 엔진별 DOM fixture, 실제 Electron 검색 창에서 로컬 HTTPS fixture를 통한 자동 검색·2페이지 순회·조건 적용·접근 확인 일시정지/재개, SQLite 및 CSV 보존을 검사합니다. fixture 검증은 실서비스 검색 엔진의 항상 정상 동작을 보장하지 않습니다. 엔진별 live-search-엔진-build.json은 빌드 시 실제 검색 시도 결과이며 completed 및 valid > 0일 때에만 그 엔진의 실제 수집을 확인한 것입니다. 다른 엔진·지역·시점의 접근 조건과 DOM은 달라질 수 있습니다.
 
 Apple Silicon: `ZeroWaste-Listening-Studio-0.4.1-mac-arm64.dmg`
 Intel Mac: `ZeroWaste-Listening-Studio-0.4.1-mac-x64.dmg`
