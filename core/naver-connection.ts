@@ -1,21 +1,18 @@
 import type {ApiOptions} from './api-types.js';
 
-// Verified legacy Search API contract. These are not API Hub endpoints.
-// https://developers.naver.com/docs/serviceapi/search/blog/blog.md
+// Hub protocol corroborated by three independent published clients; provenance
+// and the distinction from live-account verification are in docs/NAVER_API_HUB.md.
+export const naverHubUrl='https://naverapihub.apigw.ntruss.com/search/v1/{type}';
+// Legacy Developers keys use a separate host, path and authentication contract.
 export const naverLegacyUrl='https://openapi.naver.com/v1/search/{type}.json';
 
-// The uploaded Application guide confirms the Hub's gateway headers, but neither
-// supplied PDF specifies its Search endpoint. Keep Hub requests unavailable until
-// the official service contract is verified; never send Hub keys to a guessed URL.
-export const naverHubPending='네이버 API Hub 자동 연결은 아직 지원 준비 중입니다. 키는 저장할 수 있으며, 연결 지원이 완료된 앱 업데이트가 필요합니다.';
-
-export function naverConnectionIssue(options:Pick<ApiOptions,'naverAuth'|'naverUrl'>){
-  return options.naverAuth==='gateway'&&!options.naverUrl.trim()?naverHubPending:'';
-}
+export function naverTemplate(auth:ApiOptions['naverAuth']){return auth==='naver'?naverLegacyUrl:naverHubUrl;}
 
 export function migrateNaverSettings<T extends Pick<ApiOptions,'naverAuth'|'naverUrl'>>(settings:T):T{
-  // 0.5.0 defaulted to legacy authentication even for new Hub users. An empty
-  // address could never start collection, so it is safe to move that unused
-  // configuration to Hub mode. Existing configured accounts/snapshots stay intact.
-  return settings.naverUrl.trim()?settings:{...settings,naverAuth:'gateway'};
+  // 0.5.0's blank legacy default never collected anything. A nonempty legacy
+  // setting represents the explicit old-account option. Replace old editable
+  // addresses with the account preset so type changes use the corresponding API.
+  // Saved research snapshots are not rewritten here.
+  const legacy=settings.naverAuth==='naver'&&!!settings.naverUrl.trim();
+  return {...settings,naverAuth:legacy?'naver':'gateway',naverUrl:legacy?naverLegacyUrl:''};
 }

@@ -4,15 +4,15 @@ import {apiDefaults} from '../core/api-types.js';
 import {Network} from '../core/network.js';
 import {MemoryVault} from '../core/vault.js';
 import {RedditOAuth} from '../core/oauth.js';
-import {naverHubPending} from '../core/naver-connection.js';
+import {naverHubUrl} from '../core/naver-connection.js';
 const json=(d:unknown,status=200)=>new Response(JSON.stringify(d),{status,headers:{'Content-Type':'application/json'}});
 function setup(send=vi.fn(async()=>json({})),patch={}){const vault=new MemoryVault();for(const name of ['naverId','naverSecret','kakaoKey','braveKey','googleKey','redditAccess','redditRefresh'])vault.set(name,'fixture-'+name);const options={...apiDefaults,naverAuth:'naver' as const,naverUrl:'https://openapi.naver.com/v1/search/{type}.json',googleExisting:true,googleCx:'fixture-cx',redditApproved:true,redditClientId:'fixture-client',...patch};const api=new SearchApi(new Network(send),vault,()=>options);return {api,vault,options,send};}
 const signal=()=>new AbortController().signal;
 it('Naver uses the explicitly configured official endpoint, selected authentication and provider pagination',async()=>{
  const send=vi.fn(async()=>json({total:1000,items:Array.from({length:100},()=>({link:'https://example.com/a',title:'<b>후기</b>',description:'<script>bad</script>실제 내용',postdate:'20261001'}))}));const {api,options}=setup(send);const page=await api.search('naver','재사용',1,signal(),null,options);expect(page.items[0]).toMatchObject({title:'후기',text:'실제 내용',date:'2026-10-01T00:00:00.000Z'});expect(page.next).toBe(101);expect((send.mock.calls[0] as any)[1].headers['X-Naver-Client-Id']).toBe('fixture-naverId');
- await api.search('naver','재사용',10,signal(),901,{...options,naverAuth:'gateway',naverUrl:'https://fixture.apigw.ntruss.com/{type}'});expect((send.mock.calls[1] as any)[1].headers['x-ncp-apigw-api-key-id']).toBe('fixture-naverId');
+ await api.search('naver','재사용',10,signal(),901,{...options,naverAuth:'gateway',naverUrl:naverHubUrl});expect((send.mock.calls[1] as any)[1].headers['x-ncp-apigw-api-key-id']).toBe('fixture-naverId');
 });
-it('rejects unknown Naver destinations and URLs containing credentials or query secrets before sending keys',()=>{for(const url of ['https://evil.example/search','https://openapi.naver.com.evil.example/search','https://user:pass@openapi.naver.com/search','https://openapi.naver.com/search?key=secret','http://openapi.naver.com/search'])expect(()=>naverEndpoint(url,'blog')).toThrow();expect(()=>naverEndpoint('','blog')).toThrow();});
+it('rejects unknown Naver destinations and URLs containing credentials or query secrets before sending keys',()=>{for(const url of ['https://evil.example/search','https://openapi.naver.com.evil.example/search','https://user:pass@openapi.naver.com/search','https://openapi.naver.com/search?key=secret','http://openapi.naver.com/search'])expect(()=>naverEndpoint(url,'blog')).toThrow();expect(naverEndpoint('','blog').href).toBe('https://naverapihub.apigw.ntruss.com/search/v1/blog');});
 it('selects documented legacy endpoints automatically without requiring a URL from the user',async()=>{
  const {api,options,send}=setup(vi.fn(async()=>json({total:0,items:[]})),{naverUrl:''});
  for(const naverType of ['blog','cafearticle','webkr'] as const){
@@ -27,9 +27,28 @@ it('selects documented legacy endpoints automatically without requiring a URL fr
   expect(request.headers).toMatchObject({'X-Naver-Client-Id':'fixture-naverId','X-Naver-Client-Secret':'fixture-naverSecret'});
  }
 });
-it('does not mistake a missing verified Hub contract for a missing user URL or send keys to a guessed endpoint',async()=>{
+it.each(['blog','cafearticle','webkr'] as const)('Hub selects %s automatically, sends gateway headers and JSON parameters, and paginates',async(naverType)=>{
+ const items=Array.from({length:100},(_,i)=>({link:'https://example.com/'+i,title:'<b>컵</b> 후기',description:'세척 경험',postdate:'20261001'}));
+ const send=vi.fn().mockResolvedValueOnce(json({total:101,items})).mockResolvedValueOnce(json({total:101,items:[{link:'https://example.com/last',title:'컵 후기',description:'마지막 경험'}]}));
+ const {api}=setup(send);const options={...apiDefaults,naverType};
+ const first=await api.search('naver','컵 & 세척',1,signal(),null,options);
+ expect(first.items).toHaveLength(100);expect(first.next).toBe(101);expect(first.items[0].title).toBe('컵 후기');
+ const last=await api.search('naver','컵 & 세척',2,signal(),first.next,options);
+ expect(last.next).toBeNull();expect(last.items).toHaveLength(1);
+ for(const [i,[address,request]] of send.mock.calls.entries()){
+  const url=new URL(address);
+  expect(url.origin).toBe('https://naverapihub.apigw.ntruss.com');expect(url.pathname).toBe('/search/v1/'+naverType);
+  expect(url.searchParams.get('query')).toBe('컵 & 세척');expect(url.searchParams.get('format')).toBe('json');expect(url.searchParams.get('display')).toBe('100');expect(url.searchParams.get('start')).toBe(i===0?'1':'101');
+  expect(url.searchParams.get('sort')).toBe(naverType==='webkr'?null:'date');
+  expect(request.headers).toMatchObject({'x-ncp-apigw-api-key-id':'fixture-naverId','x-ncp-apigw-api-key':'fixture-naverSecret'});
+  expect(request.headers).not.toHaveProperty('X-Naver-Client-Id');expect(url.href).not.toContain('fixture-naver');expect(request.redirect).toBe('manual');
+ }
+});
+it('rejects other gateway tenants, wrong paths and authentication/host mismatches before sending Naver credentials',async()=>{
  const {api,send}=setup();
- await expect(api.search('naver','컵',1,signal(),null,apiDefaults)).rejects.toThrow(naverHubPending);
+ for(const naverUrl of ['https://other.apigw.ntruss.com/search/v1/blog','https://naverapihub.apigw.ntruss.com/search/v1/unknown','https://naverapihub.apigw.ntruss.com.evil.example/search/v1/blog','https://openapi.naver.com/v1/search/blog.json']){
+  await expect(api.search('naver','컵',1,signal(),null,{...apiDefaults,naverUrl})).rejects.toThrow(/네이버 연결 설정/);
+ }
  expect(send).not.toHaveBeenCalled();
 });
 it('Daum sends REST API auth and honors is_end and actual dates',async()=>{const {api,options,send}=setup(vi.fn(async()=>json({meta:{is_end:false},documents:[{url:'https://example.com/a',title:'후기',contents:'실제 경험',datetime:'2026-10-01T12:00:00+09:00'}]})));const result=await api.search('daum','경험',1,signal(),null,options);expect(result.next).toBe(2);expect(result.items[0].date).toBe('2026-10-01T03:00:00.000Z');expect((send.mock.calls[0] as any)[1].headers.Authorization).toBe('KakaoAK fixture-kakaoKey');expect(new URL(send.mock.calls[0][0] as string).searchParams.get('page')).toBe('1');});

@@ -1,14 +1,14 @@
-# ZeroWaste Listening Studio 0.5.1 · 공식 검색 API
+# ZeroWaste Listening Studio 0.5.2 · 공식 검색 API
 
-> 0.5.1에서는 네이버 URL·인증 형식 입력을 제거했습니다. 신규 API Hub 자동 연결은 아직 지원 준비 중이며, 키 저장을 연결 성공으로 표시하지 않습니다.
+> 0.5.2에서는 네이버 API Hub의 자동 연결과 쿼리 번들 수집을 활성화했습니다. Client ID·Client Secret을 등록하고 검색 종류를 선택하면 앱이 요청 주소와 인증 형식을 자동으로 적용합니다.
 
 기존 통합 작업실 디자인을 유지하고 검색 수집을 공식 API로 전환한 macOS/Windows 앱입니다. 메뉴는 **수집 작업실 / 설정** 두 개입니다. GPT·Gemini는 선택 행의 번역·CSV 정리에만 사용합니다.
 
-설치 파일: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.5.1
+설치 파일: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.5.2
 
-- Apple Silicon: ZeroWaste-Listening-Studio-0.5.1-mac-arm64.dmg
-- Intel Mac: ZeroWaste-Listening-Studio-0.5.1-mac-x64.dmg
-- Windows: ZeroWaste-Listening-Studio-0.5.1-win-x64.exe
+- Apple Silicon: ZeroWaste-Listening-Studio-0.5.2-mac-arm64.dmg
+- Intel Mac: ZeroWaste-Listening-Studio-0.5.2-mac-x64.dmg
+- Windows: ZeroWaste-Listening-Studio-0.5.2-win-x64.exe
 
 ## 사용 흐름
 
@@ -18,7 +18,7 @@
 
 - **다음(Kakao)**: REST API 키. 웹·블로그·카페.
 - **Brave**: 웹 검색 API 키. Reddit 등 도메인 제한 검색에도 사용.
-- **네이버 API Hub**: Client ID·Client Secret과 검색 종류를 저장합니다. URL·인증 형식을 직접 입력하지 않습니다. 신규 Hub 자동 연결은 공식 검색 계약 확인 전까지 지원 준비 중으로 표시합니다. 기존 Developers 검색 키용 주소와 인증은 별도 옵션에서 자동 선택합니다.
+- **네이버 API Hub**: Client ID·Client Secret을 등록하고 블로그·카페글·웹문서를 선택한 뒤 설정 저장·연결 테스트를 실행합니다. 주소·인증 방식은 자동 적용합니다. 작업실에서 네이버와 번들을 선택해 자동 수집합니다. 기존 Developers 키용 옵션도 유지합니다.
 - **Google**: 기존 Custom Search JSON API 사용 권한이 있는 계정만. 신규 고객 제공 종료, 기존 고객 전환 기한 2027-01-01.
 - **Reddit**: Data API 사용 승인이 있는 installed app만 OAuth 연결. 선택 시 게시글당 최대 25개 반환 댓글, 삭제 상태 동기화. 승인 전에는 Brave에서 색인된 공개 링크·검색 요약을 찾을 수 있으며 원문·댓글 직접 접근과 구분합니다.
 
