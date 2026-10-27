@@ -1,4 +1,4 @@
-import {SearchBrowser} from './search-browser.js';
+import {fixtureTransport} from './test-api.js';
 import {Network} from '../core/network.js';
 import { app,BrowserWindow,ipcMain,safeStorage,shell,dialog,net,protocol } from 'electron';
 import { fileURLToPath,pathToFileURL } from 'node:url';
@@ -13,7 +13,7 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');let service:
 void app.whenReady().then(async()=>{
 protocol.handle('studio',request=>{const u=new URL(request.url);const path=resolve(root,'dist','.'+decodeURIComponent(u.pathname==='/'?'/index.html':u.pathname));const rel=relative(join(root,'dist'),path);if(rel.startsWith('..')||isAbsolute(rel)||u.hostname!=='app')return new Response('Forbidden',{status:403});return net.fetch(pathToFileURL(path).href);});
 const data=process.env.STUDIO_TEST_DATA_DIR||app.getPath('userData');let secure=safeStorage.isEncryptionAvailable();if(process.platform==='linux'&&safeStorage.getSelectedStorageBackend()==='basic_text')secure=false;
-service=new Service(new Store(join(data,'studio.sqlite')),secure?new EncryptedVault(join(data,'credentials.enc'),safeStorage):new MemoryVault(),new Network(),new SearchBrowser());
+service=new Service(new Store(join(data,'studio.sqlite')),secure?new EncryptedVault(join(data,'credentials.enc'),safeStorage):new MemoryVault(),new Network(process.env.STUDIO_TEST_DATA_DIR&&process.env.STUDIO_TEST_API_FIXTURES==='1'?fixtureTransport(join(data,'api-fixtures.json'),join(data,'api-requests.jsonl')):undefined));
 const window=new BrowserWindow({width:1440,height:960,minWidth:860,minHeight:600,title:'ZeroWaste Listening Studio',backgroundColor:'#f5f7f3',webPreferences:{preload:join(root,'build/desktop/preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
 window.webContents.setWindowOpenHandler(({url})=>{void open(url);return {action:'deny'};});window.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith('studio://app/')){event.preventDefault();void open(url);}});
 async function open(raw:string){try{const u=new URL(raw);if(u.protocol==='https:'&&!u.username&&!u.password)await shell.openExternal(u.href);}catch{}}

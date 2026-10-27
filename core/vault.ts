@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-export const credentialNames=['naverId','naverSecret','kakaoKey','redditAccess','redditRefresh','openaiKey','geminiKey','braveKey'] as const;
+export const credentialNames=['naverId','naverSecret','kakaoKey','redditAccess','redditRefresh','openaiKey','geminiKey','braveKey','googleKey'] as const;
 export type CredentialName=typeof credentialNames[number];
 export interface Vault { available:boolean; get(name:string):string; set(name:string,value:string):void; clear():void; status():Record<string,boolean>; }
 export class MemoryVault implements Vault {available=false;private values:Record<string,string>={};get(n:string){return this.values[n]||'';}set(n:string,v:string){if(!credentialNames.includes(n as CredentialName))throw Error('지원하지 않는 키 이름');this.values[n]=v;}clear(){this.values={};}status(){return Object.fromEntries(credentialNames.map(n=>[n,!!this.get(n)]));}}

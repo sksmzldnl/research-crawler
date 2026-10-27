@@ -1,9 +1,10 @@
+import {apiDefaults} from './api-types.js';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, chmodSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type {Bundle,ProviderSettings,RecordItem,Research} from './types.js';
-export const defaultSettings:ProviderSettings={redditApproved:false,redditClientId:'',rssUrls:[],originalAllowedHosts:[],consentAi:false,retentionDays:30};
+export const defaultSettings:ProviderSettings={...apiDefaults,rssUrls:[],originalAllowedHosts:[],consentAi:false,retentionDays:30};
 export class Store {
   db:DatabaseSync;
   constructor(public path:string){if(path!==':memory:')mkdirSync(dirname(path),{recursive:true,mode:0o700});this.db=new DatabaseSync(path);this.db.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS bundles(id TEXT PRIMARY KEY,data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS researches(id TEXT PRIMARY KEY,data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS records(id TEXT PRIMARY KEY,research_id TEXT NOT NULL,data TEXT NOT NULL,FOREIGN KEY(research_id) REFERENCES researches(id) ON DELETE CASCADE); CREATE INDEX IF NOT EXISTS research_records ON records(research_id); CREATE TABLE IF NOT EXISTS settings(id TEXT PRIMARY KEY,data TEXT NOT NULL);');if(path!==':memory:')chmodSync(path,0o600);
