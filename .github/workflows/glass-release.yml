@@ -1,7 +1,7 @@
 name: API search Studio installers
 on:
   push:
-    branches: [codex/studio-api-search]
+    branches: [codex/studio-api-search, codex/naver-key-only-setup]
   workflow_dispatch:
 permissions:
   contents: write
@@ -70,7 +70,7 @@ jobs:
           path: release
           merge-multiple: true
       - run: node scripts/source-archive.mjs
-      - name: Publish this verified local import version
+      - name: Publish verified Studio installers
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

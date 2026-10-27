@@ -1,21 +1,24 @@
-# ZeroWaste Listening Studio 0.5.0 · 공식 검색 API 버전
+# ZeroWaste Listening Studio 0.5.1 · 네이버 설정 간소화
 
-기존 통합 작업실과 Liquid Glass 디자인을 유지하고, 브라우저 검색 화면 수집을 공식 API 요청으로 교체했습니다. 메뉴는 수집 작업실 / 설정 두 개입니다.
+네이버 설정에서 검색 요청 URL과 인증 형식을 직접 입력하던 단계를 제거했습니다. Client ID·Client Secret을 등록하고 블로그·카페글·웹문서 중 검색 종류를 선택합니다. 기존 Liquid Glass 디자인과 수집 작업실 / 설정 두 메뉴를 유지합니다.
 
-- 선택한 엔진과 쿼리 번들로 자동 검색, 제공자 페이지·커서 순회, 논리식·광고·날짜·중복 필터, 일시정지·현재 위치 재개.
-- 네이버: 콘솔에서 확인한 검색 요청 URL과 두 가지 인증 형식(X-Naver Client 또는 Ncloud API Gateway)을 설정합니다. Hub의 URL이나 계약을 임의로 추정하지 않습니다. 해당 상품이 다른 서명을 요구하면 추가 연동이 필요합니다. 기존 NAVER Search API 키를 보유한 계정용 주소는 별도 도움말에 있습니다.
-- 다음(Kakao): 웹·블로그·카페 REST 검색. Brave: 웹 검색과 Reddit 등 도메인 제한 검색.
-- Google: 기존 Custom Search JSON API 사용 권한이 있는 계정만 연결합니다. 공식 문서상 신규 고객에게 제공되지 않으며 전환 기한은 2027-01-01입니다. 키·cx와 기존 사용 권한 확인이 필요합니다.
-- Reddit: API 사용 승인을 받은 installed app만 OAuth로 연결합니다. 게시글 및 선택 시 게시글당 최대 25개 반환 댓글을 수집합니다. 삭제·비공개·더 보기 댓글을 우회하지 않습니다. 삭제 상태 동기화와 연결 해제를 제공합니다.
-- Google 사용 권한/Reddit 승인이 없는 새 사용자는 다음·Brave 등 연결 가능한 API를 이용하세요. Brave의 site:reddit.com은 색인된 공개 링크·검색 요약이며 Reddit API의 원문·댓글 수집과 다릅니다.
-- GPT·Gemini는 선택 행 번역·CSV 정리에만 사용합니다. 수집 중 AI를 호출하지 않습니다.
+**신규 네이버 API Hub의 실제 검색 연결은 아직 지원 준비 중입니다.** 이 버전에서는 키·검색 종류를 저장할 수 있지만, 검색 전용 공식 계약 확인 전까지 신규 Hub 연결 테스트와 자동 수집은 활성화하지 않습니다. 키를 저장했다고 연결 성공으로 표시하지 않습니다. 이번 설치 파일은 네이버 신규 계정으로 검색이 가능해진 버전이 아닙니다.
 
-설정에서 키 등록 → 연결 정보 저장·연결 테스트 → 작업실에서 엔진·번들 선택 → 자동 검색·수집 시작. API 키는 OS 암호화 저장소에 보관하고 CSV/백업에 넣지 않습니다. API 한도·요금은 제공자 계정에 따릅니다. 연결 테스트도 실제 API 요청을 사용합니다.
+- 기존 NAVER Developers 검색 API 사용 권한·키를 가진 계정은 별도 옵션을 선택하면 문서화된 기존 주소와 인증을 앱이 자동으로 선택합니다. 이는 신규 Hub 키의 호환성을 의미하지 않습니다.
+- 기존에 저장한 키·설정·수집 기록을 유지합니다. 주소 없이 남아 있던 0.5.0 기본 설정은 Hub 방식으로 전환하며, 예전의 미저장 설정 초안이 새 화면을 덮어쓰지 않습니다.
+- 다음(Kakao)·Brave 등 연결 가능한 API의 쿼리 번들 자동 검색·페이지 순회·필터·오류 시 일시정지와 재개를 유지합니다. Google 기존 계정·Reddit 승인 조건도 유지합니다.
+- GPT·Gemini는 선택 행의 번역·CSV 정리에만 사용합니다.
 
-검증은 응답 fixture로 API 인증 헤더·요청 URL·페이지/after 커서·스키마·오류·OAuth state·토큰 갱신을 검사합니다. 실제 Electron 앱에서 키 등록, 연결 테스트, 2페이지 자동 수집, 401 일시정지와 저장된 위치 재개, CSV 보존을 확인합니다. fixture 전송은 독립 테스트 데이터 디렉터리와 명시적 테스트 플래그가 모두 있는 실행에서만 활성화되며, 일반 실행은 실제 네트워크를 사용합니다. 실제 사용자 키·API Hub 계약·OAuth 승인으로 하는 실서비스 호출은 미검증입니다.
+## 다운로드
 
-Apple Silicon Mac: ZeroWaste-Listening-Studio-0.5.0-mac-arm64.dmg
-Intel Mac: ZeroWaste-Listening-Studio-0.5.0-mac-x64.dmg
-Windows: ZeroWaste-Listening-Studio-0.5.0-win-x64.exe
+- Apple Silicon Mac: `ZeroWaste-Listening-Studio-0.5.1-mac-arm64.dmg`
+- Intel Mac: `ZeroWaste-Listening-Studio-0.5.1-mac-x64.dmg`
+- Windows: `ZeroWaste-Listening-Studio-0.5.1-win-x64.exe`
 
-macOS 13 이상. Mac은 ad-hoc 서명이며 Developer ID 공증이 없습니다. ARM64 파일은 Intel Mac에서 교차 빌드하고 코드·아키텍처·서명 무결성을 확인합니다. Apple Silicon 실기기 실행은 미검증입니다. 기존 조사·CSV 자료는 유지되지만 이전 브라우저 수집은 API 커서로 재개하지 않으며 새 수집으로 시작합니다.
+Mac에서는 DMG를 열어 앱을 응용 프로그램 폴더로 옮깁니다. macOS 13 이상이 필요합니다. Mac 파일은 ad-hoc 서명이며 Developer ID 공증은 없습니다.
+
+## 검증 범위
+
+단위 테스트 64개와 화면 테스트 5개로 자동 주소 선택, 인증 헤더, 설정 이관, 기존 키·자료 보존, URL·인증 선택란 제거를 확인합니다. Electron 검사에서는 신규 Hub 준비 중 상태, 키 저장, 기존 Developers 방식의 모의 연결, 다음 2페이지 자동 수집·필터·401 일시정지와 재개·CSV 보존을 확인합니다. 테스트 데이터 폴더와 명시적 테스트 플래그가 모두 있는 실행만 모의 응답을 사용하며 일반 앱은 실제 네트워크를 사용합니다.
+
+빌드 과정에서 Intel Mac·Windows의 패키징된 앱을 실행해 검사합니다. ARM64 파일은 Intel Mac에서 교차 빌드하고 실제 앱 코드·화면·아키텍처·서명·파일 체크섬을 확인합니다. Apple Silicon 실기기 실행과 실제 사용자 키로 하는 API 호출은 미검증입니다. 각 플랫폼의 `build.json`에 정확한 소스 커밋, 검사 범위와 체크섬을 기록합니다.

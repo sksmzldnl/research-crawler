@@ -1,14 +1,14 @@
-# ZeroWaste Listening Studio 0.5.0 · 공식 검색 API
+# ZeroWaste Listening Studio 0.5.1 · 공식 검색 API
 
-> 이 브랜치(`codex/naver-key-only-setup`)는 네이버 설정 수정 검토용입니다. URL·인증 형식 입력을 제거했으며 신규 API Hub 자동 연결은 아직 미완료입니다. 아래 0.5.0 설치 파일에는 이 변경이 반영되지 않았습니다.
+> 0.5.1에서는 네이버 URL·인증 형식 입력을 제거했습니다. 신규 API Hub 자동 연결은 아직 지원 준비 중이며, 키 저장을 연결 성공으로 표시하지 않습니다.
 
 기존 통합 작업실 디자인을 유지하고 검색 수집을 공식 API로 전환한 macOS/Windows 앱입니다. 메뉴는 **수집 작업실 / 설정** 두 개입니다. GPT·Gemini는 선택 행의 번역·CSV 정리에만 사용합니다.
 
-설치 파일: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.5.0
+설치 파일: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.5.1
 
-- Apple Silicon: ZeroWaste-Listening-Studio-0.5.0-mac-arm64.dmg
-- Intel Mac: ZeroWaste-Listening-Studio-0.5.0-mac-x64.dmg
-- Windows: ZeroWaste-Listening-Studio-0.5.0-win-x64.exe
+- Apple Silicon: ZeroWaste-Listening-Studio-0.5.1-mac-arm64.dmg
+- Intel Mac: ZeroWaste-Listening-Studio-0.5.1-mac-x64.dmg
+- Windows: ZeroWaste-Listening-Studio-0.5.1-win-x64.exe
 
 ## 사용 흐름
 
