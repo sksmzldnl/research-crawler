@@ -1,12 +1,12 @@
-# ZeroWaste Listening Studio 0.4.1
+# ZeroWaste Listening Studio 0.4.0
 
 검색 엔진을 고르고 쿼리 번들로 자료를 자동 검색·수집하는 macOS/Windows 앱입니다. 검색 API는 사용하지 않습니다. GPT·Gemini는 사용자가 선택한 행의 번역·CSV 정리에만 사용합니다.
 
-설치 파일: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-search-v0.4.1
+설치 파일: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-search-v0.4.0
 
-- Apple Silicon: `ZeroWaste-Listening-Studio-0.4.1-mac-arm64.dmg`
-- Intel Mac: `ZeroWaste-Listening-Studio-0.4.1-mac-x64.dmg`
-- Windows: `ZeroWaste-Listening-Studio-0.4.1-win-x64.exe`
+- Apple Silicon: `ZeroWaste-Listening-Studio-0.4.0-mac-arm64.dmg`
+- Intel Mac: `ZeroWaste-Listening-Studio-0.4.0-mac-x64.dmg`
+- Windows: `ZeroWaste-Listening-Studio-0.4.0-win-x64.exe`
 
 Mac은 macOS 13 이상이며 ad-hoc 서명, Developer ID 공증 없음. Apple Silicon 직접 실행 여부는 플랫폼별 build.json을 확인하세요. [배포·검증 설명](docs/SEARCH_RELEASE.md).
 

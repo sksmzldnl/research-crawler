@@ -1,4 +1,4 @@
-# ZeroWaste Listening Studio 0.4.1 · 검색 수집 작업실
+# ZeroWaste Listening Studio 0.4.0 · 검색 수집 작업실
 
 프로그램의 중심 기능인 **검색 엔진 선택 → 쿼리 번들 자동 검색 → 페이지 순회 → 자료 수집**을 검색 API 없이 복원했습니다.
 
@@ -12,10 +12,10 @@
 
 검증: 엔진별 DOM fixture, 실제 Electron 검색 창에서 로컬 HTTPS fixture를 통한 자동 검색·2페이지 순회·조건 적용·접근 확인 일시정지/재개, SQLite 및 CSV 보존을 검사합니다. fixture 검증은 실서비스 검색 엔진의 항상 정상 동작을 보장하지 않습니다. 엔진별 live-search-엔진-build.json은 빌드 시 실제 검색 시도 결과이며 completed 및 valid > 0일 때에만 그 엔진의 실제 수집을 확인한 것입니다. 다른 엔진·지역·시점의 접근 조건과 DOM은 달라질 수 있습니다.
 
-Apple Silicon: `ZeroWaste-Listening-Studio-0.4.1-mac-arm64.dmg`
-Intel Mac: `ZeroWaste-Listening-Studio-0.4.1-mac-x64.dmg`
-Windows: `ZeroWaste-Listening-Studio-0.4.1-win-x64.exe`
+Apple Silicon: `ZeroWaste-Listening-Studio-0.4.0-mac-arm64.dmg`
+Intel Mac: `ZeroWaste-Listening-Studio-0.4.0-mac-x64.dmg`
+Windows: `ZeroWaste-Listening-Studio-0.4.0-win-x64.exe`
 
 Mac은 macOS 13 이상. ad-hoc 서명을 사용하며 Apple Developer ID 공증은 없습니다. Apple Silicon은 Intel Mac에서 arm64로 교차 빌드하고 파일·아키텍처·서명 무결성을 확인합니다. Apple Silicon 기기의 직접 실행과 실제 AI 키 호출은 미검증입니다. 기존 자료 저장 위치와 앱 식별자는 유지합니다.
 
-0.4.1에서는 검증 스크립트가 비동기 상태를 실제로 폴링하도록 수정했습니다. running 상태를 실제 검색 확인으로 간주하지 않으며, 종료 상태와 자료 수를 확인한 경우만 실서비스 검증으로 기록합니다.
+로컬 검증 보완: 비동기 상태를 실제로 폴링해 접근 확인 일시정지·재개를 다시 검사했습니다. 보완된 검증 스크립트와 엔진별 실서비스 탐침 스크립트의 추가 원격 업로드는 현재 GitHub 인증 오류로 막혀 있습니다. 게시된 0.4.0 앱의 검색 수집기·브라우저 어댑터·통합 UI 바이트는 로컬에서 보완 검증한 앱과 일치합니다. 게시된 실서비스 탐침 보고서의 running 상태는 완료 검증이 아니며, 실서비스 엔진의 동작 확인으로 간주하지 않습니다.
