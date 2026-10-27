@@ -16,9 +16,8 @@ const data=process.env.STUDIO_TEST_DATA_DIR||app.getPath('userData');let secure=
 service=new Service(new Store(join(data,'studio.sqlite')),secure?new EncryptedVault(join(data,'credentials.enc'),safeStorage):new MemoryVault(),new Network(process.env.STUDIO_TEST_DATA_DIR&&process.env.STUDIO_TEST_API_FIXTURES==='1'?fixtureTransport(join(data,'api-fixtures.json'),join(data,'api-requests.jsonl')):undefined));
 const window=new BrowserWindow({width:1440,height:960,minWidth:860,minHeight:600,title:'ZeroWaste Listening Studio',backgroundColor:'#f5f7f3',webPreferences:{preload:join(root,'build/desktop/preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
 window.webContents.setWindowOpenHandler(({url})=>{void open(url);return {action:'deny'};});window.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith('studio://app/')){event.preventDefault();void open(url);}});
-async function open(raw:string){try{const u=new URL(raw);if(u.protocol==='https:'&&!u.username&&!u.password)await shell.openExternal(u.href);}catch{}}
+async function open(raw:string){try{const u=new URL(raw);if(['https:','http:'].includes(u.protocol)&&!u.username&&!u.password)await shell.openExternal(u.href);}catch{}}
 ipcMain.handle('studio:call',async(event,method:string,args:unknown)=>{if(event.sender!==window.webContents||event.senderFrame?.url?.startsWith('studio://app/')!==true)throw Error('허용되지 않은 창');
-  if(method==='backup'){const {filePath}=await dialog.showSaveDialog(window,{defaultPath:'studio-backup.sqlite',filters:[{name:'SQLite',extensions:['sqlite']}]});if(filePath)await service.store.backup(filePath);return {saved:!!filePath};}
   if(method==='export'){const result=await service.call(method,args) as {filename:string;data:string};const {filePath}=await dialog.showSaveDialog(window,{defaultPath:result.filename});if(filePath)await writeFile(filePath,Buffer.from(result.data,'base64'),{mode:0o600});return {saved:!!filePath};}
   return service.call(method,args);
 });

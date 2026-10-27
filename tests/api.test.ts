@@ -1,63 +1,15 @@
 import {it,expect,vi} from 'vitest';
-import {SearchApi,naverEndpoint} from '../core/search-api.js';
-import {apiDefaults} from '../core/api-types.js';
+import {SearchApi} from '../core/search-api.js';
 import {Network} from '../core/network.js';
 import {MemoryVault} from '../core/vault.js';
-import {RedditOAuth} from '../core/oauth.js';
-import {naverHubUrl} from '../core/naver-connection.js';
-const json=(d:unknown,status=200)=>new Response(JSON.stringify(d),{status,headers:{'Content-Type':'application/json'}});
-function setup(send=vi.fn(async()=>json({})),patch={}){const vault=new MemoryVault();for(const name of ['naverId','naverSecret','kakaoKey','braveKey','googleKey','redditAccess','redditRefresh'])vault.set(name,'fixture-'+name);const options={...apiDefaults,naverAuth:'naver' as const,naverUrl:'https://openapi.naver.com/v1/search/{type}.json',googleExisting:true,googleCx:'fixture-cx',redditApproved:true,redditClientId:'fixture-client',...patch};const api=new SearchApi(new Network(send),vault,()=>options);return {api,vault,options,send};}
-const signal=()=>new AbortController().signal;
-it('Naver uses the explicitly configured official endpoint, selected authentication and provider pagination',async()=>{
- const send=vi.fn(async()=>json({total:1000,items:Array.from({length:100},()=>({link:'https://example.com/a',title:'<b>후기</b>',description:'<script>bad</script>실제 내용',postdate:'20261001'}))}));const {api,options}=setup(send);const page=await api.search('naver','재사용',1,signal(),null,options);expect(page.items[0]).toMatchObject({title:'후기',text:'실제 내용',date:'2026-10-01T00:00:00.000Z'});expect(page.next).toBe(101);expect((send.mock.calls[0] as any)[1].headers['X-Naver-Client-Id']).toBe('fixture-naverId');
- await api.search('naver','재사용',10,signal(),901,{...options,naverAuth:'gateway',naverUrl:naverHubUrl});expect((send.mock.calls[1] as any)[1].headers['x-ncp-apigw-api-key-id']).toBe('fixture-naverId');
+import {naverEndpoint} from '../core/naver-connection.js';
+const vault=()=>{const v=new MemoryVault();v.set('naverId','id');v.set('naverSecret','secret');return v;};
+it.each(['blog','cafearticle'] as const)('uses fixed Hub endpoint, two headers and real start cursor for %s',async type=>{
+ const send=vi.fn(async()=>new Response(JSON.stringify({total:150,items:Array.from({length:100},(_,i)=>({link:'https://example.com/'+i,title:'<b>사용</b> 후기',description:'<script>bad()</script>세척 불편',postdate:'20261001'}))})));
+ const api=new SearchApi(new Network(send),vault()),page=await api.search(type,'재사용 AND 후기',1,new AbortController().signal);
+ const [url,init]=send.mock.calls[0] as unknown as [string,RequestInit];const u=new URL(url);expect(u.origin+u.pathname).toBe('https://naverapihub.apigw.ntruss.com/search/v1/'+type);expect(Object.fromEntries(u.searchParams)).toEqual({query:'재사용 AND 후기',display:'100',start:'1',sort:'date',format:'json'});expect(new Headers(init.headers).get('x-ncp-apigw-api-key-id')).toBe('id');expect(new Headers(init.headers).get('x-ncp-apigw-api-key')).toBe('secret');expect(page.next).toBe(101);expect(page.items[0]).toMatchObject({title:'사용 후기',text:'세척 불편',date:'2026-10-01T00:00:00.000Z'});
 });
-it('rejects unknown Naver destinations and URLs containing credentials or query secrets before sending keys',()=>{for(const url of ['https://evil.example/search','https://openapi.naver.com.evil.example/search','https://user:pass@openapi.naver.com/search','https://openapi.naver.com/search?key=secret','http://openapi.naver.com/search'])expect(()=>naverEndpoint(url,'blog')).toThrow();expect(naverEndpoint('','blog').href).toBe('https://naverapihub.apigw.ntruss.com/search/v1/blog');});
-it('selects documented legacy endpoints automatically without requiring a URL from the user',async()=>{
- const {api,options,send}=setup(vi.fn(async()=>json({total:0,items:[]})),{naverUrl:''});
- for(const naverType of ['blog','cafearticle','webkr'] as const){
-  await api.search('naver','컵 & 세척',1,signal(),null,{...options,naverType});
-  const [address,request]=send.mock.calls.at(-1) as unknown as [string,RequestInit];
-  const url=new URL(address);
-  expect(url.origin).toBe('https://openapi.naver.com');
-  expect(url.pathname).toBe(`/v1/search/${naverType}.json`);
-  expect(url.searchParams.get('query')).toBe('컵 & 세척');
-  expect(url.searchParams.get('start')).toBe('1');
-  expect(url.href).not.toContain('fixture-naver');
-  expect(request.headers).toMatchObject({'X-Naver-Client-Id':'fixture-naverId','X-Naver-Client-Secret':'fixture-naverSecret'});
- }
+it('rejects removed scope, missing keys and invalid cursor without a request',async()=>{const send=vi.fn();const api=new SearchApi(new Network(send),vault());expect(()=>naverEndpoint('webkr' as any)).toThrow();await expect(api.search('blog','x',1001,new AbortController().signal)).rejects.toThrow();expect(()=>new SearchApi(new Network(send),new MemoryVault()).validate()).toThrow(/Client ID/);expect(send).not.toHaveBeenCalled();});
+it('handles short pages, malformed responses and authentication errors explicitly',async()=>{
+ const send=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({total:2,items:[{link:'http://example.com',title:'x'}]}))).mockResolvedValueOnce(new Response('{}')).mockResolvedValueOnce(new Response('{}',{status:401}));const api=new SearchApi(new Network(send),vault());expect((await api.search('blog','x',1,new AbortController().signal)).next).toBeNull();await expect(api.search('blog','x',1,new AbortController().signal)).rejects.toThrow(/응답 형식/);await expect(api.search('blog','x',1,new AbortController().signal)).rejects.toThrow(/401/);
 });
-it.each(['blog','cafearticle','webkr'] as const)('Hub selects %s automatically, sends gateway headers and JSON parameters, and paginates',async(naverType)=>{
- const items=Array.from({length:100},(_,i)=>({link:'https://example.com/'+i,title:'<b>컵</b> 후기',description:'세척 경험',postdate:'20261001'}));
- const send=vi.fn().mockResolvedValueOnce(json({total:101,items})).mockResolvedValueOnce(json({total:101,items:[{link:'https://example.com/last',title:'컵 후기',description:'마지막 경험'}]}));
- const {api}=setup(send);const options={...apiDefaults,naverType};
- const first=await api.search('naver','컵 & 세척',1,signal(),null,options);
- expect(first.items).toHaveLength(100);expect(first.next).toBe(101);expect(first.items[0].title).toBe('컵 후기');
- const last=await api.search('naver','컵 & 세척',2,signal(),first.next,options);
- expect(last.next).toBeNull();expect(last.items).toHaveLength(1);
- for(const [i,[address,request]] of send.mock.calls.entries()){
-  const url=new URL(address);
-  expect(url.origin).toBe('https://naverapihub.apigw.ntruss.com');expect(url.pathname).toBe('/search/v1/'+naverType);
-  expect(url.searchParams.get('query')).toBe('컵 & 세척');expect(url.searchParams.get('format')).toBe('json');expect(url.searchParams.get('display')).toBe('100');expect(url.searchParams.get('start')).toBe(i===0?'1':'101');
-  expect(url.searchParams.get('sort')).toBe(naverType==='webkr'?null:'date');
-  expect(request.headers).toMatchObject({'x-ncp-apigw-api-key-id':'fixture-naverId','x-ncp-apigw-api-key':'fixture-naverSecret'});
-  expect(request.headers).not.toHaveProperty('X-Naver-Client-Id');expect(url.href).not.toContain('fixture-naver');expect(request.redirect).toBe('manual');
- }
-});
-it('rejects other gateway tenants, wrong paths and authentication/host mismatches before sending Naver credentials',async()=>{
- const {api,send}=setup();
- for(const naverUrl of ['https://other.apigw.ntruss.com/search/v1/blog','https://naverapihub.apigw.ntruss.com/search/v1/unknown','https://naverapihub.apigw.ntruss.com.evil.example/search/v1/blog','https://openapi.naver.com/v1/search/blog.json']){
-  await expect(api.search('naver','컵',1,signal(),null,{...apiDefaults,naverUrl})).rejects.toThrow(/네이버 연결 설정/);
- }
- expect(send).not.toHaveBeenCalled();
-});
-it('Daum sends REST API auth and honors is_end and actual dates',async()=>{const {api,options,send}=setup(vi.fn(async()=>json({meta:{is_end:false},documents:[{url:'https://example.com/a',title:'후기',contents:'실제 경험',datetime:'2026-10-01T12:00:00+09:00'}]})));const result=await api.search('daum','경험',1,signal(),null,options);expect(result.next).toBe(2);expect(result.items[0].date).toBe('2026-10-01T03:00:00.000Z');expect((send.mock.calls[0] as any)[1].headers.Authorization).toBe('KakaoAK fixture-kakaoKey');expect(new URL(send.mock.calls[0][0] as string).searchParams.get('page')).toBe('1');});
-it('Brave sends subscription auth and caps pagination at offset nine',async()=>{const {api,options,send}=setup(vi.fn(async()=>json({type:'search',query:{more_results_available:true},web:{results:[{url:'https://www.reddit.com/r/a/comments/1',title:'Review',description:'A B',extra_snippets:['more context']}]}})));const result=await api.search('brave','cup site:reddit.com',1,signal(),0,options);expect(result.next).toBe(1);expect((send.mock.calls[0] as any)[1].headers['X-Subscription-Token']).toBe('fixture-braveKey');expect(result.items[0].text).toContain('more context');expect((await api.search('brave','x',10,signal(),9,options)).next).toBeNull();});
-it('Google is gated for existing customers, requires cx, uses documented JSON API and caps results',async()=>{const {api,options,send}=setup(vi.fn(async()=>json({queries:{nextPage:[{startIndex:11}]},items:[{link:'https://example.com/a',title:'Review',snippet:'A B',pagemap:{metatags:[{'article:published_time':'2026-10-01'}]}}]})));expect(()=>api.validate(['google'],{...options,googleExisting:false})).toThrow(/기존/);const page=await api.search('google','x',1,signal(),null,options);expect(page.next).toBe(11);const url=new URL(send.mock.calls[0][0] as string);expect(url.hostname).toBe('customsearch.googleapis.com');expect(url.searchParams.get('cx')).toBe('fixture-cx');vi.useFakeTimers();try{vi.setSystemTime(new Date('2027-01-01'));expect(()=>api.validate(['google'],options)).toThrow(/기한/);}finally{vi.useRealTimers();}});
-it('Reddit requires approval and OAuth; preserves after cursors, post bodies and only returned public comments',async()=>{
- const post={kind:'t3',data:{name:'t3_abc',id:'abc',title:'Cup experience',selftext:'A B full post',permalink:'/r/test/comments/abc/',created_utc:1790812800}};const comment={kind:'t1',data:{name:'t1_xyz',body:'A B full comment',parent_id:'t3_abc',permalink:'/r/test/comments/abc/comment/xyz',created_utc:1790812800}};
- const send=vi.fn(async(url:string)=>json(url.includes('/comments/')?[{}, {data:{children:[comment,{kind:'more',data:{}}]}}]:{data:{children:[post],after:'t3_next'}}));const {api,options}=setup(send);expect(()=>api.validate(['reddit'],{...options,redditApproved:false})).toThrow(/승인/);const result=await api.search('reddit','cup',2,signal(),'t3_before',{...options,redditComments:true});expect(result.next).toBe('t3_next');expect(result.items).toHaveLength(2);expect(result.items[0].full).toBe(true);expect(result.items[1]).toMatchObject({kind:'comment',parent:'t3_abc',id:'t1_xyz'});expect(new URL(send.mock.calls[0][0]).searchParams.get('after')).toBe('t3_before');expect((send.mock.calls[0] as any)[1].headers.Authorization).toBe('Bearer fixture-redditAccess');
-});
-it('refreshes Reddit once on expired OAuth and never puts credentials in error messages',async()=>{const send=vi.fn().mockResolvedValueOnce(json({},401)).mockResolvedValueOnce(json({access_token:'new-fixture'})).mockResolvedValueOnce(json({data:{children:[],after:null}}));const {api,options,vault}=setup(send);await api.search('reddit','x',1,signal(),null,options);expect(send).toHaveBeenCalledTimes(3);expect(vault.get('redditAccess')).toBe('new-fixture');const failed=setup(vi.fn(async()=>json({secret:'PRIVATE'},403)));await expect(failed.api.search('daum','x',1,signal(),null,failed.options)).rejects.toThrow('HTTP 403');});
-it('does not treat malformed API responses as successful empty results',async()=>{for(const engine of ['naver','daum','brave','google','reddit'] as const){const {api,options}=setup();await expect(api.search(engine,'x',1,signal(),null,options)).rejects.toThrow();}});
-it('OAuth callback validates state, uses a public installed app and stores tokens only in the vault',async()=>{const send=vi.fn(async()=>json({access_token:'fixture-access',refresh_token:'fixture-refresh'}));const vault=new MemoryVault(),oauth=new RedditOAuth(new Network(send),vault);try{const url=new URL(await oauth.begin('fixture-client'));const state=url.searchParams.get('state')!;expect(url.searchParams.get('redirect_uri')).toBe('http://127.0.0.1:48732/callback');expect((await fetch('http://127.0.0.1:48732/callback?state=wrong&code=fixture')).status).toBe(400);expect(vault.get('redditAccess')).toBe('');expect((await fetch('http://127.0.0.1:48732/callback?state='+state+'&code=fixture')).status).toBe(200);expect(vault.get('redditAccess')).toBe('fixture-access');expect((send.mock.calls[0] as any)[1].headers.Authorization).toBe('Basic '+Buffer.from('fixture-client:').toString('base64'));}finally{oauth.close();}});

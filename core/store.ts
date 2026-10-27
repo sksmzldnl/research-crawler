@@ -1,11 +1,9 @@
-import {apiDefaults} from './api-types.js';
-import {migrateNaverSettings} from './naver-connection.js';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, chmodSync } from 'node:fs';
 import { dirname } from 'node:path';
-import type {Bundle,ProviderSettings,RecordItem,Research} from './types.js';
-export const defaultSettings:ProviderSettings={...apiDefaults,rssUrls:[],originalAllowedHosts:[],consentAi:false,retentionDays:30};
+import {aiModels,type Bundle,type ProviderSettings,type RecordItem,type Research} from './types.js';
+export const defaultSettings:ProviderSettings={aiProvider:'openai',aiModel:'gpt-4.1-mini'};
 export class Store {
   db:DatabaseSync;
   constructor(public path:string){if(path!==':memory:')mkdirSync(dirname(path),{recursive:true,mode:0o700});this.db=new DatabaseSync(path);this.db.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS bundles(id TEXT PRIMARY KEY,data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS researches(id TEXT PRIMARY KEY,data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS records(id TEXT PRIMARY KEY,research_id TEXT NOT NULL,data TEXT NOT NULL,FOREIGN KEY(research_id) REFERENCES researches(id) ON DELETE CASCADE); CREATE INDEX IF NOT EXISTS research_records ON records(research_id); CREATE TABLE IF NOT EXISTS settings(id TEXT PRIMARY KEY,data TEXT NOT NULL);');if(path!==':memory:')chmodSync(path,0o600);
@@ -18,7 +16,7 @@ export class Store {
   records(id:string){return this.db.prepare('SELECT data FROM records WHERE research_id=? ORDER BY rowid').all(id).map(r=>JSON.parse(r.data as string) as RecordItem);}
   research(id:string){return this.list<Research>('researches').find(r=>r.id===id);}
   remove(table:'bundles'|'researches'|'records',id:string){this.db.prepare(`DELETE FROM ${table} WHERE id=?`).run(id);}
-  settings():ProviderSettings{const r=this.db.prepare("SELECT data FROM settings WHERE id='main'").get();return migrateNaverSettings({...defaultSettings,...r?JSON.parse(r.data as string):{}});}
+  settings():ProviderSettings{const r=this.db.prepare("SELECT data FROM settings WHERE id='main'").get();const saved=r?JSON.parse(r.data as string):{};return {aiProvider:saved.aiProvider==='gemini'?'gemini':'openai',aiModel:typeof saved.aiModel==='string'&&saved.aiModel.trim()?saved.aiModel:aiModels[saved.aiProvider==='gemini'?'gemini':'openai']};}
   saveSettings(s:ProviderSettings){this.db.prepare("INSERT INTO settings(id,data) VALUES('main',?) ON CONFLICT(id) DO UPDATE SET data=excluded.data").run(JSON.stringify(s));}
   async backup(path:string){const {backup}=await import('node:sqlite');await backup(this.db,path);chmodSync(path,0o600);}
   close(){this.db.close();}

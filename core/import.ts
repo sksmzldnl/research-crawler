@@ -2,8 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { RecordItem, Research } from './types.js';
 import { normalizedDate } from './quality.js';
-import { koreanHeaders } from './export.js';
-import { csvColumns } from './types.js';
 
 export function parseCsv(input:string,delimiter=detectDelimiter(input)) {
   if(input.length>5_000_000)throw Error('파일은 5MB 이하로 나눠 주세요.');
@@ -30,14 +28,14 @@ export function parseCsv(input:string,delimiter=detectDelimiter(input)) {
 }
 export function detectDelimiter(text:string){const first=text.replace(/^\uFEFF/,'').split(/\r?\n/)[0];return [',','\t',';'].sort((a,b)=>first.split(b).length-first.split(a).length)[0];}
 const field=z.string().max(200);
-export const importSchema=z.object({name:z.string().trim().min(1).max(100),kind:z.enum(['csv','text']),text:z.string().min(1).max(5_000_000),delimiter:z.enum([',',';','\t']).optional(),mapping:z.object({body:field,title:field,url:field,date:field,language:field}).optional(),deduplicate:z.boolean().default(true)});
+export const importSchema=z.object({name:z.string().trim().min(1).max(100),kind:z.literal('csv').default('csv'),text:z.string().min(1).max(5_000_000),delimiter:z.enum([',',';','\t']).optional(),mapping:z.object({body:field,title:field,url:field,date:field,language:field}).optional(),deduplicate:z.boolean().default(false)});
 export type ImportInput=z.infer<typeof importSchema>;
 export function localResearch(name:string,count:number):Research{const now=new Date().toISOString();return {id:randomUUID(),config:{name,mode:'live',bundleIds:[],sources:[],startDate:'',endDate:'',target:Math.max(1,count),removeAds:false,deduplicate:true,semanticDedupe:false,fetchOriginal:false,ai:false,aiProvider:'openai',aiModel:'gpt-4.1-mini',aiInputPrice:0,aiOutputPrice:0},bundles:[],status:'completed',stage:'저장 완료',createdAt:now,updatedAt:now,processed:count,totalTasks:count,valid:count,excluded:0,errors:[],notes:['검색 API·AI를 호출하지 않고 가져온 자료입니다.'],usage:{input:0,output:0,cost:0},cursors:{}};}
-export function makeRecord(researchId:string,text:string,title:string,url='',date='',language='und',platform='text'):RecordItem{return {record_id:randomUUID(),research_id:researchId,query_bundle_name:'직접 가져오기',query_expression:'',matched_keywords:[],excluded_keywords:[],source_search_engine:'직접 가져오기',source_platform:platform,source_url:url,title:title||text.slice(0,60),published_at:normalizedDate(date),published_at_confidence:normalizedDate(date)?'user_imported':'unknown',collected_at:new Date().toISOString(),original_language:language||'und',original_full_text:text,korean_full_translation:'',korean_summary:'',insight_category:[],pain_point:'',improvement_request:'',user_behavior:'',workaround:'',sentiment:'미확인',relevance_score:null,relevance_reason:'',advertisement_flag:false,duplicate_flag:false,content_status:'full_text',ai_provider:'',ai_model:'',processing_status:'local_imported',review_status:'pending',mode:'live',kind:'post',parent_id:null,native_id:'',discovery_paths:['사용자가 제공한 자료'],exclusion_reasons:[],evidence:[],ai_error:'',ai_chunks:[]};}
+export function makeRecord(researchId:string,text:string,title:string,url='',date='',language='und',platform='text'):RecordItem{return {record_id:randomUUID(),research_id:researchId,query_bundle_name:'직접 가져오기',query_expression:'',matched_keywords:[],excluded_keywords:[],source_search_engine:'직접 가져오기',source_platform:platform,source_url:url,title:title||text.slice(0,60),published_at:normalizedDate(date),published_at_confidence:normalizedDate(date)?'user_imported':'unknown',collected_at:new Date().toISOString(),original_language:language||'und',original_full_text:text,korean_full_translation:'',korean_summary:'',ai_insight:'',insight_category:[],pain_point:'',improvement_request:'',user_behavior:'',workaround:'',sentiment:'미확인',relevance_score:null,relevance_reason:'',advertisement_flag:false,duplicate_flag:false,content_status:'full_text',ai_provider:'',ai_model:'',processing_status:'local_imported',review_status:'pending',mode:'live',kind:'post',parent_id:null,native_id:'',discovery_paths:['사용자가 제공한 자료'],exclusion_reasons:[],evidence:[],ai_error:'',ai_chunks:[]};}
 export function prepareImport(args:ImportInput){
  const research=localResearch(args.name,1);let records:RecordItem[];
- if(args.kind==='text'){records=[makeRecord(research.id,args.text,args.name)];}
- else{const {header,rows}=parseCsv(args.text,args.delimiter);const aliases=(name:string)=>[name,koreanHeaders[csvColumns.indexOf(name as typeof csvColumns[number])]];
+ if(args.kind!=='csv')throw Error('CSV 파일만 가져올 수 있습니다.');
+ {const {header,rows}=parseCsv(args.text,args.delimiter);const aliases=(name:string)=>[name,({original_full_text:'원문 본문 또는 스니펫',title:'제목',source_url:'원문 URL',published_at:'게시일',original_language:'원문 언어'} as Record<string,string>)[name]];
   const pick=(names:string[])=>header.find(h=>names.filter(Boolean).some(n=>n.toLowerCase()===h.toLowerCase()))||'';
   const m=args.mapping||{body:pick([...aliases('original_full_text'),'text','body','content','본문','내용']),title:pick([...aliases('title'),'제목']),url:pick([...aliases('source_url'),'url','link','링크']),date:pick([...aliases('published_at'),'date','날짜']),language:pick([...aliases('original_language'),'language','언어'])};
   if(!m.body||!header.includes(m.body))throw Error('본문으로 사용할 CSV 열을 선택하세요.');

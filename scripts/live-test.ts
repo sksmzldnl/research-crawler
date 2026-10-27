@@ -1,9 +1,8 @@
+// Optional real Naver check. Never prints credentials or source response bodies.
 import {Service} from '../core/service.js';
 import {Store} from '../core/store.js';
 import {MemoryVault} from '../core/vault.js';
-import {apiEngines,type ApiEngine} from '../core/api-types.js';
-import {naverLegacyUrl} from '../core/naver-connection.js';
-const engine=(process.env.STUDIO_LIVE_ENGINE||'daum') as ApiEngine;if(!apiEngines.includes(engine))throw Error('STUDIO_LIVE_ENGINE을 확인하세요.');
-const vault=new MemoryVault();for(const [key,env] of Object.entries({kakaoKey:'KAKAO_REST_API_KEY',braveKey:'BRAVE_SEARCH_API_KEY',naverId:'NAVER_CLIENT_ID',naverSecret:'NAVER_CLIENT_SECRET',googleKey:'GOOGLE_SEARCH_API_KEY',redditAccess:'REDDIT_ACCESS_TOKEN',redditRefresh:'REDDIT_REFRESH_TOKEN'}))if(process.env[env])vault.set(key,process.env[env]!);
-const store=new Store(':memory:'),service=new Service(store,vault);store.saveSettings({...store.settings(),naverUrl:process.env.NAVER_SEARCH_URL||(process.env.NAVER_AUTH==='naver'?naverLegacyUrl:''),naverType:'blog',naverAuth:process.env.NAVER_AUTH==='naver'?'naver':'gateway',googleCx:process.env.GOOGLE_SEARCH_CX||'',googleExisting:process.env.GOOGLE_EXISTING_CUSTOMER==='true',redditApproved:process.env.REDDIT_API_APPROVED==='true',redditClientId:process.env.REDDIT_CLIENT_ID||''});
-try{const b=store.list<any>('bundles')[0];store.put('bundles',{...b,expression:'"zero waste"'});const r=await service.call('search.start',{name:'실제 API 연결 점검',engines:[engine],bundleIds:[b.id],sites:[],target:1,pages:1,startDate:'',endDate:'',includeUnknownDate:true,removeAds:false,fetchOriginal:false}) as {id:string};await service.idle();const saved=store.research(r.id)!;console.log(JSON.stringify({engine,status:saved.status,valid:saved.valid,errors:saved.errors}));if(saved.status!=='completed')process.exitCode=1;}finally{service.close();await service.idle();store.close();}
+import type {Bundle} from '../core/types.js';
+const vault=new MemoryVault();for(const [key,env] of Object.entries({naverId:'NAVER_CLIENT_ID',naverSecret:'NAVER_CLIENT_SECRET'}))if(process.env[env])vault.set(key,process.env[env]!);
+const store=new Store(':memory:'),service=new Service(store,vault);
+try{const b=store.list<Bundle>('bundles')[0];store.put('bundles',{...b,expression:'"제로웨이스트"'});const r=await service.call('search.start',{name:'네이버 실제 연결 확인',naverType:process.env.NAVER_SEARCH_TYPE||'blog',bundleIds:[b.id],target:1,pages:1,removeAds:false}) as {id:string};await service.idle();const saved=store.research(r.id)!;console.log(JSON.stringify({status:saved.status,valid:saved.valid,errors:saved.errors}));if(saved.status!=='completed')process.exitCode=1;}finally{service.close();await service.idle();store.close();}

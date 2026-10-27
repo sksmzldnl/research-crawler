@@ -1,8 +1,8 @@
 {
   "name": "zerowaste-listening-studio",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "private": true,
-  "description": "로컬 우선 제로웨이스트 사용자 리서치 도구",
+  "description": "네이버 블로그·카페 검색과 CSV 인사이트 정리",
   "author": "ZeroWaste Listening Studio contributors",
   "license": "UNLICENSED",
   "type": "module",
@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "concurrently --kill-others \"tsx server/index.ts\" \"vite --host 127.0.0.1\"",
     "desktop": "npm run build && node scripts/ensure-electron.mjs && electron .",
-    "build": "tsc -p tsconfig.node.json && tsc -p tsconfig.json && vite build && node scripts/postbuild.mjs",
+    "build": "node scripts/clean-build.mjs && tsc -p tsconfig.node.json && tsc -p tsconfig.json && vite build && node scripts/postbuild.mjs",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json --noEmit",
     "test": "vitest run",
     "test:ui": "playwright test",
@@ -24,13 +24,9 @@
     "test:desktop": "node scripts/ensure-electron.mjs && node scripts/desktop-smoke.mjs"
   },
   "dependencies": {
-    "@mozilla/readability": "^0.6.0",
-    "exceljs": "^4.4.0",
-    "fast-xml-parser": "^5.3.0",
     "jsdom": "^27.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "robots-parser": "^3.0.1",
     "undici": "^7.16.0",
     "zod": "^4.1.0"
   },
@@ -85,11 +81,6 @@
         "dir"
       ],
       "category": "Education"
-    }
-  },
-  "overrides": {
-    "exceljs": {
-      "uuid": "11.1.1"
     }
   }
 }

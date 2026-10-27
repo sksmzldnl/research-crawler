@@ -1,40 +1,37 @@
-# ZeroWaste Listening Studio 0.5.2 · 공식 검색 API
+# ZeroWaste Listening Studio 0.6.0
 
-> 0.5.2에서는 네이버 API Hub의 자동 연결과 쿼리 번들 수집을 활성화했습니다. Client ID·Client Secret을 등록하고 검색 종류를 선택하면 앱이 요청 주소와 인증 형식을 자동으로 적용합니다.
+네이버 블로그·카페의 검색 결과를 쿼리 번들로 모으고, CSV 자료를 AI로 요약·정리하는 macOS/Windows 앱입니다. 기존 Liquid Glass 디자인을 유지하며 메뉴는 **작업실 / 설정** 두 개로 정리했습니다.
 
-기존 통합 작업실 디자인을 유지하고 검색 수집을 공식 API로 전환한 macOS/Windows 앱입니다. 메뉴는 **수집 작업실 / 설정** 두 개입니다. GPT·Gemini는 선택 행의 번역·CSV 정리에만 사용합니다.
+[설치 파일 다운로드](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.6.0)
 
-설치 파일: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.5.2
+- Apple Silicon Mac: `ZeroWaste-Listening-Studio-0.6.0-mac-arm64.dmg`
+- Intel Mac: `ZeroWaste-Listening-Studio-0.6.0-mac-x64.dmg`
+- Windows: `ZeroWaste-Listening-Studio-0.6.0-win-x64.exe`
 
-- Apple Silicon: ZeroWaste-Listening-Studio-0.5.2-mac-arm64.dmg
-- Intel Mac: ZeroWaste-Listening-Studio-0.5.2-mac-x64.dmg
-- Windows: ZeroWaste-Listening-Studio-0.5.2-win-x64.exe
+## 사용 방법
 
-## 사용 흐름
+1. 설정에서 네이버 API Hub의 Client ID·Client Secret을 각각 등록합니다. 요청 URL은 입력하지 않습니다.
+2. 작업실에서 **블로그 또는 카페**를 고르고 쿼리 번들·목표 수량을 설정한 뒤 **검색·수집 시작**을 누릅니다. 예: `재사용 AND (불편 OR 후기) NOT 광고`.
+3. 기존 파일은 **CSV 파일 가져오기**에서 가져옵니다. AI가 읽을 본문 열만 고르면 나머지 열은 그대로 보존됩니다. CSV 가져오기에는 네이버 키가 필요하지 않습니다.
+4. 설정에서 **OpenAI GPT 또는 Google Gemini** 중 하나를 선택하고 해당 API 키를 등록합니다. OpenAI는 **Secret Key 전체값 하나**를 사용합니다. Tracking ID·로그인 아이디·비밀번호는 입력하지 않습니다.
+5. 자료의 행을 선택하고 **선택 N행 AI 정리**를 누릅니다. 선택한 본문을 AI에 보내 요약·인사이트·개선 제안·근거를 추가합니다. 필요하면 분석 관점을 적을 수 있습니다.
+6. **표시된 N행 CSV 저장**으로 현재 필터의 모든 행을 저장합니다. 체크한 행은 AI 처리 대상이며 CSV 저장 대상은 화면에 표시된 행입니다.
 
-설정에서 검색 API 키와 연결 정보 등록 → 연결 테스트 → 작업실에서 엔진·쿼리 번들 선택 → 자동 검색·수집 시작 → 결과 검토 → 필요한 행 번역·CSV 정리 → CSV/Excel 저장.
+[키 입력과 오류 해결](docs/API.md) · [배포 및 검증 범위](docs/API_RELEASE.md) · [네이버 연결 규격 근거](docs/NAVER_API_HUB.md)
 
-엔진별 페이지·after 커서를 저장하며 오류 시 일시정지하고 같은 위치에서 재개합니다. 전체 논리식·제외어·광고·날짜·중복 필터는 로컬에서 적용합니다. URL·검색 경로·제외 근거를 보존합니다. 목표 수량은 제공자 한도와 실제 결과에 따라 부족할 수 있습니다. 검색 범위/주소는 수집 시작 시 저장하므로 변경할 때는 새 수집으로 시작하세요.
+## 데이터 처리
 
-- **다음(Kakao)**: REST API 키. 웹·블로그·카페.
-- **Brave**: 웹 검색 API 키. Reddit 등 도메인 제한 검색에도 사용.
-- **네이버 API Hub**: Client ID·Client Secret을 등록하고 블로그·카페글·웹문서를 선택한 뒤 설정 저장·연결 테스트를 실행합니다. 주소·인증 방식은 자동 적용합니다. 작업실에서 네이버와 번들을 선택해 자동 수집합니다. 기존 Developers 키용 옵션도 유지합니다.
-- **Google**: 기존 Custom Search JSON API 사용 권한이 있는 계정만. 신규 고객 제공 종료, 기존 고객 전환 기한 2027-01-01.
-- **Reddit**: Data API 사용 승인이 있는 installed app만 OAuth 연결. 선택 시 게시글당 최대 25개 반환 댓글, 삭제 상태 동기화. 승인 전에는 Brave에서 색인된 공개 링크·검색 요약을 찾을 수 있으며 원문·댓글 직접 접근과 구분합니다.
+검색은 네이버 API가 반환하는 제목·URL·검색 요약을 저장합니다. 게시글 전문과 댓글은 수집하지 않습니다. 검색 단계에서 AI를 호출하지 않습니다. 쿼리의 전체 논리식·추가 제외어·광고·날짜·중복 검사는 로컬에서 적용합니다. 날짜가 없으면 만들어 넣지 않으며 목표 수량은 결과와 페이지 한도에 따라 부족할 수 있습니다. 오류·중단 후 현재 버전의 수집 위치에서 재개할 수 있습니다.
 
-새 사용자는 Google/Reddit 사용 권한이 있다고 가정하지 않습니다. 앱의 Google·Reddit 선택은 해당 조건을 설정에서 확인한 뒤 활성화됩니다. [API 키 입력·연결 절차](docs/API.md), [배포·검증 범위](docs/API_RELEASE.md)를 확인하세요.
+CSV는 5MB·1,000행·150열까지 가져옵니다. 원래 열과 순서를 보존하고 뒤에 `AI_요약`, `AI_인사이트`, `AI_개선제안`, `AI_근거` 등 결과 열을 추가합니다. 기존 열 이름과 겹치면 새 열에 숫자 접미사를 붙입니다. 원문을 덮어쓰지 않습니다. 수식으로 실행될 수 있는 셀에는 작은따옴표를 붙입니다. 내보내기는 Excel에서 열 수 있는 UTF-8 BOM CSV입니다.
 
-## 자료와 보안
+AI는 본문에서 정확히 일치하는 인용만 저장합니다. 잘못된 인용은 행별 오류로 남기며, 인증·권한·사용 한도 오류는 남은 행 처리를 멈춥니다. 완료한 결과는 보존됩니다. AI 해석과 제안은 원문과 함께 검토하세요.
 
-CSV·텍스트·RSS·URL 직접 가져오기는 접힌 보조 영역에 있습니다. 원래 CSV 열과 값은 original_column: 접두어로 내보내기에 보존합니다. 모든 행을 내보내려면 전체 결과를 선택하세요. 위험한 수식 값에는 작은따옴표가 붙습니다.
+다른 검색엔진, 웹문서 검색, RSS·URL 수집, 전문 추출, 번역 전용 기능, 모델 목록 조회와 별도 연결 테스트는 제거했습니다. 이전 버전의 자료·키 저장 파일은 보존하며, 이전 수집 작업은 새 네이버 검색으로 시작합니다.
 
-원문 확보는 설정의 허용 도메인과 robots.txt/공개 HTML 저장 조건을 확인하며, 실패 시 검색 스니펫을 유지합니다. 로그인·CAPTCHA·비공개 자료를 우회하지 않습니다. Reddit 원문은 승인된 API 응답만 사용합니다.
+키는 지원되는 OS 암호화 기능으로 저장하고, 보안 저장소를 사용할 수 없으면 세션 메모리에만 보관합니다. CSV에는 키를 넣지 않습니다. ChatGPT/Gemini 구독과 API 사용 요금은 별개입니다.
 
-키는 지원되는 OS 암호화 기능으로 저장하며 불가능하면 세션 메모리에만 보관합니다. CSV/백업에 키를 넣지 않습니다. API 연결 테스트도 실제 요청과 할당량을 사용합니다. 제공자별 최신 한도·요금·승인 조건을 확인하세요. ChatGPT/Gemini 앱 구독은 API 이용권과 별개입니다.
-
-기존 조사·가져온 자료는 유지합니다. 이전 브라우저 수집 기록은 결과만 읽고, API 방식 수집은 새로 시작합니다.
-
-## 개발 및 검증
+## 개발
 
 Node.js 24+, Electron 45, React 19, TypeScript, SQLite.
 
@@ -47,8 +44,8 @@ npm run test:ui
 npm run desktop
 ```
 
-설치형 통합 검증: npm run test:desktop. Linux에서는 STUDIO_DESKTOP_HEADLESS=1을 추가할 수 있습니다. 독립 테스트 데이터 폴더와 명시적 테스트 플래그가 있는 실행만 정해진 HTTP 응답 fixture를 사용하며 일반 앱은 실제 API를 호출합니다. 사용자 키가 없는 개발·CI 검증은 실제 서비스 승인·요금·계약 검증과 구분합니다.
+`npm run test:desktop`은 격리된 데이터와 명시적인 테스트 플래그에서만 모의 API 응답으로 실제 Electron UI·IPC·저장 경로를 검사합니다. Linux headless 실행은 `STUDIO_DESKTOP_HEADLESS=1 npm run test:desktop`입니다. 설치 패키지 자체도 네이티브 빌드 호스트에서 같은 검사를 실행합니다.
 
-실제 API 점검은 설정한 계정의 키를 환경 변수로 제공하고 STUDIO_LIVE_ENGINE을 지정해 npm run test:live를 실행할 수 있습니다. [스크립트](scripts/live-test.ts)의 변수 이름을 참고하세요. 키를 소스에 쓰지 마세요.
+선택적인 실제 네이버 검사는 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, 선택적인 `NAVER_SEARCH_TYPE=blog|cafearticle` 환경 변수로 `npm run test:live`를 실행합니다. 실제 키를 코드나 채팅에 넣지 마세요. 일반 앱 실행은 실제 API를 사용합니다.
 
-Mac은 macOS 13 이상. ad-hoc 서명이며 Developer ID 공증 없음. Apple Silicon 기기 직접 실행과 실제 사용자 API 키 호출은 미검증입니다. 플랫폼별 build.json과 릴리스 검증 설명을 확인하세요.
+Mac은 macOS 13 이상, ad-hoc 서명이며 Developer ID 공증은 없습니다. 실제 사용자 API 키와 Apple Silicon 하드웨어 실행은 개발 환경에서 검증하지 않았습니다.

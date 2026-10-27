@@ -1,11 +1,12 @@
-import ExcelJS from 'exceljs';
-import { csvColumns } from './types.js';
 import type {RecordItem,ExportRequest} from './types.js';
-export const koreanHeaders=['자료 ID','조사 ID','쿼리 번들명','쿼리 논리식','일치 키워드','제외 키워드','검색 엔진','소스 플랫폼','원문 URL','제목','게시일','게시일 신뢰도','수집일','원문 언어','원문 본문 또는 스니펫','한국어 전체 번역','한국어 요약','경험 유형','페인 포인트','개선 요구','사용자 행동','임시방편','감정','관련성 점수','관련성 근거','광고 여부','중복 여부','본문 확보 상태','AI 제공자','AI 모델','처리 상태','검토 상태'];
-const extra=['mode','kind','parent_id','discovery_paths','exclusion_reasons','evidence','ai_error'] as const;
-export function safeCell(value:unknown){const s=Array.isArray(value)?value.join(' | '):value==null?'':String(value);return /^[\s\u0000-\u001f]*[=+@-]/u.test(s)?"'"+s:s;}
-export function selectRecords(records:RecordItem[],request:ExportRequest){return records.filter(r=>r.research_id===request.researchId&&(request.scope==='all'||request.scope==='valid'&&r.review_status!=='excluded'||request.scope==='excluded'&&r.review_status==='excluded'||request.scope==='bundle'&&r.query_bundle_name===request.bundle));}
-export async function exportData(records:RecordItem[],request:ExportRequest){const selected=selectRecords(records,request);const originalKeys=[...new Set(selected.flatMap(r=>Object.keys(r.imported_fields||{})))];const columns=[...csvColumns,...extra];const headers=[...request.korean?koreanHeaders:csvColumns,...request.korean?['데이터 모드','자료 유형','상위 게시물 ID','발견 경로','제외 근거','근거 문맥','처리 오류']:extra,...originalKeys.map(k=>'original_column:'+k)];const rows=selected.map(r=>[...columns.map(c=>safeCell(r[c])),...originalKeys.map(k=>safeCell(r.imported_fields?.[k]))]);
-  if(request.format==='xlsx'){const book=new ExcelJS.Workbook();const sheet=book.addWorksheet('조사 결과');sheet.addRow(headers);for(const row of rows)sheet.addRow(row);sheet.views=[{state:'frozen',ySplit:1}];sheet.autoFilter={from:{row:1,column:1},to:{row:1,column:headers.length}};return Buffer.from(await book.xlsx.writeBuffer());}
-  function quote(s:unknown){return '"'+String(s).replace(/"/g,'""')+'"';}return Buffer.from((request.bom?'\ufeff':'')+[headers,...rows].map(row=>row.map(quote).join(',')).join('\r\n')+'\r\n','utf8');
+export function safeCell(value:unknown){const text=Array.isArray(value)?value.join(' | '):value==null?'':String(value);return /^[\s\u0000-\u001f]*[=+@-]/u.test(text)?"'"+text:text;}
+export function selectRecords(records:RecordItem[],request:ExportRequest){const ids=request.ids?new Set(request.ids):undefined;const result=records.filter(r=>r.research_id===request.researchId&&(!ids||ids.has(r.record_id)));if(ids&&result.length!==ids.size)throw Error('저장할 행을 찾을 수 없습니다.');return result;}
+export async function exportData(records:RecordItem[],request:ExportRequest){
+ const selected=selectRecords(records,request);if(!selected.length)throw Error('저장할 자료가 없습니다.');
+ const originalKeys=[...new Set(selected.flatMap(row=>Object.keys(row.imported_fields||{})))];
+ const base=originalKeys.length?originalKeys:['제목','원문 URL','게시일','본문','본문 상태','검색 종류','쿼리 번들','제외 사유'];
+ const additions=['AI_요약','AI_인사이트','AI_분류','AI_불편사항','AI_개선제안','AI_사용자행동','AI_대안','AI_감정','AI_근거','AI_처리상태','AI_오류'];
+ const used=new Set(base);const headers=[...base,...additions.map(name=>{let value=name;for(let i=2;used.has(value);i++)value=name+'_'+i;used.add(value);return value;})];
+ const rows=selected.map(row=>[...(originalKeys.length?originalKeys.map(key=>row.imported_fields?.[key]||''):[row.title,row.source_url,row.published_at||'',row.original_full_text,row.content_status==='snippet_only'?'검색 요약':'CSV 본문',row.source_search_engine,row.query_bundle_name,row.exclusion_reasons]),row.korean_summary,row.ai_insight||'',row.insight_category,row.pain_point,row.improvement_request,row.user_behavior,row.workaround,row.sentiment,row.evidence,row.processing_status==='insights_ready'?'정리 완료':row.ai_error?'오류':'미정리',row.ai_error]);
+ const quote=(value:unknown)=>'"'+safeCell(value).replace(/"/g,'""')+'"';return Buffer.from('\uFEFF'+[headers,...rows].map(row=>row.map(quote).join(',')).join('\r\n'),'utf8');
 }
