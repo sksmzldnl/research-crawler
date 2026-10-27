@@ -1,6 +1,6 @@
 # 현재 검증 절차
 
-현재 기능과 배포 검증 범위는 [0.6.2 배포 안내](API_RELEASE.md)에 기록합니다. `GLASS_RELEASE.md`, `LOCAL_RELEASE.md`, `SEARCH_RELEASE.md`, `RELEASE_NOTES.md`는 과거 버전 기록입니다.
+현재 기능과 배포 검증 범위는 [0.7.0 배포 안내](API_RELEASE.md)에 기록합니다. `GLASS_RELEASE.md`, `LOCAL_RELEASE.md`, `SEARCH_RELEASE.md`, `RELEASE_NOTES.md`는 과거 버전 기록입니다.
 
 ```sh
 npm test

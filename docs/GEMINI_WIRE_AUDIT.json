@@ -1,0 +1,12 @@
+{
+  "sdk": "@google/genai@2.31.0",
+  "app_version": "0.6.2",
+  "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+  "endpoint_matches": true,
+  "auth_header_matches": true,
+  "request_json_matches": true,
+  "sdk_response_decoding_verified": true,
+  "transport": "intercepted in memory; no real Gemini request",
+  "live_key_validation": false,
+  "live_project_eligibility_validation": false
+}

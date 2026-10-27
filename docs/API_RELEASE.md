@@ -1,8 +1,15 @@
-# ZeroWaste Listening Studio 0.6.2 · Naver + CSV Insights
+# ZeroWaste Listening Studio 0.7.0 · Gemini 연결 확인
 
-0.6.2 수정: AI 생성 요청의 전체 응답 제한을 25초에서 120초로 늘렸습니다. 본문 수신에도 제한을 적용하고 사용자 중지와 시간 초과를 구분합니다. DNS·TLS 인증서·프록시·연결 거부·연결 끊김 오류를 구분하며, 원본 오류 문자열과 키를 표시하지 않습니다. 전송 실패·시간 초과 시 생성 POST를 자동 재호출하지 않습니다. 설치 앱은 시스템 네트워크 설정을 따르는 Electron 전송을 사용하고, 명시적인 환경 변수 프록시는 기존 Node 전송으로 유지합니다.
+Gemini 연결을 세 단계로 확인합니다. 모델 목록 조회 성공 뒤에도 실제 생성 권한이 거부될 수 있어, 텍스트 생성과 JSON·인사이트 생성까지 통과해야 연결 성공으로 표시합니다.
 
-0.6.1 수정: Gemini 기본 모델을 Google 공식 SDK의 현재 예제와 같은 `gemini-flash-latest`로 바꾸고, 기존 기본 설정도 이전합니다. 모델 404 발생 시 계정의 모델 목록에 Flash 최신 별칭이 있는 경우에만 한 번 재시도합니다. 다른 종류의 모델로 자동 전환하지 않습니다. API 오류는 배치를 즉시 중단하며, 전부 실패·일부 실패·성공을 구분하고 오류와 미처리 행 수를 표시합니다.
+- 설정의 Gemini 영역에 **연결 확인** 버튼과 단계별 결과·시간·중지 기능.
+- 합성 문장만 사용하며 사용자 CSV는 전송하지 않음. 모델 조회와 최대 2회 생성 요청의 프로젝트 요금·한도 적용 안내.
+- 키·모델 변경 시 확인 무효화. 앱 재실행 후 재확인. 확인 전 Gemini CSV 처리 차단.
+- 실패한 단계에 키가 가려진 Google 오류 코드·사유 표시, 진단 내용 복사.
+- 프로젝트 무료 등급 제한·키 제한·비활성 API·일일 한도 등을 구분해 안내.
+- Gemini 기본 모델을 안정 모델 `gemini-3.5-flash-lite`로 고정. 생성 실패 시 다른 모델로 자동 전환하지 않음.
+- 생성 요청은 최대 120초를 기다리고 자동 재전송하지 않음. 모델별 지원되는 낮은 사고 수준 적용.
+- 기존 두 메뉴와 Liquid Glass 화면, 원문·기존 자료 보존.
 
 이번 버전은 **네이버 블로그·카페 검색과 CSV 인사이트 정리**에 집중합니다. 기존 Liquid Glass 디자인을 유지하며 작업실과 설정 두 메뉴로 구성했습니다.
 
@@ -11,16 +18,16 @@
 - OpenAI 또는 Gemini로 선택 행의 한국어 요약·인사이트·개선 제안·근거 추가.
 - 표시한 행을 UTF-8 BOM CSV로 저장. 원래 열 이름이 겹쳐도 덮어쓰지 않음.
 - 잘못된 인용은 행별 오류 표시, AI 인증·권한·한도 오류는 배치 중지, 완료 결과 보존.
-- 다른 엔진·웹문서·RSS·URL 수집·전문 추출·번역 전용·모델 조회·연결 테스트 제거.
+- 다른 엔진·웹문서·RSS·URL 수집·전문 추출·번역 전용·모델 목록만으로 성공을 표시하는 테스트 제거. 실제 생성 기반 Gemini 연결 확인 추가.
 - 설정은 네이버 ID·Secret 두 값과 선택한 AI 키 하나. GPT는 Tracking ID 대신 Secret Key 전체값만 입력.
 
 ## 설치
 
-- Apple Silicon: `ZeroWaste-Listening-Studio-0.6.2-mac-arm64.dmg`
-- Intel Mac: `ZeroWaste-Listening-Studio-0.6.2-mac-x64.dmg`
-- Windows: `ZeroWaste-Listening-Studio-0.6.2-win-x64.exe`
+- Apple Silicon: `ZeroWaste-Listening-Studio-0.7.0-mac-arm64.dmg`
+- Intel Mac: `ZeroWaste-Listening-Studio-0.7.0-mac-x64.dmg`
+- Windows: `ZeroWaste-Listening-Studio-0.7.0-win-x64.exe`
 
-[다운로드](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.6.2). Mac DMG를 열고 앱을 Applications로 옮깁니다. 기존 앱을 종료한 뒤 교체하세요. 앱 식별자와 데이터 저장 위치를 유지하므로 이전 자료는 보존됩니다. 이전 버전 수집 작업은 새로 시작하세요.
+[다운로드](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.7.0). Mac DMG를 열고 앱을 Applications로 옮깁니다. 기존 앱을 종료한 뒤 교체하세요. 앱 식별자와 데이터 저장 위치를 유지하므로 이전 자료는 보존됩니다. 이전 버전 수집 작업은 새로 시작하세요.
 
 macOS 13 이상. ad-hoc 서명이며 Developer ID 공증은 없습니다. macOS가 차단하면 시스템 설정의 개인정보 보호 및 보안에서 해당 앱의 실행 허용을 확인할 수 있습니다.
 
@@ -30,7 +37,7 @@ macOS 13 이상. ad-hoc 서명이며 Developer ID 공증은 없습니다. macOS�
 
 브라우저 검사: 두 메뉴와 두 검색 종류, 번들 편집, CSV 파일 가져오기·미리보기·행 선택·다운로드, 최소 키 설정과 좁은 화면.
 
-Electron 검사: 실제 UI·IPC·SQLite·네이티브 저장 경로를 거쳐 네이버 블로그·카페, start=1/101, 광고 필터, 401 후 재개, 네이버 키 없는 CSV + OpenAI/Gemini 정리, 원문 보존, CSV 저장, AI 401 중지를 검증합니다. 제공자 응답은 격리된 명시적 테스트 실행에서만 fixture를 사용합니다. 일반 앱은 실제 API를 호출합니다.
+Electron 검사: 실제 UI·IPC·SQLite·네이티브 저장 경로를 거쳐 Gemini 메타데이터 200·생성 403 구분, 오류 키 가림, 연결 확인 3단계와 26초 지연 응답, 확인 후 CSV 처리, 네이버 블로그·카페, start=1/101, 광고 필터, 401 후 재개, 네이버 키 없는 CSV + OpenAI/Gemini 정리, 원문 보존, CSV 저장, AI 401 중지를 검증합니다. 제공자 응답은 격리된 명시적 테스트 실행에서만 fixture를 사용합니다. 일반 앱은 실제 API를 호출합니다.
 
 CI는 Intel macOS·Windows에서 소스와 설치 패키지의 실행을 검사합니다. Mac 두 아키텍처의 바이너리·서명 무결성·ASAR의 실제 코드·자산·설치 파일 체크섬을 검사합니다. `*-build.json`에 소스 커밋과 검사 범위를 기록합니다. Apple Silicon 바이너리는 교차 빌드 및 내용 검사이며 M 시리즈 실기기 실행은 미검증입니다.
 

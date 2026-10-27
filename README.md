@@ -1,12 +1,12 @@
-# ZeroWaste Listening Studio 0.6.2
+# ZeroWaste Listening Studio 0.7.0
 
 네이버 블로그·카페의 검색 결과를 쿼리 번들로 모으고, CSV 자료를 AI로 요약·정리하는 macOS/Windows 앱입니다. 기존 Liquid Glass 디자인을 유지하며 메뉴는 **작업실 / 설정** 두 개로 정리했습니다.
 
-[설치 파일 다운로드](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.6.2)
+[설치 파일 다운로드](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.7.0)
 
-- Apple Silicon Mac: `ZeroWaste-Listening-Studio-0.6.2-mac-arm64.dmg`
-- Intel Mac: `ZeroWaste-Listening-Studio-0.6.2-mac-x64.dmg`
-- Windows: `ZeroWaste-Listening-Studio-0.6.2-win-x64.exe`
+- Apple Silicon Mac: `ZeroWaste-Listening-Studio-0.7.0-mac-arm64.dmg`
+- Intel Mac: `ZeroWaste-Listening-Studio-0.7.0-mac-x64.dmg`
+- Windows: `ZeroWaste-Listening-Studio-0.7.0-win-x64.exe`
 
 ## 사용 방법
 
@@ -14,8 +14,9 @@
 2. 작업실에서 **블로그 또는 카페**를 고르고 쿼리 번들·목표 수량을 설정한 뒤 **검색·수집 시작**을 누릅니다. 예: `재사용 AND (불편 OR 후기) NOT 광고`.
 3. 기존 파일은 **CSV 파일 가져오기**에서 가져옵니다. AI가 읽을 본문 열만 고르면 나머지 열은 그대로 보존됩니다. CSV 가져오기에는 네이버 키가 필요하지 않습니다.
 4. 설정에서 **OpenAI GPT 또는 Google Gemini** 중 하나를 선택하고 해당 API 키를 등록합니다. OpenAI는 **Secret Key 전체값 하나**를 사용합니다. Tracking ID·로그인 아이디·비밀번호는 입력하지 않습니다.
-5. 자료의 행을 선택하고 **선택 N행 AI 정리**를 누릅니다. 선택한 본문을 AI에 보내 요약·인사이트·개선 제안·근거를 추가합니다. 필요하면 분석 관점을 적을 수 있습니다.
-6. **표시된 N행 CSV 저장**으로 현재 필터의 모든 행을 저장합니다. 체크한 행은 AI 처리 대상이며 CSV 저장 대상은 화면에 표시된 행입니다.
+5. Gemini는 **설정 → 연결 확인**을 눌러 키·모델 조회, 실제 문장 생성, JSON·인사이트 생성의 3단계를 통과해야 합니다. 합성 자료로 모델 조회와 최대 2회의 생성 요청을 보내며 CSV는 전송하지 않습니다. 프로젝트의 요금·한도가 적용됩니다.
+6. 자료의 행을 선택하고 **선택 N행 AI 정리**를 누릅니다. 선택한 본문을 AI에 보내 요약·인사이트·개선 제안·근거를 추가합니다. 필요하면 분석 관점을 적을 수 있습니다.
+7. **표시된 N행 CSV 저장**으로 현재 필터의 모든 행을 저장합니다. 체크한 행은 AI 처리 대상이며 CSV 저장 대상은 화면에 표시된 행입니다.
 
 [키 입력과 오류 해결](docs/API.md) · [배포 및 검증 범위](docs/API_RELEASE.md) · [네이버 연결 규격 근거](docs/NAVER_API_HUB.md)
 
@@ -27,7 +28,7 @@ CSV는 5MB·1,000행·150열까지 가져옵니다. 원래 열과 순서를 보�
 
 AI는 본문에서 정확히 일치하는 인용만 저장합니다. 잘못된 인용은 행별 오류로 남기며, 인증·권한·사용 한도 오류는 남은 행 처리를 멈춥니다. 완료한 결과는 보존됩니다. AI 해석과 제안은 원문과 함께 검토하세요.
 
-다른 검색엔진, 웹문서 검색, RSS·URL 수집, 전문 추출, 번역 전용 기능, 모델 목록 조회와 별도 연결 테스트는 제거했습니다. 이전 버전의 자료·키 저장 파일은 보존하며, 이전 수집 작업은 새 네이버 검색으로 시작합니다.
+다른 검색엔진, 웹문서 검색, RSS·URL 수집, 전문 추출, 번역 전용 기능, 모델 목록만 확인하는 연결 테스트는 제거했습니다. Gemini는 실제 문장·JSON 생성까지 검증하는 연결 확인을 제공합니다. 이전 버전의 자료·키 저장 파일은 보존하며, 이전 수집 작업은 새 네이버 검색으로 시작합니다.
 
 키는 지원되는 OS 암호화 기능으로 저장하고, 보안 저장소를 사용할 수 없으면 세션 메모리에만 보관합니다. CSV에는 키를 넣지 않습니다. ChatGPT/Gemini 구독과 API 사용 요금은 별개입니다.
 
@@ -49,3 +50,5 @@ npm run desktop
 선택적인 실제 네이버 검사는 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, 선택적인 `NAVER_SEARCH_TYPE=blog|cafearticle` 환경 변수로 `npm run test:live`를 실행합니다. 실제 키를 코드나 채팅에 넣지 마세요. 일반 앱 실행은 실제 API를 사용합니다.
 
 Mac은 macOS 13 이상, ad-hoc 서명이며 Developer ID 공증은 없습니다. 실제 사용자 API 키와 Apple Silicon 하드웨어 실행은 개발 환경에서 검증하지 않았습니다.
+
+Gemini 기본 모델은 `gemini-3.5-flash-lite`입니다. 키·모델을 변경하거나 앱을 다시 실행하면 연결을 다시 확인합니다. 성공 표시는 해당 시점의 생성 검증이며 무료 이용 자격이나 앞으로의 할당량을 보장하지 않습니다. Google 오류는 키를 가린 상태로 실패 단계에 표시하며 진단 내용만 복사할 수 있습니다.

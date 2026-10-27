@@ -1,4 +1,4 @@
-# 0.6.2 구조
+# 0.7.0 구조
 
 Electron main의 Service가 SQLite·OS 암호화 저장소·공식 HTTPS API를 관리합니다. sandbox·contextIsolation을 사용하고 preload는 제한된 IPC 호출만 노출합니다. React 화면은 작업실과 설정으로 구성됩니다. 로컬 개발 서버는 Origin·클라이언트 헤더를 검사합니다.
 
@@ -13,3 +13,5 @@ Electron main의 Service가 SQLite·OS 암호화 저장소·공식 HTTPS API를 
 공식 검색 API가 제공하는 요약과 게시글 전문을 구분합니다. 전문 추출·크롤링·RSS·다른 엔진·OAuth·번역 기능은 포함하지 않습니다. 사용자 지정 API 목적지는 받지 않으며 키는 CSV나 API 오류 본문에 노출하지 않습니다.
 
 `clean-build.mjs`는 컴파일 전 생성 디렉터리를 비워 삭제된 모듈이 패키지에 남는 것을 방지합니다. `desktop/test-api.ts`의 fixture 전송은 격리된 테스트 폴더와 명시적 플래그 두 조건에서만 활성화됩니다.
+
+- `gemini-check.ts`: 합성 입력의 모델 조회·실제 문장 생성·실제 JSON·근거 검증을 관리합니다. 확인은 현재 키와 모델에 연결되며 메모리에만 보존합니다. Service는 확인되지 않은 Gemini CSV 처리를 차단하고 변경 시 기존 확인을 무효화합니다.

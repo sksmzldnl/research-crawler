@@ -3,10 +3,31 @@ const dispatcher=new EnvHttpProxyAgent();
 export type Transport=(url:string,init?:RequestInit)=>Promise<Response>;
 const transport:Transport=async(url,init)=>await proxyFetch(url,{...init,dispatcher} as Parameters<typeof proxyFetch>[1]) as unknown as Response;
 export class ApiError extends Error{
- constructor(public status:number,public provider:string){
-  const message=provider==='OpenAI'&&status===401?'Secret Key 전체값과 키의 활성 상태를 확인하세요. Tracking ID는 인증에 사용할 수 없습니다.':provider==='OpenAI'&&status===429?'API 계정의 사용 한도·잔액을 확인한 뒤 다시 실행하세요.':provider==='Gemini'&&status===404?'요청한 Gemini 모델을 찾을 수 없습니다. 설정의 AI 모델을 gemini-flash-latest로 변경하세요. 무료 한도 초과를 뜻하는 오류는 아닙니다.':status===400?'요청 형식 또는 모델 설정을 확인하세요.':status===404?'요청한 모델이나 API 경로를 찾을 수 없습니다.':status===401?'등록한 인증정보를 확인하세요.':status===403?'해당 상품·모델의 사용 권한을 확인하세요.':status===429?'요청 한도에 도달했습니다. 잠시 후 다시 실행하세요.':status>=500?'제공자 일시 오류입니다. 잠시 후 다시 실행하세요.':'요청 조건을 확인하세요.';
-  super(`${provider} (${status}): ${message}`);
+ constructor(public status:number,public provider:string,public detail?:{code:string;reason:string;message:string}){
+  const message=provider==='OpenAI'&&status===401?'Secret Key 전체값과 키의 활성 상태를 확인하세요. Tracking ID는 인증에 사용할 수 없습니다.':provider==='OpenAI'&&status===429?'API 계정의 사용 한도·잔액을 확인한 뒤 다시 실행하세요.':provider==='Gemini'&&status===404?'요청한 Gemini 모델을 찾을 수 없습니다. 설정에서 모델 이름과 생성 지원 여부를 확인하세요. 무료 한도 초과를 뜻하는 오류는 아닙니다.':status===400?'요청 형식 또는 모델 설정을 확인하세요.':status===404?'요청한 모델이나 API 경로를 찾을 수 없습니다.':status===401?'등록한 인증정보를 확인하세요.':status===403?'해당 상품·모델의 사용 권한을 확인하세요.':status===429?'요청 한도에 도달했습니다. 잠시 후 다시 실행하세요.':status>=500?'제공자 일시 오류입니다. 잠시 후 다시 실행하세요.':'요청 조건을 확인하세요.';
+  super(`${provider} (${status}): ${googleAdvice(status,detail)||message}${detail?.code?' ['+detail.code+']':''}${detail?.reason?' ['+detail.reason+']':''}${detail?.message?' · Google: '+detail.message:''}`);
  }
+}
+function googleAdvice(status:number,detail?:{code:string;reason:string;message:string}){
+ if(!detail)return '';const text=(detail.code+' '+detail.reason+' '+detail.message).toLowerCase();
+ if(/free.?tier.*(not available|unavailable|restricted)|project.*denied access/.test(text))return '해당 프로젝트의 무료 등급 또는 생성 접근이 제한됐습니다. AI Studio의 프로젝트 상태를 확인하세요. 같은 프로젝트의 키만 교체해도 해결되지 않습니다.';
+ if(/leaked|compromised/.test(text))return '노출된 것으로 차단된 키입니다. AI Studio에서 새 키를 발급하세요.';
+ if(/api_key_invalid|api key not valid|invalid api key/.test(text))return 'API 키 전체값과 활성 상태를 확인하세요.';
+ if(/referrer|ip_address_blocked|ip address/.test(text))return '키의 애플리케이션 제한이 현재 앱의 요청을 차단합니다. 허용된 IP·웹사이트 제한을 확인하세요.';
+ if(/service_disabled|api_key_service_blocked|has not been used.*disabled/.test(text))return '키가 속한 프로젝트의 Generative Language API 활성화와 API 제한을 확인하세요.';
+ if(/unrestricted/.test(text))return '제한 없는 Standard 키는 거부될 수 있습니다. AI Studio의 Auth 키 또는 Gemini API로 제한한 키를 사용하세요.';
+ if(status===402)return '연결된 유료 프로젝트의 선불 잔액이 부족합니다. 무료 이용 자격과 현재 프로젝트를 확인하세요.';
+ if(status===429&&/daily|per.?day|requestsperday/.test(text))return '프로젝트의 일일 요청 한도에 도달했습니다. AI Studio의 초기화 시점과 한도를 확인하세요.';
+ return '';
+}
+async function googleDetail(response:Response,init:RequestInit){
+ try{const body=JSON.parse(await limitedText(response,65536)),error=body.error;if(!error||typeof error!=='object')return;
+  const headers=new Headers(init.headers),secretValues=[headers.get('x-goog-api-key'),headers.get('Authorization')].filter((s):s is string=>!!s);const clean=(value:unknown)=>typeof value==='string'&&/^([A-Z][A-Z0-9_]{0,79}|[a-z][a-z0-9_]{0,79})$/.test(value)&&!secretValues.some(secret=>value.includes(secret))?value:'';
+  let message=typeof error.message==='string'?error.message:'';
+  for(const value of [headers.get('x-goog-api-key'),headers.get('Authorization')])if(value){for(const secret of [value,value.replace(/^Bearer\s+/i,'')])if(secret)message=message.split(secret).join('[키 숨김]').split(encodeURIComponent(secret)).join('[키 숨김]');}
+  message=message.replace(/AIza[A-Za-z0-9_-]{15,}/g,'[키 숨김]').replace(/([?&]key=)[^&\s]+/gi,'$1[키 숨김]').replace(/Bearer\s+[^\s"']+/gi,'Bearer [키 숨김]').replace(/[\u0000-\u001f\u007f]/g,' ').slice(0,800);
+  return {code:clean(error.status)||clean(error.code),reason:clean(Array.isArray(error.details)?error.details.find((d:unknown)=>d&&typeof d==='object'&&'reason' in d)?.reason:undefined),message};
+ }catch{return undefined;}
 }
 export const wait=(ms:number,signal?:AbortSignal)=>new Promise<void>((resolve,reject)=>{if(signal?.aborted)return reject(signal.reason);const timer=setTimeout(done,ms);function done(){signal?.removeEventListener('abort',abort);resolve();}function abort(){clearTimeout(timer);reject(signal?.reason);}signal?.addEventListener('abort',abort,{once:true});});
 export class NetworkFailure extends Error {
@@ -23,7 +44,7 @@ function connectionFailure(error:unknown,provider:string,ms:number):NetworkFailu
   if(e.cause)pending.push(e.cause);if(Array.isArray(e.errors))pending.push(...e.errors);
  }return new NetworkFailure('unknown',provider);
 }
-export interface RequestPolicy {timeoutMs?:number;}
+export interface RequestPolicy {timeoutMs?:number;maxAttempts?:number;}
 export class Network {
  private last=new Map<string,number>();
  constructor(private send:Transport=transport,private sleep=wait,private deadline=(ms:number)=>AbortSignal.timeout(ms)){}
@@ -31,19 +52,19 @@ export class Network {
   const ms=policy.timeoutMs??25000,timer=this.deadline(ms),combined=signal?AbortSignal.any([signal,timer]):timer;
   try{combined.throwIfAborted();return await action(combined);}catch(error){if(signal?.aborted)throw signal.reason;if(timer.aborted)throw new NetworkFailure('timeout',provider,'',ms);throw error;}
  }
- async request(url:string,init:RequestInit={},provider='API',signal?:AbortSignal,policy:RequestPolicy={}):Promise<Response>{return this.timed(provider,signal,policy,s=>this.perform(url,init,provider,s,policy.timeoutMs??25000));}
- private async perform(url:string,init:RequestInit,provider:string,signal:AbortSignal,ms:number):Promise<Response>{
-  for(let attempt=0;attempt<4;attempt++){
+ async request(url:string,init:RequestInit={},provider='API',signal?:AbortSignal,policy:RequestPolicy={}):Promise<Response>{return this.timed(provider,signal,policy,s=>this.perform(url,init,provider,s,policy.timeoutMs??25000,policy.maxAttempts??4));}
+ private async perform(url:string,init:RequestInit,provider:string,signal:AbortSignal,ms:number,maxAttempts=4):Promise<Response>{
+  for(let attempt=0;attempt<maxAttempts;attempt++){
    signal.throwIfAborted();let response:Response;const host=new URL(url).hostname;
    if(this.send===transport){const delay=Math.max(0,650-(Date.now()-(this.last.get(host)||0)));if(delay)await this.sleep(delay,signal);this.last.set(host,Date.now());}
    try{response=await this.send(url,{...init,redirect:'manual',signal});}catch(error){signal.throwIfAborted();throw connectionFailure(error,provider,ms);}
-   if(((response.status===429&&!['OpenAI','Gemini'].includes(provider))||response.status>=500)&&attempt<3){const retry=response.headers.get('retry-after');const seconds=retry?(Number.isFinite(Number(retry))?Number(retry):Math.max(0,(Date.parse(retry)-Date.now())/1000)):2**attempt;
+   if(((response.status===429&&!['OpenAI','Gemini'].includes(provider))||response.status>=500)&&attempt<maxAttempts-1){const retry=response.headers.get('retry-after');const seconds=retry?(Number.isFinite(Number(retry))?Number(retry):Math.max(0,(Date.parse(retry)-Date.now())/1000)):2**attempt;
     if(seconds>60)throw new ApiError(response.status,provider);await response.body?.cancel();await this.sleep(Math.max(0,seconds)*1000,signal);continue;}
-   if(!response.ok){await response.body?.cancel();throw new ApiError(response.status,provider);}return response;
+   if(!response.ok){const detail=provider==='Gemini'?await googleDetail(response,init):undefined;await response.body?.cancel().catch(()=>{});throw new ApiError(response.status,provider,detail);}return response;
   }throw Error('재시도 한도');
  }
  async json(url:string,init:RequestInit={},provider='API',signal?:AbortSignal,policy:RequestPolicy={}):Promise<any>{return this.timed(provider,signal,policy,async s=>{
-  const response=await this.perform(url,init,provider,s,policy.timeoutMs??25000);let text:string;
+  const response=await this.perform(url,init,provider,s,policy.timeoutMs??25000,policy.maxAttempts??4);let text:string;
   try{text=await limitedText(response,8_000_000);}catch(error){s.throwIfAborted();if((error as Error).message==='응답 크기 제한 초과')throw Error(`${provider}: 응답 크기 제한을 넘었습니다.`);throw connectionFailure(error,provider,policy.timeoutMs??25000);}
   s.throwIfAborted();try{return JSON.parse(text);}catch{throw Error(`${provider}: 유효한 JSON 응답이 아닙니다.`);}
  });}
