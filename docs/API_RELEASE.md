@@ -1,4 +1,6 @@
-# ZeroWaste Listening Studio 0.6.1 · Naver + CSV Insights
+# ZeroWaste Listening Studio 0.6.2 · Naver + CSV Insights
+
+0.6.2 수정: AI 생성 요청의 전체 응답 제한을 25초에서 120초로 늘렸습니다. 본문 수신에도 제한을 적용하고 사용자 중지와 시간 초과를 구분합니다. DNS·TLS 인증서·프록시·연결 거부·연결 끊김 오류를 구분하며, 원본 오류 문자열과 키를 표시하지 않습니다. 전송 실패·시간 초과 시 생성 POST를 자동 재호출하지 않습니다. 설치 앱은 시스템 네트워크 설정을 따르는 Electron 전송을 사용하고, 명시적인 환경 변수 프록시는 기존 Node 전송으로 유지합니다.
 
 0.6.1 수정: Gemini 기본 모델을 Google 공식 SDK의 현재 예제와 같은 `gemini-flash-latest`로 바꾸고, 기존 기본 설정도 이전합니다. 모델 404 발생 시 계정의 모델 목록에 Flash 최신 별칭이 있는 경우에만 한 번 재시도합니다. 다른 종류의 모델로 자동 전환하지 않습니다. API 오류는 배치를 즉시 중단하며, 전부 실패·일부 실패·성공을 구분하고 오류와 미처리 행 수를 표시합니다.
 
@@ -14,11 +16,11 @@
 
 ## 설치
 
-- Apple Silicon: `ZeroWaste-Listening-Studio-0.6.1-mac-arm64.dmg`
-- Intel Mac: `ZeroWaste-Listening-Studio-0.6.1-mac-x64.dmg`
-- Windows: `ZeroWaste-Listening-Studio-0.6.1-win-x64.exe`
+- Apple Silicon: `ZeroWaste-Listening-Studio-0.6.2-mac-arm64.dmg`
+- Intel Mac: `ZeroWaste-Listening-Studio-0.6.2-mac-x64.dmg`
+- Windows: `ZeroWaste-Listening-Studio-0.6.2-win-x64.exe`
 
-[다운로드](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.6.1). Mac DMG를 열고 앱을 Applications로 옮깁니다. 기존 앱을 종료한 뒤 교체하세요. 앱 식별자와 데이터 저장 위치를 유지하므로 이전 자료는 보존됩니다. 이전 버전 수집 작업은 새로 시작하세요.
+[다운로드](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.6.2). Mac DMG를 열고 앱을 Applications로 옮깁니다. 기존 앱을 종료한 뒤 교체하세요. 앱 식별자와 데이터 저장 위치를 유지하므로 이전 자료는 보존됩니다. 이전 버전 수집 작업은 새로 시작하세요.
 
 macOS 13 이상. ad-hoc 서명이며 Developer ID 공증은 없습니다. macOS가 차단하면 시스템 설정의 개인정보 보호 및 보안에서 해당 앱의 실행 허용을 확인할 수 있습니다.
 

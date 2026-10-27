@@ -12,8 +12,11 @@ if(process.env.STUDIO_TEST_DATA_DIR){app.setPath('userData',process.env.STUDIO_T
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');let service:Service;
 void app.whenReady().then(async()=>{
 protocol.handle('studio',request=>{const u=new URL(request.url);const path=resolve(root,'dist','.'+decodeURIComponent(u.pathname==='/'?'/index.html':u.pathname));const rel=relative(join(root,'dist'),path);if(rel.startsWith('..')||isAbsolute(rel)||u.hostname!=='app')return new Response('Forbidden',{status:403});return net.fetch(pathToFileURL(path).href);});
+// Use the Mac/Windows network stack (system proxy and trust store) on desktop.
+// Explicit environment proxies retain the Node transport used by managed runtimes.
+const systemTransport=process.env.HTTPS_PROXY||process.env.HTTP_PROXY||process.env.https_proxy||process.env.http_proxy?undefined:async(url:string,init?:RequestInit)=>net.fetch(url,{...init,cache:'no-store'});
 const data=process.env.STUDIO_TEST_DATA_DIR||app.getPath('userData');let secure=safeStorage.isEncryptionAvailable();if(process.platform==='linux'&&safeStorage.getSelectedStorageBackend()==='basic_text')secure=false;
-service=new Service(new Store(join(data,'studio.sqlite')),secure?new EncryptedVault(join(data,'credentials.enc'),safeStorage):new MemoryVault(),new Network(process.env.STUDIO_TEST_DATA_DIR&&process.env.STUDIO_TEST_API_FIXTURES==='1'?fixtureTransport(join(data,'api-fixtures.json'),join(data,'api-requests.jsonl')):undefined));
+service=new Service(new Store(join(data,'studio.sqlite')),secure?new EncryptedVault(join(data,'credentials.enc'),safeStorage):new MemoryVault(),new Network(process.env.STUDIO_TEST_DATA_DIR&&process.env.STUDIO_TEST_API_FIXTURES==='1'?fixtureTransport(join(data,'api-fixtures.json'),join(data,'api-requests.jsonl')):systemTransport));
 const window=new BrowserWindow({width:1440,height:960,minWidth:860,minHeight:600,title:'ZeroWaste Listening Studio',backgroundColor:'#f5f7f3',webPreferences:{preload:join(root,'build/desktop/preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
 window.webContents.setWindowOpenHandler(({url})=>{void open(url);return {action:'deny'};});window.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith('studio://app/')){event.preventDefault();void open(url);}});
 async function open(raw:string){try{const u=new URL(raw);if(['https:','http:'].includes(u.protocol)&&!u.username&&!u.password)await shell.openExternal(u.href);}catch{}}

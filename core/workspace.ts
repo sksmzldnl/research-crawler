@@ -2,7 +2,7 @@ import {randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {Store} from './store.js';
 import {AI} from './ai.js';
-import {ApiError} from './network.js';
+import {ApiError,NetworkFailure} from './network.js';
 import {importSchema,prepareImport} from './import.js';
 import type {LocalJob} from './types.js';
 export const processSchema=z.object({researchId:z.string().min(1),ids:z.array(z.string()).min(1).max(1000),focus:z.string().max(1000).default(''),consent:z.literal(true)}).strict();
@@ -21,7 +21,7 @@ export class Workspace {
    row.korean_summary=result.results.map(r=>r.summary).join('\n');row.ai_insight=result.results.map(r=>r.insight).join('\n');row.insight_category=[...new Set(result.results.flatMap(r=>r.categories))];
    for(const field of ['pain_point','improvement_request','user_behavior','workaround'] as const)row[field]=[...new Set(result.results.map(r=>r[field]).filter(Boolean))].join('\n');
    row.sentiment=[...new Set(result.results.map(r=>r.sentiment))].join(', ');row.evidence=result.results.flatMap(r=>r.evidence);row.ai_provider=settings.aiProvider;row.ai_model=result.model;if(result.model!==settings.aiModel){settings.aiModel=result.model;const current=this.store.settings();if(current.aiProvider===settings.aiProvider)this.store.saveSettings({...current,aiModel:result.model});}row.ai_error='';row.processing_status='insights_ready';research.usage.input+=result.input;research.usage.output+=result.output;job.message=row.title;
-  }catch(error){if(signal.aborted)throw error;row.ai_error=(error as Error).message;row.processing_status='ai_failed';job.failed++;job.lastError=row.ai_error;job.message=row.ai_error;if(error instanceof ApiError||/연결 실패|시간 초과/.test(row.ai_error))throw error;
+  }catch(error){if(signal.aborted)throw error;row.ai_error=(error as Error).message;row.processing_status='ai_failed';job.failed++;job.lastError=row.ai_error;job.message=row.ai_error;if(error instanceof ApiError||error instanceof NetworkFailure)throw error;
   }finally{if(!signal.aborted){const current=this.store.records(research.id).find(r=>r.record_id===row.record_id);this.store.record({...row,review_status:current?.review_status||row.review_status});const latest=this.store.research(research.id)!;this.store.put('researches',{...latest,usage:research.usage});job.processed++;}}}})().catch(error=>{if(!signal.aborted){job.status='failed';job.message=(error as Error).message;}}).finally(()=>{if(signal.aborted)job.status='cancelled';else if(job.status==='running')job.status=job.failed===job.total?'failed':job.failed?'partial':'completed';});
   return job;
  }

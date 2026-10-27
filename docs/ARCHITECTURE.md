@@ -1,4 +1,4 @@
-# 0.6.1 구조
+# 0.6.2 구조
 
 Electron main의 Service가 SQLite·OS 암호화 저장소·공식 HTTPS API를 관리합니다. sandbox·contextIsolation을 사용하고 preload는 제한된 IPC 호출만 노출합니다. React 화면은 작업실과 설정으로 구성됩니다. 로컬 개발 서버는 Origin·클라이언트 헤더를 검사합니다.
 
