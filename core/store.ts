@@ -1,4 +1,5 @@
 import {apiDefaults} from './api-types.js';
+import {migrateNaverSettings} from './naver-connection.js';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, chmodSync } from 'node:fs';
@@ -17,7 +18,7 @@ export class Store {
   records(id:string){return this.db.prepare('SELECT data FROM records WHERE research_id=? ORDER BY rowid').all(id).map(r=>JSON.parse(r.data as string) as RecordItem);}
   research(id:string){return this.list<Research>('researches').find(r=>r.id===id);}
   remove(table:'bundles'|'researches'|'records',id:string){this.db.prepare(`DELETE FROM ${table} WHERE id=?`).run(id);}
-  settings():ProviderSettings{const r=this.db.prepare("SELECT data FROM settings WHERE id='main'").get();return {...defaultSettings,...r?JSON.parse(r.data as string):{}};}
+  settings():ProviderSettings{const r=this.db.prepare("SELECT data FROM settings WHERE id='main'").get();return migrateNaverSettings({...defaultSettings,...r?JSON.parse(r.data as string):{}});}
   saveSettings(s:ProviderSettings){this.db.prepare("INSERT INTO settings(id,data) VALUES('main',?) ON CONFLICT(id) DO UPDATE SET data=excluded.data").run(JSON.stringify(s));}
   async backup(path:string){const {backup}=await import('node:sqlite');await backup(this.db,path);chmodSync(path,0o600);}
   close(){this.db.close();}

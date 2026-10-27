@@ -2,6 +2,7 @@ import {browserQueries} from './search-plan.js';
 import {SearchCollector} from './search.js';
 import {SearchApi,naverEndpoint} from './search-api.js';
 import {apiDefaults,apiEngines} from './api-types.js';
+import {migrateNaverSettings} from './naver-connection.js';
 import {RedditOAuth} from './oauth.js';
 import { Workspace } from './workspace.js';
 import { parseCsv } from './import.js';
@@ -20,7 +21,7 @@ const id=z.string().min(1).max(200);
 const date=z.string().regex(/^$|^\d{4}-\d{2}-\d{2}$/).refine(s=>!s||(!isNaN(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s),'올바른 날짜를 입력하세요.');
 export const configSchema=z.object({name:z.string().trim().min(1).max(100),mode:z.enum(['demo','live']),bundleIds:z.array(id).min(1).max(30),sources:z.array(z.enum(sources)).max(8),startDate:date,endDate:date,target:z.number().int().min(1).max(1000),removeAds:z.boolean(),deduplicate:z.boolean(),semanticDedupe:z.boolean(),fetchOriginal:z.boolean(),ai:z.boolean(),aiProvider:z.enum(['openai','gemini']),aiModel:z.string().min(1).max(120),aiInputPrice:z.number().min(0).max(10000),aiOutputPrice:z.number().min(0).max(10000)}).refine(c=>!c.startDate||!c.endDate||c.startDate<=c.endDate,'종료일은 시작일 이후여야 합니다.');
 const bundleSchema=z.object({id:z.string().max(200).optional(),name:z.string().trim().min(1).max(100),expression:z.string().min(1).max(3000),exclusions:z.string().max(2000),priority:z.number().int().min(1).max(100),suggestions:z.array(z.string().max(80)).max(20),aiApproved:z.array(z.string().max(80)).max(100).optional()});
-const settingsSchema=z.object({naverUrl:z.string().max(2000).default(apiDefaults.naverUrl),naverType:z.enum(['blog','cafearticle','webkr']).default('blog'),naverAuth:z.enum(['naver','gateway']).default('naver'),daumType:z.enum(['web','blog','cafe']).default('web'),googleCx:z.string().max(200).default(''),googleExisting:z.boolean().default(false),redditComments:z.boolean().default(false),redditApproved:z.boolean(),redditClientId:z.string().max(100),rssUrls:z.array(z.string().url().max(2000)).max(20),originalAllowedHosts:z.array(z.string().regex(/^[a-z0-9.-]+$/)).max(100),consentAi:z.boolean(),retentionDays:z.number().int().min(1).max(365)});
+const settingsSchema=z.object({naverUrl:z.string().max(2000).default(apiDefaults.naverUrl),naverType:z.enum(['blog','cafearticle','webkr']).default('blog'),naverAuth:z.enum(['naver','gateway']).default(apiDefaults.naverAuth),daumType:z.enum(['web','blog','cafe']).default('web'),googleCx:z.string().max(200).default(''),googleExisting:z.boolean().default(false),redditComments:z.boolean().default(false),redditApproved:z.boolean(),redditClientId:z.string().max(100),rssUrls:z.array(z.string().url().max(2000)).max(20),originalAllowedHosts:z.array(z.string().regex(/^[a-z0-9.-]+$/)).max(100),consentAi:z.boolean(),retentionDays:z.number().int().min(1).max(365)});
 const exportSchema=z.object({researchId:id,scope:z.enum(['all','valid','excluded','bundle']),bundle:z.string().optional(),korean:z.boolean(),bom:z.boolean(),format:z.enum(['csv','xlsx'])});
 export class Service {
   api:SearchApi;oauth:RedditOAuth;search:SearchCollector;workspace:Workspace;connectors:Connectors;ai:AI;engine:Engine;
@@ -50,7 +51,7 @@ export class Service {
       case 'research.delete':{const key=id.parse(args);if(this.engine.active.has(key)||this.workspace.busy||this.search.active.has(key))throw Error('먼저 조사를 중지하고 요청이 끝날 때까지 기다려 주세요.');this.store.remove('researches',key);return true;}
       case 'record.review':{const a=z.object({id,review:z.enum(['included','excluded','pending'])}).parse(args);const record=this.store.list<RecordItem>('records').find(r=>r.record_id===a.id);if(!record)throw Error('자료를 찾지 못했습니다.');record.review_status=a.review;this.store.record(record);this.recount(record.research_id);return true;}
       case 'record.retry':throw Error('검토 화면에서 행을 선택해 번역 또는 CSV 정리를 실행하세요.');
-      case 'settings.save':{const s=settingsSchema.parse(args);if(s.naverUrl)naverEndpoint(s.naverUrl,s.naverType);this.store.saveSettings(s);return true;}
+      case 'settings.save':{const s=migrateNaverSettings(settingsSchema.parse(args));if(s.naverUrl)naverEndpoint(s.naverUrl,s.naverType,s.naverAuth);this.store.saveSettings(s);return true;}
       case 'credential.set':{const a=z.object({name:z.enum(['openaiKey','geminiKey','naverId','naverSecret','kakaoKey','braveKey','googleKey']),value:z.string().max(10000)}).parse(args);this.vault.set(a.name,a.value.trim());return true;}
       case 'connection.test':{const p=z.enum(['openai','gemini',...apiEngines]).parse(args);if(p==='openai'||p==='gemini')return {message:'API 인증·모델 목록 조회 확인 · 번역/정리는 별도 실행',models:await this.ai.models(p)};return {message:await this.api.test(p),models:[]};}
       case 'reddit.oauth':if(!this.store.settings().redditApproved)throw Error('Reddit API 사용 승인을 확인하세요.');return {url:await this.oauth.begin(this.store.settings().redditClientId)};

@@ -1,5 +1,7 @@
 # ZeroWaste Listening Studio 0.5.0 · 공식 검색 API
 
+> 이 브랜치(`codex/naver-key-only-setup`)는 네이버 설정 수정 검토용입니다. URL·인증 형식 입력을 제거했으며 신규 API Hub 자동 연결은 아직 미완료입니다. 아래 0.5.0 설치 파일에는 이 변경이 반영되지 않았습니다.
+
 기존 통합 작업실 디자인을 유지하고 검색 수집을 공식 API로 전환한 macOS/Windows 앱입니다. 메뉴는 **수집 작업실 / 설정** 두 개입니다. GPT·Gemini는 선택 행의 번역·CSV 정리에만 사용합니다.
 
 설치 파일: https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.5.0
@@ -16,7 +18,7 @@
 
 - **다음(Kakao)**: REST API 키. 웹·블로그·카페.
 - **Brave**: 웹 검색 API 키. Reddit 등 도메인 제한 검색에도 사용.
-- **네이버 API Hub**: 콘솔에서 확인한 실제 검색 요청 URL과 인증 형식을 설정합니다. 기존 NAVER Search API 키용 요청 계약도 지원하지만 신규 Hub의 주소를 추정하지 않습니다.
+- **네이버 API Hub**: Client ID·Client Secret과 검색 종류를 저장합니다. URL·인증 형식을 직접 입력하지 않습니다. 신규 Hub 자동 연결은 공식 검색 계약 확인 전까지 지원 준비 중으로 표시합니다. 기존 Developers 검색 키용 주소와 인증은 별도 옵션에서 자동 선택합니다.
 - **Google**: 기존 Custom Search JSON API 사용 권한이 있는 계정만. 신규 고객 제공 종료, 기존 고객 전환 기한 2027-01-01.
 - **Reddit**: Data API 사용 승인이 있는 installed app만 OAuth 연결. 선택 시 게시글당 최대 25개 반환 댓글, 삭제 상태 동기화. 승인 전에는 Brave에서 색인된 공개 링크·검색 요약을 찾을 수 있으며 원문·댓글 직접 접근과 구분합니다.
 

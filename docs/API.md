@@ -19,17 +19,30 @@
 3. 작업실에서 Brave 웹 검색을 선택합니다.
 4. Reddit 공개 링크를 찾으려면 범위 설정에서 Brave로 Reddit 공개글 찾기를 누르세요. reddit.com 도메인 제한이 적용됩니다. 이는 검색에 색인된 제목·URL·요약이며 Reddit API 승인이나 원문·댓글 접근 권한을 대신하지 않습니다.
 
-## 네이버 API Hub
+## 네이버 API Hub · 설정 수정 브랜치
 
-신규 신청 경로: https://www.ncloud.com/product/applicationService/naverApiHub
+이 절은 `codex/naver-key-only-setup` 브랜치의 변경 내용입니다. 이미 게시된 0.5.0 설치 파일에는 아직 반영되지 않았습니다.
 
-1. API Hub에서 사용할 검색 상품의 이용 조건과 인증정보를 확인합니다. 계정 상태에 따라 결제수단 등록이 요구될 수 있으며 실제 과금은 상품 조건에 따릅니다.
-2. 공식 콘솔/문서에 표시된 **검색 요청 URL**을 앱의 네이버 검색 요청 URL에 입력합니다. ? 앞 주소만 입력하며 키·검색어는 붙이지 않습니다.
-3. 콘솔 예시에 맞게 검색 종류와 인증 형식을 선택합니다. 앱은 X-Naver-Client-Id/Secret 또는 x-ncp-apigw-api-key-id/key 두 형식을 지원합니다. 다른 HMAC 서명이나 계약별 경로를 요구하는 상품은 추가 개발이 필요합니다. 이 환경에서는 Ncloud 상품 상세 문서를 읽을 수 없어 신규 Hub의 주소·인증 형식을 자동으로 확정하지 않았습니다.
-4. 해당 검색 상품의 Client ID/Secret 또는 Key ID/Key를 각각 등록하고 설정 저장·연결 테스트를 누릅니다. 일반 Ncloud 계정 Access Key를 대신 입력하지 마세요.
-5. 기존 NAVER Search API 사용 권한과 키가 있는 계정은 도움말의 기존 Search API 주소 사용 버튼으로 공식 기존 주소를 입력할 수 있습니다. 신규 Developers 화면에 검색 항목이 있다고 가정하지 않습니다.
+사용자가 검색 요청 URL이나 HTTP 인증 헤더를 찾아 입력하는 단계는 제거했습니다. 새 계정은 API Hub의 인증 방식을 기본으로 사용합니다.
 
-주소 경로에 {type}을 넣으면 선택한 blog/cafearticle/webkr로 치환합니다. 콘솔에서 종류별 고정 주소를 제공하면 해당 종류와 주소를 함께 맞추세요. 기존 요청 계약 문서: https://developers.naver.com/docs/serviceapi/search/blog/blog.md
+1. https://www.ncloud.com/product/applicationService/naverApiHub 에서 사용할 검색 상품을 신청합니다.
+2. 콘솔의 NAVER API HUB → Application → 사용할 앱 → **인증 정보**를 엽니다.
+3. 설치 앱 설정의 네이버 카드에서 **Client ID**, **Client Secret**을 각각 붙여 넣고 등록합니다.
+4. 사용할 검색 종류를 선택하고 **네이버 설정 저장**을 누릅니다.
+
+**현재 수정 브랜치에서도 신규 API Hub의 자동 연결은 미완료입니다.** 첨부 공식 Application 안내 6쪽과 NAVER 연동 API 안내 4쪽으로 `X-NCP-APIGW-API-KEY-ID` / `X-NCP-APIGW-API-KEY` 인증은 확인했지만, 검색 전용 요청 주소는 확인하지 못했습니다. 두 PDF에는 해당 주소가 없고, 현재 클라우드 환경에서는 검색 전용 공식 문서에 접근할 수 없습니다. 따라서 키 저장을 연결 성공으로 표시하지 않으며, 신규 Hub 연결 테스트와 자동 수집을 활성화하지 않습니다. 사용자에게 다른 주소를 찾아 입력하도록 요구하지 않습니다.
+
+기존 0.5.0에서 등록한 네이버 주소·키와 수집 기록은 보존합니다. 주소 없이 남아 있던 0.5.0 기본값은 신규 Hub 방식으로 전환합니다. 예전의 미저장 설정 초안은 새 화면에 적용하지 않습니다.
+
+### 기존 NAVER Developers 검색 키를 가진 계정
+
+기존 검색 API 사용 권한과 키가 있는 계정은 네이버 카드의 **기존 NAVER Developers 검색 키**를 펼쳐 해당 옵션을 선택합니다. 문서화된 기존 검색 주소와 인증 형식은 앱 내부에서 선택합니다. 이 옵션은 신규 API Hub 키의 호환성을 의미하지 않습니다.
+
+공식 이관 안내: https://developers.naver.com/notice/article/32530
+
+이관 안내에서 연결한 공식 가이드: https://guide.ncloud-docs.com/docs/apihub-migration
+
+기존 블로그 검색 계약: https://developers.naver.com/docs/serviceapi/search/blog/blog.md
 
 ## Google · 기존 계정만
 

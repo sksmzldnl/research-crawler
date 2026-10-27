@@ -13,4 +13,29 @@ test('settings is the sole secondary menu; appearance persists and narrow window
  await page.goto('/');await page.getByRole('navigation').getByRole('button',{name:'설정',exact:true}).click();await expect(page.getByRole('heading',{name:'Google Gemini',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'네이버 API Hub',exact:true})).toBeVisible();await expect(page.getByText('Custom Search JSON API는 신규 고객에게 제공되지 않으며',{exact:false})).toBeVisible();await page.getByRole('navigation').getByRole('button',{name:'수집 작업실',exact:true}).click();await page.getByRole('button',{name:'투명도 줄이기',exact:true}).click();await expect(page.locator('.app')).toHaveClass(/reduced-glass/);await page.getByRole('button',{name:'고대비',exact:true}).click();await page.reload();await expect(page.locator('.app')).toHaveClass(/high-contrast/);await page.getByRole('button',{name:'수집 자료 검색 열기',exact:true}).click();await expect(page.getByLabel('자료 검색',{exact:true})).toBeFocused();
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);await expect(page.getByRole('button',{name:'자동 검색·수집 시작',exact:true})).toBeVisible();await page.screenshot({path:'test-results/unified-mobile.png',fullPage:true});
 });
+test('Naver setup stores keys and scope without a URL field, ignores old drafts and distinguishes unverified Hub support',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('studio.settingsDraft.v5',JSON.stringify({naverUrl:'https://wrong.example',naverAuth:'naver',naverType:'webkr'})));
+ await page.goto('/');await page.getByRole('navigation').getByRole('button',{name:'설정',exact:true}).click();
+ const card=page.locator('section.provider-card').filter({has:page.getByRole('heading',{name:'네이버 API Hub',exact:true})});
+ await expect(card.getByLabel('네이버 검색 요청 URL',{exact:true})).toHaveCount(0);
+ await expect(card.getByLabel('네이버 인증 형식',{exact:true})).toHaveCount(0);
+ await expect(card.getByRole('status')).toContainText('자동 연결은 아직 지원 준비 중');
+ for(const [label,value] of [['Client ID','fixture-id'],['Client Secret','fixture-secret']]){
+  const field=card.getByLabel('네이버 API Hub '+label,{exact:true});
+  await field.fill(value);await field.locator('..').locator('..').getByRole('button',{name:'등록',exact:true}).click();await expect(field).toHaveValue('');
+ }
+ await card.getByLabel('네이버 검색 종류',{exact:true}).selectOption('cafearticle');
+ await card.getByRole('button',{name:'네이버 설정 저장',exact:true}).click();
+ const state=()=>page.evaluate(async()=>{
+  const response=await fetch('/api/call',{method:'POST',headers:{'Content-Type':'application/json','X-Studio-Client':'local-ui'},body:JSON.stringify({method:'state'})});
+  const {result}=await response.json();return {settings:result.settings,credentials:result.credentials};
+ });
+ await expect.poll(async()=>{const s=await state();return {type:s.settings.naverType,auth:s.settings.naverAuth,url:s.settings.naverUrl,id:s.credentials.naverId,secret:s.credentials.naverSecret};}).toEqual({type:'cafearticle',auth:'gateway',url:'',id:true,secret:true});
+ await page.getByRole('navigation').getByRole('button',{name:'수집 작업실',exact:true}).click();await expect(page.getByLabel('네이버 API Hub',{exact:true})).toBeDisabled();
+ await page.getByRole('navigation').getByRole('button',{name:'설정',exact:true}).click();
+ await card.getByText('기존 NAVER Developers 검색 키',{exact:true}).click();await card.getByLabel('기존 NAVER Developers에서 발급받은 검색 키를 사용합니다.',{exact:true}).check();
+ await page.getByRole('button',{name:'설정 저장',exact:true}).click();
+ await expect.poll(async()=>(await state()).settings.naverAuth).toBe('naver');
+ await page.getByRole('navigation').getByRole('button',{name:'수집 작업실',exact:true}).click();await expect(page.getByLabel('네이버 API Hub',{exact:true})).toBeEnabled();await page.getByLabel('네이버 API Hub',{exact:true}).check();await page.getByLabel('다음 (Kakao)',{exact:true}).uncheck();await expect(page.getByRole('button',{name:'자동 검색·수집 시작',exact:true})).toBeEnabled();
+});
 test('blocks cross-origin or headerless mutations',async({request})=>{const r=await request.post('http://127.0.0.1:4317/api/call',{data:{method:'data.delete',args:'DELETE ALL'}});expect(r.status()).toBe(403);});
