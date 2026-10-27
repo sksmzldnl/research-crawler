@@ -2,6 +2,8 @@
 
 네이버 블로그·카페의 검색 결과를 쿼리 번들로 모으고, CSV 자료를 AI로 요약·정리하는 macOS/Windows 앱입니다. 기존 Liquid Glass 디자인을 유지하며 메뉴는 **작업실 / 설정** 두 개로 정리했습니다.
 
+[처음 사용하는 분을 위한 Windows·API 연결 안내](docs/WINDOWS_BEGINNER_GUIDE_KO.md) · [8쪽 PDF 안내서](docs/Windows-Guide-0.7.0-KO.pdf)
+
 [설치 파일 다운로드](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.7.0)
 
 - Apple Silicon Mac: `ZeroWaste-Listening-Studio-0.7.0-mac-arm64.dmg`

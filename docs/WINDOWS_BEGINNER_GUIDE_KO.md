@@ -1,0 +1,269 @@
+# Windows 설치와 API 연결 안내
+
+<strong>ZeroWaste Listening Studio 0.7.0 · 처음 사용하는 분을 위한 안내</strong>  
+작성·공식 문서 확인: 2026년 10월 28일 (한국 시간)
+
+이 앱은 네이버 블로그·카페에서 검색 자료를 모으고, Gemini 또는 GPT로 CSV의 요약·인사이트를 정리합니다. 아래 순서대로 진행하면 됩니다.
+
+## 먼저 알아두세요
+
+<strong>API 키</strong>는 앱이 외부 서비스에 요청할 때 쓰는 개인용 열쇠입니다. 로그인 아이디나 비밀번호와 다릅니다. 앱에는 로그인 비밀번호를 입력하지 않습니다.
+
+| 하고 싶은 작업 | 준비할 인증정보 | 발급하는 곳 |
+| --- | --- | --- |
+| 네이버 블로그·카페 검색 | Client ID + Client Secret, 총 2개 | NAVER API HUB |
+| Gemini로 CSV 정리 | Gemini API 키 1개 | Google AI Studio |
+| GPT로 CSV 정리 — 선택 사항 | OpenAI Secret Key 1개 | OpenAI Platform |
+| CSV 가져오기·저장만 하기 | API 키 없이 가능 | 앱 안에서 진행 |
+
+<strong>기존 CSV를 AI로 정리하는 분은 네이버 연결을 건너뛰어도 됩니다.</strong> AI는 Gemini와 GPT 중 하나만 연결하면 됩니다. 처음에는 Gemini 경로를 따라가세요.
+
+## 1. Windows에 앱 설치하기
+
+1. [Windows 64비트 설치 파일 다운로드](https://github.com/sksmzldnl/research-crawler/releases/download/studio-api-v0.7.0/ZeroWaste-Listening-Studio-0.7.0-win-x64.exe)를 누릅니다.
+2. 파일 이름이 <strong>ZeroWaste-Listening-Studio-0.7.0-win-x64.exe</strong>인지 확인합니다.
+3. 다운로드 폴더에서 해당 파일을 실행합니다. 기존 앱이 켜져 있다면 먼저 종료합니다.
+4. 설치 화면에서 다음(Next) → 설치(Install) → 완료(Finish) 순서로 진행합니다. 설치 위치는 기본값을 사용해도 됩니다.
+5. 시작 메뉴에서 <strong>ZeroWaste Listening Studio</strong>를 실행합니다.
+
+Windows 보호 창이 나타날 수 있습니다. 이 배포본은 코드 서명이 없으므로, 위 공식 배포 링크에서 받은 파일인지 확인한 후 <strong>추가 정보 → 실행</strong>을 선택합니다. 실행을 위해 Windows 보안 기능 전체를 끌 필요는 없습니다.
+
+<strong>앱의 메뉴는 작업실 / 설정 두 개입니다.</strong> 아래 발급 작업은 웹브라우저에서 하고, 발급받은 값은 앱의 설정에 넣습니다.
+
+<!-- PAGE -->
+
+# 2. 네이버 검색용 인증정보 발급하기
+
+검색할 분만 진행하세요. 네이버 검색에 필요한 값은 <strong>Client ID와 Client Secret 두 개</strong>입니다.
+
+## 2-1. 네이버 클라우드 계정 준비
+
+1. 웹브라우저에서 [네이버 클라우드 플랫폼](https://www.ncloud.com/)을 엽니다.
+2. <strong>회원가입</strong>을 선택합니다. 이미 클라우드 계정이 있으면 로그인합니다.
+3. 화면의 약관·본인 확인·회원 정보 입력을 완료합니다. 일반 네이버 서비스를 이용 중이어도 클라우드 회원 등록이 필요할 수 있습니다.
+4. 로그인 후 <strong>콘솔(Console)</strong>을 엽니다. 콘솔은 API 상품과 인증정보를 관리하는 화면입니다.
+
+여기서는 <strong>NAVER API HUB</strong>를 사용합니다. 네이버 개발자센터의 ‘네이버 로그인’ API를 신청하는 과정이 아닙니다.
+
+## 2-2. NAVER API HUB 이용 신청
+
+1. [NAVER API HUB 콘솔](https://console.ncloud.com/naver-api-hub/application)을 엽니다. 로그인이 풀렸으면 다시 로그인합니다.
+2. 메뉴로 찾을 때는 <strong>Menu → All Services → Application Services → NAVER API HUB</strong> 순서로 이동합니다. 콘솔 서비스 검색에 <strong>NAVER API HUB</strong>를 입력해도 됩니다.
+3. 최초 이용이면 <strong>Subscription → 서비스 이용 신청</strong>을 선택합니다.
+4. 약관과 개인정보 제공 안내를 읽고, 동의하는 경우 체크한 뒤 확인합니다. 이미 신청한 계정은 이 단계가 생략될 수 있습니다.
+
+## 2-3. 블로그·카페를 사용할 Application 만들기
+
+1. <strong>Application → Application 등록</strong>을 누릅니다.
+2. <strong>API 선택</strong> 화면에서 <strong>NAVER 검색</strong> 카테고리를 선택합니다.
+3. <strong>블로그</strong>와 <strong>카페</strong>를 선택하고 <strong>다음</strong>을 누릅니다. 이 앱을 위해 다른 API를 추가할 필요는 없습니다.
+4. <strong>Application 정보 입력</strong>에서 이름을 입력합니다. 예시는 <strong>zerowaste</strong>입니다.
+5. 선택한 API가 블로그·카페인지 확인한 뒤 <strong>완료</strong>를 누릅니다.
+
+공식 안내상 Application 이름은 영문자·숫자·하이픈(-)으로 최대 20자입니다. ‘Application’은 인증정보를 묶어 관리할 이름이며 프로그램을 새로 개발하라는 뜻이 아닙니다.
+
+<strong>요금 확인:</strong> 작성일 기준 공식 안내는 NAVER API HUB를 한시적 무료로 설명합니다. 추후 정책 변경·한도는 콘솔과 공식 공지를 확인하세요. 계정 활성화나 결제수단 등록을 별도로 요구할 수 있습니다. ‘서비스 이용이 불가능한 계정’이 나오면 화면에 안내된 계정·결제 정보 설정을 확인하세요.
+
+<!-- PAGE -->
+
+# 3. 네이버 인증정보를 앱에 입력하기
+
+## 3-1. 두 값을 복사하기
+
+1. NAVER API HUB의 <strong>Application</strong> 목록에서 방금 만든 <strong>zerowaste</strong>를 선택합니다.
+2. <strong>인증 정보</strong>를 누릅니다.
+3. 아래 두 항목을 확인합니다. 화면의 값 또는 복사 아이콘을 눌러 전체값을 복사합니다.
+
+| 콘솔에서 보이는 항목 | 앱에서 넣을 칸 |
+| --- | --- |
+| Client ID | 네이버 Client ID |
+| Client Secret | 네이버 Client Secret |
+
+Client Secret은 클라우드 로그인 비밀번호가 아닙니다. 인증 정보 화면에서 발급된 별도의 값입니다.
+
+## 3-2. 앱에 각각 등록하기
+
+1. <strong>ZeroWaste Listening Studio → 설정</strong>을 엽니다.
+2. <strong>네이버 블로그·카페</strong> 영역을 찾습니다.
+3. 콘솔의 Client ID 전체값을 복사해 <strong>네이버 Client ID</strong> 칸에 붙여넣고 <strong>등록</strong>을 누릅니다.
+4. 콘솔의 Client Secret 전체값을 복사해 <strong>네이버 Client Secret</strong> 칸에 붙여넣고 <strong>등록</strong>을 누릅니다.
+5. 두 항목에 <strong>등록됨</strong>이 표시되는지 확인합니다.
+
+등록 후 실제 값은 다시 표시하지 않습니다. 입력한 문자열이 사라지고 ‘등록됨’이 보여도 정상입니다. ID와 Secret 각각의 등록 버튼을 눌러야 합니다.
+
+## 3-3. 첫 검색으로 연결 확인하기
+
+1. <strong>작업실</strong>로 이동해 검색 대상을 블로그 또는 카페로 고릅니다.
+2. 처음에는 목표 자료 수를 <strong>3</strong>, 검색어당 페이지 수를 <strong>1</strong>로 작게 설정합니다.
+3. 쿼리 번들에서 사용할 항목을 체크합니다. ‘쿼리 번들’은 앱이 실행할 검색어 묶음입니다.
+4. <strong>검색·수집 시작</strong>을 누릅니다. 자료가 나타나면 검색 연결이 동작한 것입니다.
+
+<strong>요청 URL, X-NCP 헤더, API 호출 코드는 입력하지 않습니다.</strong> 앱이 자동으로 적용합니다.
+
+카페는 게시일 정보가 없는 검색 결과가 있을 수 있습니다. <strong>기간·광고 필터 → 게시일 미확인 자료 포함</strong>을 체크하세요. 미확인 자료가 지정 기간 안의 글인지는 보장할 수 없습니다.
+
+네이버 검색 단계는 AI를 사용하지 않습니다. 모으는 자료는 API가 반환한 제목·원문 URL·검색 요약입니다. 검색 결과 수는 검색어·필터·제공자 한도에 따라 달라집니다.
+
+<!-- PAGE -->
+
+# 4. Gemini API 키 발급하기
+
+Gemini는 Google의 AI입니다. 이 앱에서 CSV를 요약하려면 웹사이트의 Gemini 대화창이 아니라 <strong>Google AI Studio의 API 키</strong>를 사용합니다.
+
+## 4-1. Google 계정으로 시작하기
+
+1. [Google AI Studio](https://aistudio.google.com/)를 엽니다.
+2. 본인의 Google 계정으로 로그인합니다. 계정이 없다면 로그인 화면에서 계정 만들기를 진행합니다.
+3. 처음 나타나는 이용 조건을 읽고, 동의하는 경우 시작합니다.
+4. [프로젝트 목록](https://aistudio.google.com/projects)을 엽니다.
+
+<strong>프로젝트</strong>는 Google이 API 키·사용 한도·요금을 묶어서 관리하는 작업 공간입니다. 처음 이용하면 약관 동의 후 기본 프로젝트와 키가 자동으로 만들어질 수 있습니다.
+
+프로젝트가 없으면 Projects 화면의 새 프로젝트 생성 기능을 사용합니다. 기존 Google Cloud 프로젝트를 쓸 분은 <strong>Import projects(프로젝트 가져오기)</strong>로 선택해 가져옵니다. 회사·학교 프로젝트에 생성 권한이 없으면 해당 프로젝트 관리자에게 확인하세요.
+
+## 4-2. 무료 이용 가능한 프로젝트인지 확인하기
+
+1. 키를 만들 프로젝트의 이용 등급·상태를 확인합니다.
+2. 무료로 이용하려면 <strong>Free tier(무료 등급)</strong>이 사용 가능한지 확인합니다.
+3. <strong>Restricted / Free tier unavailable / Payment needed</strong> 등이 표시되면 바로 CSV 전체를 실행하지 말고 해당 상태의 안내를 확인합니다.
+
+Gemini에는 무료 등급이 있지만, <strong>모든 프로젝트가 무료 이용 대상인 것은 아닙니다.</strong> 모델별 요청 횟수·토큰 한도도 있습니다. 같은 프로젝트의 키를 새로 만드는 것으로 프로젝트 제한이나 할당량이 초기화되지는 않습니다.
+
+무료 사용이 목적이라면 결제 연결을 필수 과정으로 생각하지 마세요. 결제 계정을 연결해 유료 등급이 되면 사용량에 따라 과금됩니다. [프로젝트 상태](https://aistudio.google.com/projects)와 [실제 사용 한도](https://aistudio.google.com/rate-limit)를 먼저 확인하세요.
+
+## 4-3. API 키 만들고 복사하기
+
+1. [AI Studio API Keys](https://aistudio.google.com/api-keys)를 엽니다.
+2. <strong>Create API key(API 키 만들기)</strong>를 누릅니다.
+3. 이름을 요청하면 <strong>ZeroWaste-Windows</strong> 등 알아보기 쉬운 이름을 입력합니다.
+4. 앞에서 확인한 <strong>동일 프로젝트</strong>를 선택하고 키를 생성합니다. 이름·프로젝트 선택 순서는 화면에 따라 다를 수 있습니다.
+5. <strong>API 키 전체값</strong>을 복사합니다. 가려진 표시나 일부 글자만 복사하지 않습니다.
+
+현재 AI Studio에서 새로 만드는 키는 기본적으로 <strong>Auth(Authorization) key</strong>입니다. 앱에는 키 하나만 넣습니다. 이름이 Auth여도 로그인 아이디·비밀번호·Client ID·Client Secret을 추가로 입력하지 않습니다.
+
+<!-- PAGE -->
+
+# 5. Gemini를 앱에 등록하고 확인하기
+
+## 5-1. 키 등록
+
+1. 앱의 <strong>설정 → CSV 인사이트 AI</strong>를 엽니다.
+2. <strong>AI 제공자</strong>에서 <strong>Google Gemini</strong>를 선택합니다.
+3. <strong>Gemini API 키</strong> 칸에 방금 복사한 전체값을 붙여넣습니다.
+4. <strong>등록</strong>을 누르고 <strong>등록됨</strong>이 표시되는지 확인합니다.
+5. AI 모델 설정은 기본값을 사용합니다. 0.7.0 기본 모델은 <strong>gemini-3.5-flash-lite</strong>입니다.
+
+모델을 직접 바꿨다면 <strong>AI 모델 설정</strong>을 열어 이름을 확인하고 <strong>모델 적용</strong>을 눌러야 반영됩니다.
+
+## 5-2. 연결 확인 — 세 단계 모두 통과해야 함
+
+<strong>Gemini 연결 확인 → 연결 확인</strong>을 누릅니다. 다음 순서로 결과가 표시됩니다.
+
+| 단계 | 확인하는 내용 | 통과만으로 알 수 있는 것 |
+| --- | --- | --- |
+| 1. 키·모델 조회 | Google이 키를 인식하고 선택한 모델을 찾는지 | 실제 생성 권한은 아직 확인되지 않음 |
+| 2. 짧은 문장 생성 | 짧은 합성 문장을 실제로 생성하는지 | 생성 API 접근 가능 여부 |
+| 3. JSON·인사이트 생성 | 실제 CSV 처리와 같은 형식과 원문 근거 검사 | 해당 모델의 인사이트 처리 준비 여부 |
+
+<strong>‘연결 확인 성공 · 문장·JSON 생성 검증 완료’</strong>가 나오면 작업실에서 CSV 정리를 시작할 수 있습니다.
+
+확인 과정에는 사용자 CSV를 보내지 않습니다. 합성 문장으로 모델 조회와 최대 2회의 실제 생성 요청을 보내므로, <strong>프로젝트의 요청 한도·요금이 적용</strong>됩니다. 요청당 최대 2분을 기다릴 수 있고 <strong>확인 중지</strong>로 대기를 멈출 수 있습니다.
+
+## 5-3. 실패했을 때
+
+빨간색으로 표시된 단계와 아래 오류 문구를 읽습니다. 첫 단계가 통과해도 두 번째 단계에서 프로젝트 사용 제한으로 실패할 수 있습니다. 모델 조회만 성공한 것을 전체 연결 성공으로 보지 않습니다.
+
+<strong>진단 내용 복사</strong>를 눌러 프로그램을 전달한 담당자에게 텍스트를 보내세요. 이 기능은 키를 가린 진단 정보를 복사합니다. API 키 자체나 키 입력 화면을 따로 보낼 필요는 없습니다.
+
+키나 모델을 바꾸면 다시 확인합니다. 같은 PC에서도 앱을 완전히 종료하고 다시 실행하면 키는 저장되어 있지만 <strong>연결 확인은 다시 진행</strong>합니다. 성공 결과는 그 시점의 상태이며 이후 할당량·권한 변경까지 보장하지 않습니다.
+
+<!-- PAGE -->
+
+# 6. 자료 수집과 CSV 정리하기
+
+## 6-1. 네이버에서 자료 모으기
+
+1. <strong>작업실 → 네이버에서 자료 모으기</strong>에서 블로그 또는 카페를 고릅니다.
+2. 검색 이름을 적고 사용할 쿼리 번들을 체크합니다. 번들 옆 <strong>편집</strong>에서 검색어를 바꿀 수 있습니다.
+3. 예시 검색식은 <strong>재사용 AND (불편 OR 후기) NOT 광고</strong>입니다. AND는 함께 포함, OR는 둘 중 하나, NOT은 제외 조건을 뜻합니다.
+4. 처음에는 목표 자료 수 3·페이지 수 1로 시험한 뒤 필요한 수량으로 늘립니다.
+5. 카페는 <strong>기간·광고 필터 → 게시일 미확인 자료 포함</strong>을 체크합니다.
+6. <strong>검색·수집 시작</strong>을 누르고 아래 <strong>자료와 인사이트</strong>에서 결과를 확인합니다.
+
+유효 자료가 0이면 <strong>표시 → 전체</strong> 또는 <strong>제외 자료</strong>로 바꾸고 글 제목을 눌러 제외 사유를 확인합니다. ‘게시일 미확인’이 많다면 위 체크를 켜고 <strong>새 검색을 시작</strong>하세요. 기존 수집은 시작할 때의 설정을 유지합니다.
+
+## 6-2. 기존 CSV 파일 가져오기
+
+1. 작업실에서 <strong>CSV 파일 가져오기</strong>를 엽니다.
+2. <strong>CSV 파일 선택</strong>을 눌러 파일을 고릅니다. 파일은 머리글이 있는 표 형태여야 합니다.
+3. 미리보기에서 <strong>AI가 읽을 본문 열</strong>을 선택합니다. 예를 들어 ‘본문’, ‘내용’, ‘리뷰’ 열입니다.
+4. 자료 이름을 확인하고 <strong>CSV 가져오기</strong>를 누릅니다.
+
+CSV는 한 번에 최대 5MB·1,000행·150열입니다. Excel에서 저장한다면 <strong>CSV UTF-8</strong> 형식을 권장합니다. 가져오기만 할 때는 API를 호출하지 않습니다.
+
+## 6-3. AI로 정리하고 저장하기
+
+1. Gemini 연결 확인이 완료됐는지 확인합니다.
+2. 자료 표에서 <strong>1행만 먼저 체크</strong>하고 <strong>선택 1행 AI 정리</strong>를 누릅니다.
+3. 요약·인사이트·개선 제안·근거가 생성되면 원문과 맞는지 확인합니다.
+4. 이후 필요한 행을 선택해 처리합니다. 여러 행은 여러 API 요청을 사용하며, 한도 때문에 중간에 멈출 수 있습니다.
+5. <strong>표시된 N행 CSV 저장</strong>을 눌러 파일 이름과 저장 위치를 고릅니다.
+
+원래 CSV 열과 본문을 보존하고 AI 결과 열을 뒤에 추가합니다. <strong>행 체크는 AI 처리 대상을 고르는 기능이고, CSV 저장은 현재 화면에 표시된 행이 대상</strong>입니다. 저장할 범위는 자료 검색·표시 필터와 버튼의 N행을 확인하세요.
+
+<!-- PAGE -->
+
+# 7. 다른 PC에 설치하고 오류 해결하기
+
+## 다른 PC에 설치할 때
+
+설치 파일에 개인 API 키는 포함되어 있지 않습니다. 새 PC에서는 네이버 ID·Secret과 사용할 AI 키를 <strong>다시 입력</strong>합니다. 본인의 기존 키를 다시 사용할 수 있으며, PC가 달라졌다는 이유만으로 새 키를 발급할 필요는 없습니다. 키에 IP 등 접근 제한을 설정했다면 새 PC도 허용되어 있어야 합니다.
+
+등록한 키는 지원되는 보안 저장소를 통해 해당 PC·사용자 환경에 암호화해 저장합니다. 보안 저장소를 사용할 수 없는 환경에서는 앱 안내에 따라 세션 메모리에만 유지됩니다. 기존 자료를 옮길 때는 CSV로 저장해 새 PC에서 가져옵니다. 같은 키·프로젝트를 여러 PC에서 사용하면 한도·요금을 함께 사용합니다.
+
+배포할 때는 받는 분이 <strong>본인 계정에서 발급한 키</strong>를 입력하게 안내하세요. 키를 공용 설치 파일이나 공개 안내문에 넣지 않습니다.
+
+## 자주 나오는 오류
+
+| 표시되는 내용 | 확인할 사항 |
+| --- | --- |
+| 401 / 키가 유효하지 않음 | 키 전체값·활성 상태·올바른 제공자의 입력칸 확인 |
+| 403 / 무료 등급·프로젝트 제한 | 해당 키가 속한 프로젝트의 상태 확인. 같은 프로젝트에서 키만 재발급해도 해결되지 않을 수 있음 |
+| 모델을 찾을 수 없음 / 404 | AI 모델 이름과 사용 가능 여부 확인 후 모델 적용·연결 재확인 |
+| 429 / 요청 한도 초과 | 프로젝트의 분당·일일 한도 확인. 실패한 행부터 필요한 범위만 다시 선택 |
+| 응답 시간 초과·DNS·인증서·프록시 | 표시된 연결 원인 확인 후 진단 내용 복사. 시간 초과를 곧바로 무료 등급 문제라고 판단하지 않음 |
+| 네이버 ‘게시일 미확인’ 제외 | 미확인 자료 포함 체크 후 새 수집. 기존 결과는 표시 → 전체에서 확인 |
+
+<!-- PAGE -->
+
+# 8. GPT 사용 — 선택 사항
+
+Gemini를 사용할 분은 이 페이지의 발급 과정을 생략해도 됩니다. 두 AI의 키를 모두 준비할 필요는 없습니다.
+
+## OpenAI API 키 발급부터 앱 적용까지
+
+1. [OpenAI Platform](https://platform.openai.com/)을 열고 로그인합니다. 계정이 없으면 회원가입을 진행합니다.
+2. [API Keys](https://platform.openai.com/api-keys)로 이동합니다. 프로젝트 선택이 나오면 본인이 사용할 프로젝트를 선택합니다.
+3. <strong>Create new secret key</strong>를 누릅니다. 이름을 요청하면 <strong>ZeroWaste-Windows</strong> 등으로 입력하고 키를 생성합니다.
+4. 생성 직후 나오는 <strong>Secret Key 전체값</strong>을 복사합니다. Tracking ID나 별표로 가려진 값은 사용하지 않습니다. 전체값을 잃었다면 새 키를 발급합니다.
+5. 앱의 <strong>설정 → AI 제공자 → OpenAI GPT</strong>를 선택합니다.
+6. <strong>OpenAI Secret Key</strong> 칸에 전체값을 붙여넣고 <strong>등록</strong>을 누릅니다.
+7. 작업실에서 CSV 1행을 선택해 AI 정리를 실행하고, 결과가 만들어지는지 확인합니다.
+
+기본 모델은 <strong>gpt-4.1-mini</strong>입니다. 계정에서 사용할 수 없는 모델이면 AI 모델 설정에서 사용 가능한 구조화 응답 지원 모델로 바꾸고 <strong>모델 적용</strong>을 누릅니다. 이 앱의 세 단계 연결 확인은 Gemini용이며 GPT는 1행 처리로 실제 호출을 확인합니다.
+
+<strong>OpenAI API는 기본적으로 사용량 과금입니다.</strong> 키 발급과 실제 호출 요금은 다릅니다. OpenAI Platform의 Billing/Usage에서 API 결제·사용량을 확인하세요. ChatGPT 웹의 무료 이용·Plus 구독에 API 사용료가 포함되는 것은 아닙니다.
+
+## 처음 실행한 뒤 빠른 확인표
+
+- 네이버 검색을 쓸 경우 Client ID와 Client Secret을 각각 등록했나요?
+- 선택한 AI 제공자와 등록한 키의 발급 서비스가 같은가요?
+- Gemini를 쓴다면 연결 확인의 세 단계가 모두 통과했나요?
+- 전체 자료를 보내기 전에 1행의 AI 결과를 확인했나요?
+- CSV 저장 버튼의 ‘표시된 N행’이 저장하려는 범위와 맞나요?
+
+## 공식 안내와 배포 주소
+
+[앱 다운로드 페이지](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.7.0) · [NAVER API HUB 이용 안내](https://guide.ncloud-docs.com/docs/apihub-application) · [NAVER API HUB 요금 안내](https://guide.ncloud-docs.com/docs/apihub-overview) · [Gemini 키 안내](https://ai.google.dev/gemini-api/docs/api-key) · [Gemini 프로젝트 제한 안내](https://ai.google.dev/gemini-api/docs/troubleshooting#project-unavailable) · [Gemini 요금](https://ai.google.dev/gemini-api/docs/pricing)
+
+이 안내는 앱 0.7.0과 작성일의 공식 문서를 기준으로 합니다. 외부 사이트의 버튼 이름·계정 조건·요금 정책은 바뀔 수 있으므로 신청 화면의 최신 안내를 함께 확인하세요.
