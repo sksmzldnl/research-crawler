@@ -1,0 +1,12 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "failure",
+  "channel": "glass-mac",
+  "source_sha": "b135170e6ed058c58ebd0bc4da871d95ba883cab",
+  "run_id": "40441651194",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40441651194",
+  "updated_at": "2026-10-27T03:01:42.802Z",
+  "release_url": null,
+  "log_tail": "COMMAND: npm run test:desktop\n\n> zerowaste-listening-studio@0.5.0 test:desktop\n> node scripts/desktop-smoke.mjs\n\nDownloading Electron binary...\nTypeError: fetch failed\nDesktop smoke failure: electron.launch: Electron failed to install correctly. Please delete `node_modules/electron` and run \"npx install-electron --no\" manually.\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nelectron.launch: Electron failed to install correctly. Please delete `node_modules/electron` and run \"npx install-electron --no\" manually.\n    at async file:///Users/runner/work/research-crawler/research-crawler/scripts/desktop-smoke.mjs:14:51 {\n  log: [],\n  name: 'Error'\n}\n\nNode.js v24.19.0\n"
+}
