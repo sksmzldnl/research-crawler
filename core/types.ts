@@ -10,9 +10,9 @@ export interface RecordItem { record_id:string; research_id:string; query_bundle
 export interface Candidate { id:string; url:string; title:string; text:string; date:string|null; language?:string; full?:boolean; kind?:'post'|'comment';parent?:string|null; }
 export const aiProviders=['openai','gemini'] as const;
 export type AiProvider=typeof aiProviders[number];
-export const aiModels:Record<AiProvider,string>={openai:'gpt-4.1-mini',gemini:'gemini-2.5-flash'};
+export const aiModels:Record<AiProvider,string>={openai:'gpt-4.1-mini',gemini:'gemini-flash-latest'};
 export interface ProviderSettings {aiProvider:AiProvider;aiModel:string;}
-export interface LocalJob {id:string;researchId?:string;kind:string;status:'running'|'completed'|'cancelled'|'failed';total:number;processed:number;failed:number;message:string;}
+export interface LocalJob {id:string;researchId?:string;kind:string;status:'running'|'completed'|'partial'|'cancelled'|'failed';total:number;processed:number;failed:number;message:string;lastError?:string;}
 export interface State { localJob?:LocalJob; bundles:Bundle[]; researches:Research[]; records:RecordItem[]; settings:ProviderSettings; credentials:Record<string,boolean>; secureStorage:boolean; }
 export type ExportRequest={researchId:string;ids?:string[]};
 export interface Bridge { call<T=unknown>(method:string,args?:unknown):Promise<T>; }

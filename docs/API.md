@@ -26,12 +26,13 @@ OpenAI의 **Tracking ID는 관리용 식별자**입니다. API 인증에는 Secr
 
 ## Gemini로 CSV 정리
 
-[Google AI Studio](https://aistudio.google.com/apikey)에서 API 키를 발급하고, 앱에서 **AI 제공자 → Google Gemini**를 선택한 뒤 **Gemini API 키**에 등록합니다. 기본 모델은 `gemini-2.5-flash`입니다. 사용할 수 있는 모델·할당량은 계정에서 확인합니다. GPT와 Gemini 키를 모두 등록할 필요는 없습니다.
+[Google AI Studio](https://aistudio.google.com/apikey)에서 API 키를 발급하고, 앱에서 **AI 제공자 → Google Gemini**를 선택한 뒤 **Gemini API 키**에 등록합니다. 기본 모델은 `gemini-flash-latest`입니다. 사용할 수 있는 모델·할당량은 계정에서 확인합니다. GPT와 Gemini 키를 모두 등록할 필요는 없습니다.
 
 ## 결과와 오류
 
 선택 행의 본문과 분석 관점을 선택한 AI에 전송합니다. 원문과 기존 CSV 열은 유지하고 한국어 요약·인사이트·개선 제안·근거 등을 추가합니다. CSV 가져오기만 할 때에는 외부 전송하지 않습니다.
 
+- **404 (Gemini)**: 요청한 모델을 찾을 수 없습니다. **AI 모델 설정**에서 `gemini-flash-latest`를 적용하세요. 무료 한도 초과는 보통 429입니다. 현재 모델 별칭은 [Google 공식 SDK 예제](https://github.com/googleapis/python-genai#generate-content)를 참고했습니다. 모델 목록은 무료 과금 여부를 보장하지 않으므로 프로젝트의 등급을 확인하세요.
 - **401**: 등록한 키 전체값과 활성 상태를 확인합니다. GPT의 경우 Tracking ID나 가려진 키가 들어가지 않았는지 확인한 뒤 새 Secret Key로 교체합니다.
 - **403**: 네이버 상품이나 AI 모델의 이용 권한을 확인합니다.
 - **429**: 제공자의 사용 한도·API 잔액·청구 설정을 확인합니다. AI는 남은 행의 호출을 멈춥니다.

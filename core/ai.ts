@@ -1,7 +1,7 @@
 import {z} from 'zod';
 import type {Vault} from './vault.js';
 import type {AiProvider} from './types.js';
-import {Network} from './network.js';
+import {Network,ApiError} from './network.js';
 export const insightSchema=z.object({summary:z.string().trim().min(1),insight:z.string().trim().min(1),categories:z.array(z.enum(['사용 경험','문제·불편','개선 요구','사용 행동','대안·임시방편','기타'])),pain_point:z.string(),improvement_request:z.string(),user_behavior:z.string(),workaround:z.string(),sentiment:z.enum(['긍정','중립','부정','혼합','미확인']),evidence:z.array(z.string().min(1).max(1000)).min(1).max(3)}).strict();
 export type Insight=z.infer<typeof insightSchema>;
 const schema=z.toJSONSchema(insightSchema);delete schema.$schema;
@@ -9,7 +9,19 @@ const instruction='Analyze the supplied CSV source text into concise Korean summ
 export class AI {
  constructor(private net:Network,private vault:Vault){}
  key(provider:AiProvider){const value=this.vault.get(provider==='openai'?'openaiKey':'geminiKey');if(!value)throw Error('설정에서 '+(provider==='openai'?'OpenAI Secret Key':'Gemini API 키')+'를 등록하세요.');return value;}
- async insights(text:string,provider:AiProvider,model:string,focus:string,signal?:AbortSignal){
+ async insights(text:string,provider:AiProvider,model:string,focus:string,signal?:AbortSignal):Promise<{results:Insight[];chunks:string[];input:number;output:number;model:string}>{
+  try{return await this.generate(text,provider,model,focus,signal);}catch(error){
+   if(!(error instanceof ApiError)||error.status!==404||provider!=='gemini'||model==='gemini-flash-latest')throw error;
+   // Only recover to Google's current Flash alias after checking the account catalog.
+   let token='';for(let page=0;page<3;page++){
+    const url=new URL('https://generativelanguage.googleapis.com/v1beta/models');url.searchParams.set('pageSize','1000');if(token)url.searchParams.set('pageToken',token);
+    const data=await this.net.json(url.href,{headers:{'x-goog-api-key':this.key('gemini')}},'Gemini',signal);
+    if(data.models?.some((m:{name:string;supportedGenerationMethods?:string[]})=>m.name==='models/gemini-flash-latest'&&m.supportedGenerationMethods?.includes('generateContent')))return this.generate(text,provider,'gemini-flash-latest',focus,signal);
+    token=data.nextPageToken||'';if(!token)break;
+   }throw error;
+  }
+ }
+ private async generate(text:string,provider:AiProvider,model:string,focus:string,signal?:AbortSignal){
   if(!text.trim())throw Error('본문이 비어 있습니다.');if(!/^[a-zA-Z0-9._:/-]{1,120}$/.test(model))throw Error('AI 모델 이름을 확인하세요.');
   const chunks=Array.from({length:Math.ceil(text.length/5000)},(_,i)=>text.slice(i*5000,(i+1)*5000));const results:Insight[]=[];let input=0,output=0;
   for(const chunk of chunks){
@@ -23,7 +35,7 @@ export class AI {
    }
    const parsed=insightSchema.safeParse(value);if(!parsed.success)throw Error('AI 응답에 필요한 요약·인사이트·근거가 없습니다. 모델을 확인한 뒤 이 행을 다시 실행하세요.');const result=parsed.data;if(result.evidence.some(quote=>!chunk.includes(quote)))throw Error('AI 근거 인용이 원문과 일치하지 않아 이 행의 결과를 저장하지 않았습니다.');results.push(result);
   }
-  return {results,chunks,input,output};
+  return {results,chunks,input,output,model};
  }
 }
 

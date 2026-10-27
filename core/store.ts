@@ -16,7 +16,7 @@ export class Store {
   records(id:string){return this.db.prepare('SELECT data FROM records WHERE research_id=? ORDER BY rowid').all(id).map(r=>JSON.parse(r.data as string) as RecordItem);}
   research(id:string){return this.list<Research>('researches').find(r=>r.id===id);}
   remove(table:'bundles'|'researches'|'records',id:string){this.db.prepare(`DELETE FROM ${table} WHERE id=?`).run(id);}
-  settings():ProviderSettings{const r=this.db.prepare("SELECT data FROM settings WHERE id='main'").get();const saved=r?JSON.parse(r.data as string):{};return {aiProvider:saved.aiProvider==='gemini'?'gemini':'openai',aiModel:typeof saved.aiModel==='string'&&saved.aiModel.trim()?saved.aiModel:aiModels[saved.aiProvider==='gemini'?'gemini':'openai']};}
+  settings():ProviderSettings{const r=this.db.prepare("SELECT data FROM settings WHERE id='main'").get();const saved=r?JSON.parse(r.data as string):{};return {aiProvider:saved.aiProvider==='gemini'?'gemini':'openai',aiModel:typeof saved.aiModel==='string'&&saved.aiModel.trim()?(saved.aiProvider==='gemini'&&saved.aiModel==='gemini-2.5-flash'?aiModels.gemini:saved.aiModel):aiModels[saved.aiProvider==='gemini'?'gemini':'openai']};}
   saveSettings(s:ProviderSettings){this.db.prepare("INSERT INTO settings(id,data) VALUES('main',?) ON CONFLICT(id) DO UPDATE SET data=excluded.data").run(JSON.stringify(s));}
   async backup(path:string){const {backup}=await import('node:sqlite');await backup(this.db,path);chmodSync(path,0o600);}
   close(){this.db.close();}

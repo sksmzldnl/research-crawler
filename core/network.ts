@@ -4,7 +4,7 @@ export type Transport=(url:string,init?:RequestInit)=>Promise<Response>;
 const transport:Transport=async(url,init)=>await proxyFetch(url,{...init,dispatcher} as Parameters<typeof proxyFetch>[1]) as unknown as Response;
 export class ApiError extends Error{
  constructor(public status:number,public provider:string){
-  const message=provider==='OpenAI'&&status===401?'Secret Key 전체값과 키의 활성 상태를 확인하세요. Tracking ID는 인증에 사용할 수 없습니다.':provider==='OpenAI'&&status===429?'API 계정의 사용 한도·잔액을 확인한 뒤 다시 실행하세요.':status===401?'등록한 인증정보를 확인하세요.':status===403?'해당 상품·모델의 사용 권한을 확인하세요.':status===429?'요청 한도에 도달했습니다. 잠시 후 다시 실행하세요.':status>=500?'제공자 일시 오류입니다. 잠시 후 다시 실행하세요.':'요청 조건을 확인하세요.';
+  const message=provider==='OpenAI'&&status===401?'Secret Key 전체값과 키의 활성 상태를 확인하세요. Tracking ID는 인증에 사용할 수 없습니다.':provider==='OpenAI'&&status===429?'API 계정의 사용 한도·잔액을 확인한 뒤 다시 실행하세요.':provider==='Gemini'&&status===404?'요청한 Gemini 모델을 찾을 수 없습니다. 설정의 AI 모델을 gemini-flash-latest로 변경하세요. 무료 한도 초과를 뜻하는 오류는 아닙니다.':status===400?'요청 형식 또는 모델 설정을 확인하세요.':status===404?'요청한 모델이나 API 경로를 찾을 수 없습니다.':status===401?'등록한 인증정보를 확인하세요.':status===403?'해당 상품·모델의 사용 권한을 확인하세요.':status===429?'요청 한도에 도달했습니다. 잠시 후 다시 실행하세요.':status>=500?'제공자 일시 오류입니다. 잠시 후 다시 실행하세요.':'요청 조건을 확인하세요.';
   super(`${provider} (${status}): ${message}`);
  }
 }
