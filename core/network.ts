@@ -1,3 +1,4 @@
+import {publicNaverUrl} from './original-url.js';
 import { EnvHttpProxyAgent, fetch as proxyFetch } from 'undici';
 const dispatcher=new EnvHttpProxyAgent();
 export type Transport=(url:string,init?:RequestInit)=>Promise<Response>;
@@ -52,6 +53,17 @@ export class Network {
   const ms=policy.timeoutMs??25000,timer=this.deadline(ms),combined=signal?AbortSignal.any([signal,timer]):timer;
   try{combined.throwIfAborted();return await action(combined);}catch(error){if(signal?.aborted)throw signal.reason;if(timer.aborted)throw new NetworkFailure('timeout',provider,'',ms);throw error;}
  }
+ async page(raw:string,signal:AbortSignal):Promise<{html:string;url:string}>{return this.timed('원문 수집',signal,{timeoutMs:45000},async combined=>{
+  let url=publicNaverUrl(raw);
+  for(let n=0;n<6;n++){
+   combined.throwIfAborted();let response:Response;try{response=await this.send(url,{redirect:'manual',signal:combined,headers:{Accept:'text/html,application/xhtml+xml'}});}catch(e){combined.throwIfAborted();throw connectionFailure(e,'원문 수집',45000);}
+   if([301,302,303,307,308].includes(response.status)){const location=response.headers.get('location');await response.body?.cancel();if(!location)throw Error('원문 이동 주소가 없습니다.');url=publicNaverUrl(new URL(location,url).href);continue;}
+   if(!response.ok){await response.body?.cancel();throw new ApiError(response.status,'원문 수집');}
+   const type=response.headers.get('content-type')||'';if(type&&!/html|text/i.test(type)){await response.body?.cancel();throw Error('원문이 HTML 페이지가 아닙니다.');}
+   const reader=response.body?.getReader(),chunks:Uint8Array[]=[];let size=0;if(reader)while(true){const {value,done}=await reader.read();if(done)break;size+=value.length;if(size>8_000_000){await reader.cancel();throw Error('원문 HTML이 8MB 제한을 초과했습니다.');}chunks.push(value);}combined.throwIfAborted();
+   const bytes=Buffer.concat(chunks),header=type.match(/charset=([a-zA-Z0-9_-]+)/i)?.[1],meta=bytes.subarray(0,4096).toString('ascii').match(/charset=["']?([a-zA-Z0-9_-]+)/i)?.[1];return {html:new TextDecoder(header||meta||'utf-8').decode(bytes),url};
+  }throw Error('원문 주소 이동이 너무 많습니다.');
+ });}
  async request(url:string,init:RequestInit={},provider='API',signal?:AbortSignal,policy:RequestPolicy={}):Promise<Response>{return this.timed(provider,signal,policy,s=>this.perform(url,init,provider,s,policy.timeoutMs??25000,policy.maxAttempts??4));}
  private async perform(url:string,init:RequestInit,provider:string,signal:AbortSignal,ms:number,maxAttempts=4):Promise<Response>{
   for(let attempt=0;attempt<maxAttempts;attempt++){

@@ -8,5 +8,5 @@ export function fixtureTransport(path:string,log:string):Transport{return async(
  const authenticated=!!route&&Object.entries(route.headers||{}).every(([k,v])=>headers.get(k)===v);
  const params=Object.fromEntries([...u.searchParams].filter(([key])=>['query','q','page','start','offset','display','sort','format'].includes(key)));
  appendFileSync(log,JSON.stringify({host:u.hostname,path:u.pathname,params,matched:!!route,authenticated})+'\n');
- if(!route)throw Error('Unmatched integration fixture request.');if(route.delayMs)await wait(Math.min(60000,Math.max(0,route.delayMs)),init?.signal||undefined);return new Response(JSON.stringify(authenticated?route.body:{error:'fixture authentication mismatch'}),{status:authenticated?route.status:401,headers:{'Content-Type':'application/json'}});
+ if(!route)throw Error('Unmatched integration fixture request.');if(route.delayMs)await wait(Math.min(60000,Math.max(0,route.delayMs)),init?.signal||undefined);return new Response(authenticated&&typeof route.body==='string'?route.body:JSON.stringify(authenticated?route.body:{error:'fixture authentication mismatch'}),{status:authenticated?route.status:401,headers:{'Content-Type':typeof route.body==='string'?'text/html;charset=utf-8':'application/json'}});
 };}

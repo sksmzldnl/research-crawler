@@ -8,7 +8,8 @@ export class Store {
   db:DatabaseSync;
   constructor(public path:string){if(path!==':memory:')mkdirSync(dirname(path),{recursive:true,mode:0o700});this.db=new DatabaseSync(path);this.db.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS bundles(id TEXT PRIMARY KEY,data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS researches(id TEXT PRIMARY KEY,data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS records(id TEXT PRIMARY KEY,research_id TEXT NOT NULL,data TEXT NOT NULL,FOREIGN KEY(research_id) REFERENCES researches(id) ON DELETE CASCADE); CREATE INDEX IF NOT EXISTS research_records ON records(research_id); CREATE TABLE IF NOT EXISTS settings(id TEXT PRIMARY KEY,data TEXT NOT NULL);');if(path!==':memory:')chmodSync(path,0o600);
     for(const r of this.list<Research>('researches'))if(r.status==='running'){r.status='paused';r.stage='앱 종료 후 복원 · 재개 가능';this.put('researches',r);}
-    if(!this.list('bundles').length)this.put('bundles',{id:randomUUID(),name:'제로웨이스트 생활 경험',expression:'(제로웨이스트 OR "zero waste" OR 재사용) AND (불편 OR 후기 OR 문제 OR 경험) NOT 광고',exclusions:'',priority:1,suggestions:[]});
+    for(const bundle of this.list<Bundle>('bundles'))if(bundle.name==='제로웨이스트 생활 경험'&&bundle.expression==='(제로웨이스트 OR "zero waste" OR 재사용) AND (불편 OR 후기 OR 문제 OR 경험) NOT 광고')this.put('bundles',{...bundle,expression:bundle.expression.replace(/ NOT 광고$/,'')});
+    if(!this.list('bundles').length)this.put('bundles',{id:randomUUID(),name:'제로웨이스트 생활 경험',expression:'(제로웨이스트 OR "zero waste" OR 재사용) AND (불편 OR 후기 OR 문제 OR 경험)',exclusions:'',priority:1,suggestions:[]});
   }
   list<T>(table:'bundles'|'researches'|'records'):T[]{return this.db.prepare(`SELECT data FROM ${table} ORDER BY rowid DESC`).all().map(r=>JSON.parse(r.data as string));}
   put(table:'bundles'|'researches',value:Bundle|Research){this.db.prepare(`INSERT INTO ${table}(id,data) VALUES(?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data`).run(value.id,JSON.stringify(value));}

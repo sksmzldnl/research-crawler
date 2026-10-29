@@ -1,4 +1,4 @@
-name: Naver CSV Studio installers
+name: Naver Original Archive installers
 on:
   push:
     branches: [codex/studio-api-search, codex/naver-key-only-setup]
@@ -77,13 +77,15 @@ jobs:
           set -euo pipefail
           version="$(node -p "require('./package.json').version")"
           tag="studio-api-v${version}"
+          cp "docs/Original-Guide-${version}-KO.pdf" release/
+          sha256sum "release/Original-Guide-${version}-KO.pdf" > "release/Original-Guide-${version}-KO.pdf.sha256"
           if gh release view "$tag" >/dev/null 2>&1; then
             published_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" --jq '.object.sha')"
             test "$published_sha" = "$GITHUB_SHA" || { echo 'Version already published from a different commit; bump the version.'; exit 1; }
-            gh release upload "$tag" release/*.dmg release/*.zip release/*.exe release/*.sha256 release/*-build.json --clobber
+            gh release upload "$tag" release/*.dmg release/*.zip release/*.exe release/*.pdf release/*.sha256 release/*-build.json --clobber
           else
-            gh release create "$tag" release/*.dmg release/*.zip release/*.exe release/*.sha256 release/*-build.json \
-              --target "$GITHUB_SHA" --prerelease --title "ZeroWaste Listening Studio ${version} · Naver + CSV Insights" --notes-file docs/API_RELEASE.md
+            gh release create "$tag" release/*.dmg release/*.zip release/*.exe release/*.pdf release/*.sha256 release/*-build.json \
+              --target "$GITHUB_SHA" --prerelease --title "ZeroWaste Listening Studio ${version} · Naver Original Archive" --notes-file docs/API_RELEASE.md
           fi
       - name: Record publication outcome
         if: always()
