@@ -6,7 +6,7 @@ import type {RecordItem} from './types.js';
 export async function checkDirectory(directory:string){if(!isAbsolute(directory)||!(await stat(directory)).isDirectory())throw Error('저장할 폴더를 다시 선택하세요.');await access(directory,constants.W_OK);}
 export function originalFile(row:RecordItem,format:'md'|'json'){
  if(row.content_status!=='full_text'||!row.original_markdown)throw Error('전문 수집에 성공한 자료만 저장할 수 있습니다.');
- const data={title:row.title,url:row.source_url,published_at:row.published_at,published_at_confidence:row.published_at_confidence,collected_at:row.collected_at,platform:row.source_platform,query_bundle:row.query_bundle_name,body:row.original_full_text,body_markdown:row.original_markdown,content_status:'full_text'};
+ const data={title:row.title,url:row.source_url,published_at:row.published_at,published_at_confidence:row.published_at_confidence,collected_at:row.collected_at,platform:row.source_platform,query_bundle:row.query_bundle_name,body:row.original_full_text,body_markdown:row.original_markdown,content_status:'full_text',...(row.comments?{post_body:row.original_post_text,post_markdown:row.original_post_markdown,comments:row.comments.items,comments_status:row.comments.status,comments_expected:row.comments.expected,comments_note:row.comments.reason}:{})};
  return format==='json'?JSON.stringify(data,null,2)+'\n':`# ${row.title.replace(/[\r\n]/g,' ')}\n\n- 원문: ${row.source_url}\n- 게시일: ${row.published_at||'미확인'}\n- 수집일: ${row.collected_at}\n- 쿼리 번들: ${row.query_bundle_name.replace(/[\r\n]/g,' ')}\n\n---\n\n${row.original_markdown}\n`;
 }
 export async function saveOriginal(row:RecordItem,directory:string,format:'md'|'json'){
