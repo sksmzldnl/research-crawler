@@ -1,0 +1,12 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "failure",
+  "channel": "glass-win",
+  "source_sha": "54a34353864b3ad2324ad0097a731c9fcd947392",
+  "run_id": "40829246557",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40829246557",
+  "updated_at": "2026-10-29T06:28:59.866Z",
+  "release_url": null,
+  "log_tail": "COMMAND: npm run test:desktop\n\n> zerowaste-listening-studio@0.9.0 test:desktop\n> node scripts/ensure-electron.mjs && node scripts/desktop-smoke.mjs\n\nInstalling the official checksum-verified Electron runtime (1/3)...\nElectron runtime ready: 45.0.0\nDesktop smoke failure: locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('heading', { name: '리서치' }) to be visible\u001b[22m\n\n{\n  windows: [ { url: 'studio://app/', loading: false } ],\n  renderRequests: undefined\n}\n본문으로 건너뛰기\nZeroWaste\nLISTENING STUDIO\n작업실\n설정\n리서치\n네이버에서 자료 모으기\nNAVER\n검색 대상\n블로그\n카페\n지식인\n검색 이름\n목표 자료 수\n검색어당 페이지 수\n기간 설정\n쿼리 번들\n＋ 번들 추가\n제로웨이스트 생활 경험\n(제로웨이스트 OR \"zero waste\" OR 재사용) AND (불편 OR 후기 OR 문제 OR 경험)\n편집\n파일 형식\nMarkdown (.md)\nJSON (.json)\n저장 폴더\n폴더 선택\n미선택\n팝업·배너 광고 제거\n네이버 인증정보 등록\n수집한 원문\n저장 0개 · 실패 0개\n자료 모음\n자료 선택\n자료 검색\n표시\n전체\n저장 완료\n수집·저장 실패\n검색 조건 제외\n\n검색을 시작하면 원문과 저장 상태가 표시됩니다.\n\n다시 저장할 형식\nMD\nJSON\n표시된 원문 0개 다시 저장\nnode:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\n\r\nlocator.waitFor: Timeout 30000ms exceeded.\r\nCall log:\r\n\u001b[2m  - waiting for getByRole('heading', { name: '리서치' }) to be visible\u001b[22m\r\n\r\n    at D:\\a\\research-crawler\\research-crawler\\scripts\\desktop-smoke.mjs:21:80 {\r\n  log: [\r\n    \"  - waiting for getByRole('heading', { name: '리서치' }) to be visible\"\r\n  ],\r\n  name: 'TimeoutError'\r\n}\r\n\r\nNode.js v24.22.1\r\n"
+}
