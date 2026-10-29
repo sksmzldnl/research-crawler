@@ -1,3 +1,4 @@
+import type {RedditBrowserState} from './reddit-browser.js';
 import type {CommentReport} from './comments.js';
 import type {SearchType} from './api-types.js';
 export const sources = ['naver_blog','naver_cafearticle','naver_kin','reddit'] as const;
@@ -18,6 +19,6 @@ export interface GeminiCheckStep {id:'catalog'|'text'|'json';title:string;status
 export interface GeminiCheckReport {id:string;model:string;status:'running'|'passed'|'failed'|'cancelled';startedAt:string;finishedAt?:string;steps:GeminiCheckStep[];}
 export interface ConnectionScope {comments?:{status:CommentReport['status'];count:number};type:SearchType;manual?:boolean;search:'pending'|'running'|'passed'|'failed'|'skipped'|'cancelled';original:'pending'|'running'|'passed'|'failed'|'empty'|'cancelled';date:string|null;url?:string;error?:string;}
 export interface ConnectionReport {id:string;status:'running'|'completed'|'cancelled';scopes:ConnectionScope[];}
-export interface State {readingOriginal?:boolean;connectionCheck?:ConnectionReport; geminiCheck?:GeminiCheckReport;localJob?:LocalJob; bundles:Bundle[]; researches:Research[]; records:RecordItem[]; settings:ProviderSettings; credentials:Record<string,boolean>; secureStorage:boolean; }
+export interface State {redditBrowser?:RedditBrowserState;readingOriginal?:boolean;connectionCheck?:ConnectionReport; geminiCheck?:GeminiCheckReport;localJob?:LocalJob; bundles:Bundle[]; researches:Research[]; records:RecordItem[]; settings:ProviderSettings; credentials:Record<string,boolean>; secureStorage:boolean; }
 export type ExportRequest={researchId:string;ids?:string[]};
 export interface Bridge { call<T=unknown>(method:string,args?:unknown):Promise<T>; }

@@ -1,3 +1,4 @@
+import {BrowserAttentionError} from './reddit-browser.js';
 import {browserQueries} from './search-plan.js';
 import {randomUUID,createHash} from 'node:crypto';
 import {z} from 'zod';
@@ -29,7 +30,7 @@ export class SearchCollector {
   const r=localResearch(config.name,config.target);r.id=randomUUID();r.bundles=bundles;r.apiSearch=config;r.config={...r.config,bundleIds:config.bundleIds,sources:[(config.naverType==='reddit'?'reddit':'naver_'+config.naverType) as import('./types.js').Source],target:config.target,startDate:config.startDate,endDate:config.endDate,removeAds:config.removeAds};
   r.totalTasks=bundles.reduce((n,b)=>n+browserQueries(b.expression).length,0)*config.pages;r.processed=0;r.valid=0;r.status='running';r.stage='검색 준비';r.notes=['공개 게시글의 본문 전체를 수집해 지정 폴더에 개별 파일로 저장합니다. 이미지·첨부는 원문 링크로 남깁니다. 로그인·가입이 필요한 글은 수집하지 않습니다.'];this.store.put('researches',r);this.launch(r);return r;
  }
- private launch(r:Research){if(this.active.size)throw Error('다른 수집이 진행 중입니다.');const controller=new AbortController();r.status='running';const entry={r,controller,pending:Promise.resolve()};this.active.set(r.id,entry);entry.pending=this.run(r,controller.signal).catch(e=>{if(controller.signal.aborted)return;r.status='paused';r.stage='수집 일시정지';r.errors=[...r.errors,(e as Error).message].slice(-100);}).finally(()=>{this.save(r);this.active.delete(r.id);});}
+ private launch(r:Research){if(this.active.size)throw Error('다른 수집이 진행 중입니다.');const controller=new AbortController();r.status='running';const entry={r,controller,pending:Promise.resolve()};this.active.set(r.id,entry);entry.pending=this.run(r,controller.signal).catch(e=>{if(controller.signal.aborted)return;r.status='paused';r.stage=e instanceof BrowserAttentionError?'브라우저 확인 후 재개':'수집 일시정지';r.errors=[...r.errors,(e as Error).message].slice(-100);}).finally(()=>{this.save(r);this.active.delete(r.id);});}
  private save(r:Research){const rows=this.store.records(r.id);r.valid=rows.filter(row=>!!row.saved_path&&row.review_status!=='excluded').length;r.excluded=rows.length-r.valid;r.updatedAt=new Date().toISOString();this.store.put('researches',r);}
  private async run(r:Research,signal:AbortSignal){const config=r.apiSearch!;let first=true;
   outer:for(const bundle of r.bundles)for(const query of browserQueries(bundle.expression)){
@@ -51,7 +52,7 @@ export class SearchCollector {
   const row=existing||makeRecord(r.id,'',item.title,url,'',type==='reddit'?'en':'ko',type==='reddit'?'reddit':'naver_'+type);row.record_id=id;row.native_id=item.id;row.source_search_engine=searchLabels[type];row.query_bundle_name=b.name;row.query_expression=b.expression;row.search_snippet=item.text;row.discovery_paths=[...new Set([...(existing?.discovery_paths||[]),path])];row.exclusion_reasons=[];row.collection_error='';
   try{
    if(row.content_status!=='full_text'||!row.original_markdown){r.stage=`원문 수집 · ${item.title}`;this.save(r);const body=await this.original.read(url,config.removeAds,signal,config.removeHashtags,config.includeComments??true);row.original_full_text=body.text;row.original_markdown=body.markdown;row.original_post_text=body.postText;row.original_post_markdown=body.postMarkdown;row.comments=body.comments;row.content_status='full_text';row.published_at=normalizedDate(item.date)||body.date;row.published_at_confidence=normalizedDate(item.date)?'provider_reported':body.date?'page_reported':'unknown';}
-  }catch(error){signal.throwIfAborted();row.content_status='snippet_only';row.processing_status='collection_failed';row.collection_error=(error as Error).message;row.exclusion_reasons=['원문 수집 실패'];row.review_status='excluded';this.store.record(row);return;}
+  }catch(error){signal.throwIfAborted();if(error instanceof BrowserAttentionError)throw error;row.content_status='snippet_only';row.processing_status='collection_failed';row.collection_error=(error as Error).message;row.exclusion_reasons=['원문 수집 실패'];row.review_status='excluded';this.store.record(row);return;}
   signal.throwIfAborted();applySearchFilters(row,b,config);this.store.record(row);
   if(!row.exclusion_reasons.length){try{row.saved_path=await saveOriginal(row,config.outputDirectory!,config.outputFormat||'md');row.processing_status='file_saved';this.store.record(row);}catch(error){row.processing_status='save_failed';row.collection_error='파일 저장 실패: '+(error as Error).message;row.review_status='excluded';row.exclusion_reasons=['파일 저장 실패'];this.store.record(row);throw Error(row.collection_error);}}
  }
