@@ -1,0 +1,17 @@
+import {it,expect} from 'vitest';
+import {extractOriginal} from '../core/original.js';
+const url='https://kin.naver.com/qna/detail.naver?docId=42';
+const body='<div class="question-content"><div class="c-heading__content">질문 본문</div></div>';
+function date(metadata:string){return extractOriginal(body+metadata,url,true).date;}
+it.each(['c-userinfo__info','user-info__info','userInfo__info'])('reads question metadata outside the body from %s',cls=>{expect(date(`<div class="end-user-info"><span class="${cls}">작성일2026.10.29.</span></div>`)).toBe('2026-10-29T00:00:00+09:00');});
+it.each(['작성일2026.10.01. 수정일2026.10.29.','수정일2026.10.29. 작성일2026.10.01.'])('retains original publication when the same metadata element also contains modification: %s',value=>{expect(date(`<span class="c-userinfo__info">${value}</span>`)).toBe('2026-10-01T00:00:00+09:00');});
+it('reads an absolute date attribute when the displayed question date is relative',()=>{expect(date('<span class="c-userinfo__info" title="2026.10.29. 09:10">작성일 3시간 전</span>')).toBe('2026-10-29T09:10:00+09:00');});
+it('reads explicitly labelled metadata without depending on a CSS class',()=>{expect(date('<div class="new-metadata"><span>질문일 : 2026년 10월 29일 오전 9:10</span></div>')).toBe('2026-10-29T09:10:00+09:00');});
+it('reads dt/dd publication metadata',()=>{expect(date('<dl><dt>작성일</dt><dd>2026.10.29. 09:10</dd></dl>')).toBe('2026-10-29T09:10:00+09:00');});
+it('never guesses an unknown question date from answers, comments, user profiles or modification-only metadata',()=>{expect(date('<div class="answer-content"><span class="c-userinfo__info">작성일2026.10.29.</span></div><div id="commentList"><span>작성일2026.10.28.</span></div><span class="user-info__info">가입일2020.01.01.</span><span class="c-userinfo__info">수정일2026.10.30.</span>')).toBeNull();});
+it('does not treat a quoted date in the actual question body as metadata',()=>{expect(extractOriginal('<div class="question-content"><div class="c-heading__content"><p>이 문서에 작성일2020.01.01.이라고 적혀 있는데 무슨 뜻인가요?</p></div></div>',url,true).date).toBeNull();});
+it('uses Question/QAPage metadata and ignores answer dates and generic WebPage modification data',()=>{expect(date('<script type="application/ld+json">{"@type":"QAPage","mainEntity":{"@type":"Question","dateCreated":"2026-10-01","dateModified":"2026-10-29","acceptedAnswer":{"dateCreated":"2026-10-02"}}}</script>')).toBe('2026-10-01T00:00:00+09:00');expect(date('<script type="application/ld+json">[{"@type":"Answer","dateCreated":"2026-10-02"},{"@type":"WebPage","dateModified":"2026-10-29"}]</script>')).toBeNull();});
+it('keeps publication unknown for unqualified relative dates',()=>{expect(date('<span class="c-userinfo__info">작성일 3시간 전</span>')).toBeNull();});
+it('does not use a different question from structured recommendations',()=>{expect(date('<script type="application/ld+json">{"@type":"Question","url":"https://kin.naver.com/qna/detail.naver?docId=999","dateCreated":"2026-10-29"}</script>')).toBeNull();});
+it('does not treat an unlabelled profile nickname that resembles a date as publication metadata',()=>{expect(date('<span class="user-info__info" title="2020.01.01">2020.01.01</span>')).toBeNull();});
+it('reads an absolute tooltip from explicitly labelled metadata with a new CSS class',()=>{expect(date('<span class="new-header-date" title="2026.10.29. 09:10">작성일 3시간 전</span>')).toBe('2026-10-29T09:10:00+09:00');});

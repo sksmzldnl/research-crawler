@@ -1,5 +1,6 @@
 import {JSDOM} from 'jsdom';
 import {Network} from './network.js';
+import {kinPublishedDate} from './kin-date.js';
 import {articleDate} from './article-date.js';
 import {publicNaverUrl,articleIdentity} from './original-url.js';
 export interface Original {text:string;markdown:string;date:string|null;url:string;}
@@ -20,6 +21,7 @@ function markdown(node:Node,base:string):string{
 }
 function visibleText(root:Element){const copy=root.cloneNode(true) as Element;for(const el of copy.querySelectorAll('br'))el.replaceWith('\n');for(const el of copy.querySelectorAll('p,div,li,h1,h2,h3,h4,tr,blockquote,figcaption')){el.prepend('\n');el.append('\n');}return (copy.textContent||'').replace(/[ \t]+/g,' ').replace(/ *\n */g,'\n').replace(/\n{3,}/g,'\n\n').trim();}
 function posted(doc:Document,kin:boolean){
+ if(kin)return kinPublishedDate(doc);
  const selectors=['meta[property="article:published_time"]','meta[property="og:article:published_time"]','meta[itemprop="datePublished"]','.ArticleWriter .date','.WriterInfo .date','.se_publishDate','.blog_date','.post_date',...(kin?['.question-content .c-userinfo__info','.question-content .userInfo__info','.question-content .date','.question-content .info']:[]),'time[datetime]:not([itemprop="dateModified"])','meta[name="date"]','.date'];
  for(const selector of selectors)for(const el of doc.querySelectorAll(selector)){
   if(el.closest('.CommentBox,.CommentItem,.comment,#commentList,.answer-content,.answer_wrap')||/수정일|수정됨|updated/i.test(el.textContent||''))continue;

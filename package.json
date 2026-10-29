@@ -1,6 +1,6 @@
 {
   "name": "zerowaste-listening-studio",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "private": true,
   "description": "네이버 블로그·카페·지식인 원문 수집 · 개별 MD/JSON 저장",
   "author": "ZeroWaste Listening Studio contributors",
