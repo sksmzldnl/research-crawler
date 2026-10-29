@@ -1,5 +1,5 @@
 import {articleDate} from './article-date.js';
-const otherContent='.answer-content,.answer_wrap,.answer-list,.answer_list,.answer-item,.answerItem,.answerDetail,._answerContentsArea,._answerContents,#answerArea,#answerList,[data-answer-id],.CommentBox,.CommentItem,.comment,#commentList,aside,.related-question,.relatedQuestion';
+const otherContent='.end_answer,._answerItem,.answer_area,.answerArea,.answer-content,.answer_wrap,.answer-list,.answer_list,.answer-item,.answerItem,.answerDetail,._answerContentsArea,._answerContents,#answerArea,#answerList,[data-answer-id],.CommentBox,.CommentItem,.comment,#commentList,aside,.related-question,.relatedQuestion';
 const questionBody='.c-heading__content,._questionContentsArea,.questionDetail,.question-content__body';
 const label=/(?:작성\s*일|질문\s*(?:등록\s*)?일|등록\s*일|게시\s*일)\s*[:：]?\s*/;
 function publicationText(value:string|null){
