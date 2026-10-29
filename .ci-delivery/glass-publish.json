@@ -1,0 +1,12 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "success",
+  "channel": "glass-publish",
+  "source_sha": "44fff21e1186eba1b5ffdedd2e23f49104892af0",
+  "run_id": "40829944019",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40829944019",
+  "updated_at": "2026-10-29T06:41:12.057Z",
+  "release_url": null,
+  "log_tail": ""
+}
