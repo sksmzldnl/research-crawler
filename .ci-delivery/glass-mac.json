@@ -1,0 +1,12 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "success",
+  "channel": "glass-mac",
+  "source_sha": "5c4b70535895031d01eed9e33194151504eecca5",
+  "run_id": "40885768120",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40885768120",
+  "updated_at": "2026-10-29T13:58:31.276Z",
+  "release_url": null,
+  "log_tail": "COMMAND: node scripts/verify-mac-packages.mjs\nVerified x64 bundle, Liquid Glass UI assets, source identity and signature integrity. Native execution: true.\nVerified arm64 bundle, Liquid Glass UI assets, source identity and signature integrity. Native execution: false.\n"
+}
