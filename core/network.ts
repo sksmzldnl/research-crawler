@@ -1,3 +1,4 @@
+import {decodeHtml} from './html-encoding.js';
 import {publicNaverUrl} from './original-url.js';
 import { EnvHttpProxyAgent, fetch as proxyFetch } from 'undici';
 const dispatcher=new EnvHttpProxyAgent();
@@ -61,7 +62,7 @@ export class Network {
    if(!response.ok){await response.body?.cancel();throw new ApiError(response.status,'원문 수집');}
    const type=response.headers.get('content-type')||'';if(type&&!/html|text/i.test(type)){await response.body?.cancel();throw Error('원문이 HTML 페이지가 아닙니다.');}
    const reader=response.body?.getReader(),chunks:Uint8Array[]=[];let size=0;if(reader)while(true){const {value,done}=await reader.read();if(done)break;size+=value.length;if(size>8_000_000){await reader.cancel();throw Error('원문 HTML이 8MB 제한을 초과했습니다.');}chunks.push(value);}combined.throwIfAborted();
-   const bytes=Buffer.concat(chunks),header=type.match(/charset=([a-zA-Z0-9_-]+)/i)?.[1],meta=bytes.subarray(0,4096).toString('ascii').match(/charset=["']?([a-zA-Z0-9_-]+)/i)?.[1];return {html:new TextDecoder(header||meta||'utf-8').decode(bytes),url};
+   return {html:decodeHtml(Buffer.concat(chunks),type),url};
   }throw Error('원문 주소 이동이 너무 많습니다.');
  });}
  async request(url:string,init:RequestInit={},provider='API',signal?:AbortSignal,policy:RequestPolicy={}):Promise<Response>{return this.timed(provider,signal,policy,s=>this.perform(url,init,provider,s,policy.timeoutMs??25000,policy.maxAttempts??4));}

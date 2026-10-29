@@ -1,32 +1,29 @@
-# ZeroWaste Listening Studio 0.9.0
+# ZeroWaste Listening Studio 0.9.1 · 카페 MS949 오류 수정
 
-- 기능 변경 설명·상단 홍보 문구를 UI에서 제거.
-- 네이버 API 연결 확인 복원. 블로그·카페·지식인별 실제 검색 요청, 원문 접근, 게시일 결과를 분리. 중지·키 변경 시 무효화·키 가림 지원.
-- 접힌 ‘원문 주소 확인’으로 특정 URL을 검색 API 키 없이 직접 확인.
-- 카페 프레임과 늦게 도착하는 본문·게시일을 기다림. 정적 읽기 실패 시 브라우저 읽기 경로 복구. 렌더러 초기화 대기 교착 방지.
-- 정상 공개 페이지가 실제 요청한 게시글 JSON에서 본문과 writeDate 추출. 글 ID 일치 검사, 댓글·추천글·수정일 제외, 한국 날짜 유지. 별도의 비공개 API 요청이나 로그인 우회 없음.
-- 실패 자료의 ‘원문 다시 읽기’, 기존 검색·날짜·제외어 조건 유지.
-- 지식인 쿼리 번들 검색 및 질문·표시된 공개 답변을 MD/JSON 개별 파일로 저장. NAVER API HUB Application에 지식iN 권한 필요.
+카페 원문 수집의 `The "MS949" encoding is not supported` 오류를 수정합니다. 사용자가 로그인하지 않은 시크릿 창에서도 본문이 보인다고 확인한 사례입니다. API 키나 회원 권한 변경이 필요한 수정은 아닙니다.
 
-## 다운로드
+- Node TextDecoder에 그대로 전달하던 MS949·CP949·한국어 웹 인코딩을 CP949 전용 디코더로 처리.
+- EUC-KR 별칭 변경만으로 누락될 수 있는 확장 한글도 보존.
+- 따옴표·공백이 있는 HTTP charset과 HTML meta 선언 처리. Unicode BOM 우선, 유효한 HTTP charset → meta → UTF-8 순서.
+- 기존 블로그·카페·지식인 검색, 원문/게시일 연결 확인, 개별 MD/JSON 저장과 UI 유지.
 
-[전체 설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.9.0)
+## 다운로드 및 적용
 
-- Apple Silicon Mac: `ZeroWaste-Listening-Studio-0.9.0-mac-arm64.dmg`
-- Intel Mac: `ZeroWaste-Listening-Studio-0.9.0-mac-x64.dmg`
-- Windows x64: `ZeroWaste-Listening-Studio-0.9.0-win-x64.exe`
-- 설치·키 발급·사용 안내: `Original-Guide-0.9.0-KO.pdf`
+[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.9.1)
 
-기존 앱을 종료하고 교체합니다. 기존 네이버 키와 기록은 유지됩니다. 같은 저장 폴더를 선택하고 자료 상세의 ‘원문 다시 읽기’를 사용할 수 있습니다. 기존 파일은 덮어쓰지 않습니다.
+- Apple Silicon Mac: `ZeroWaste-Listening-Studio-0.9.1-mac-arm64.dmg`
+- Intel Mac: `ZeroWaste-Listening-Studio-0.9.1-mac-x64.dmg`
+- Windows x64: `ZeroWaste-Listening-Studio-0.9.1-win-x64.exe`
+- 설치·사용 안내: `Original-Guide-0.9.1-KO.pdf`
 
-macOS 13 이상, ad-hoc 서명·Developer ID 공증 없음. Windows 설치 파일은 서명되지 않았습니다.
+기존 앱을 종료한 뒤 교체합니다. 저장한 네이버 키와 기록은 유지됩니다. 같은 저장 폴더를 다시 선택하고 실패한 자료 상세에서 ‘원문 다시 읽기’를 누르거나 새 수집을 시작하세요. 설정 → 원문 주소 확인에서 해당 카페 글을 재검사할 수도 있습니다.
+
+macOS 13 이상. Mac은 ad-hoc 서명·Developer ID 공증 없음, Windows는 서명되지 않은 설치 파일입니다.
 
 ## 검증 범위
 
-단위·브라우저 검사는 세 검색 경로, 연결 상태 분리·중지·키 가림, 카페 URL 네 가지 형식, 본문 JSON·등록시각·한국 날짜·잘못된 글 ID 거부, 지식인 질문/답변·본문 전체·개별 파일 저장과 기존 검색 흐름을 확인합니다.
+기존 코드로 사용자 오류를 재현하고, Python 표준 cp949 코덱으로 독립 생성한 실제 MS949 바이트 fixture로 회귀 검사합니다. 확장 한글·본문 마지막 문단·게시일 추출, UTF-8 MD/JSON 저장을 확인합니다.
 
-Electron 검사는 실제 IPC·SQLite·폴더 선택·개별 MD/JSON 저장, 검색 API/원문/게시일 연결 검사, 지식인 수집을 실행합니다. 카페의 별칭/글번호 → iframe → 페이지의 정상 JSON 응답 흐름, 본문보다 늦게 렌더링되는 날짜·마지막 문단을 테스트합니다. 응답은 모두 격리 fixture이며 실제 사용자 글을 재현한 응답이라고 주장하지 않습니다.
+Electron 소스와 설치 패키지 검사에서 HTTP `charset=MS949` + 실제 CP949 바이트를 받아 연결 확인 → 원문/날짜 추출 → 개별 파일 저장까지 실행합니다. 브라우저 재시도로 성공을 대신하지 않았는지도 검사합니다. 이 검사는 패키지에 필요한 인코딩 테이블이 실제로 포함됐는지도 검증합니다.
 
-제보 주소 `https://cafe.naver.com/fmjs5/15641`는 개발 환경의 네이버 접속이 프록시 403으로 차단되어 실응답 확인을 완료하지 못했습니다. 네이버/정적 리소스 접속 허용 초안은 저장했지만 환경에 적용·게시되지 않았습니다. 실제 글의 공개 여부·회원 권한·실계정 상품 승인은 미검증입니다. 로그인·가입이 필요한 글은 자동으로 우회하지 않습니다. 지식인 답변은 현재 페이지에서 공개적으로 로드되는 범위입니다.
-
-CI는 Windows·Intel Mac에서 패키지를 실행 검사합니다. Mac ARM64는 교차 빌드와 바이너리·서명·ASAR 내용 검증이며 M 시리즈 실기기 실행은 미검증입니다.
+제보한 실제 사이트 응답 자체는 개발 클라우드의 네이버 접속 제한으로 직접 확인하지 못했습니다. 테스트는 실제 글 내용이 아닌 동일 오류 조건을 재현한 데이터입니다. Windows·Intel Mac에서 패키지를 실행하며, Mac ARM64는 빌드·바이너리·서명·코드 일치 검사입니다. M 시리즈 실기기 실행은 미검증입니다.

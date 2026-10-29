@@ -1,8 +1,8 @@
-# ZeroWaste Listening Studio 0.9.0
+# ZeroWaste Listening Studio 0.9.1
 
 네이버 블로그·카페·지식인를 쿼리 번들로 자동 검색하고, **공개 본문 전체를 글마다 별도 MD/JSON 파일로 저장**하는 macOS/Windows 앱입니다. Liquid Glass 디자인과 작업실·설정 두 메뉴를 유지합니다.
 
-[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.9.0) · [처음 사용하는 분을 위한 설치·키 발급·수집 안내](docs/ORIGINAL_GUIDE_KO.md) · [배포용 PDF](docs/Original-Guide-0.9.0-KO.pdf)
+[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.9.1) · [처음 사용하는 분을 위한 설치·키 발급·수집 안내](docs/ORIGINAL_GUIDE_KO.md) · [배포용 PDF](docs/Original-Guide-0.9.1-KO.pdf)
 
 1. 설정에 NAVER API HUB의 **Client ID / Client Secret**을 각각 등록합니다. 요청 URL은 자동 적용됩니다.
 2. 작업실에서 블로그·카페·지식인 중 하나, 쿼리 번들, 목표 수량을 선택합니다. 예: `재사용 AND (불편 OR 후기)`.

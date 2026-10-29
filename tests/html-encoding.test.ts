@@ -1,0 +1,20 @@
+import {it,expect,vi} from 'vitest';
+import {readFile,mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {decodeHtml} from '../core/html-encoding.js';
+import {Network} from '../core/network.js';
+import {OriginalReader} from '../core/original.js';
+import {makeRecord} from '../core/record.js';
+import {saveOriginal} from '../core/original-export.js';
+const url='https://cafe.naver.com/fmjs5/15641';
+// Fixed CP949 bytes independently generated with Python's standard cp949 codec, not this decoder.
+const korean=Uint8Array.from([196,171,198,228,32,186,187,185,174,176,250,32,176,212,189,195,192,207,32,161,164,32,200,174,192,229,32,199,209,177,219,32,148,238,32,198,82,32,151,205]);
+const expected='카페 본문과 게시일 · 확장 한글 뷁 힣 쀍';
+it('reproduces the exact reported unsupported MS949 error in the old code path',()=>{expect(()=>new TextDecoder('MS949')).toThrow('encoding is not supported');});
+it.each(['MS949','ms949','CP949','cp-949','Windows-949','x-windows-949','EUC-KR','ks_c_5601-1987','KSC5601','korean','iso-ir-149','csksc56011987'])('decodes the full CP949 repertoire declared as %s',label=>{expect(decodeHtml(korean,'text/html; charset='+label)).toBe(expected);});
+it.each(['text/html; charset="MS949"','text/html; charset=\'MS949\'','text/html; charset = MS949 ; other=1'])('accepts quoted and spaced HTTP charset: %s',header=>expect(decodeHtml(korean,header)).toBe(expected));
+it('reads MS949 in a real meta tag if the HTTP charset is absent or unsupported',async()=>{const bytes=await readFile(new URL('./fixtures/cafe-ms949.html.bin',import.meta.url));for(const header of ['text/html','text/html; charset=x-unsupported'])expect(decodeHtml(bytes,header)).toContain('확장 한글 뷁 힣 쀍');});
+it('honors a Unicode BOM and a supported HTTP charset over conflicting meta declarations',()=>{const utf8=Buffer.from('<meta charset="MS949">카페 본문');expect(decodeHtml(Buffer.concat([Buffer.from([0xef,0xbb,0xbf]),utf8]),'text/html;charset=MS949')).toBe(utf8.toString());expect(decodeHtml(utf8,'text/html;charset=UTF-8')).toBe(utf8.toString());});
+it('does not silently treat unknown, non-UTF8 byte data as a valid original',()=>expect(()=>decodeHtml(korean,'text/html; charset=x-unknown')).toThrow('문자 인코딩'));
+it('collects an MS949 Cafe response through decoding, original/date extraction and individual MD/JSON saving',async()=>{const bytes=await readFile(new URL('./fixtures/cafe-ms949.html.bin',import.meta.url)),send=vi.fn(async()=>new Response(bytes,{headers:{'Content-Type':'text/html; charset=MS949'}})),body=await new OriginalReader(new Network(send)).read(url,true,new AbortController().signal);expect(body.text).toContain('카페 전체 본문');expect(body.text).toContain('확장 한글 뷁 힣 쀍');expect(body.text).toContain('마지막 문단');expect(body.text).not.toContain('\ufffd');expect(body.date).toBe('2026-10-29T09:10:00+09:00');expect(send).toHaveBeenCalledTimes(1);const dir=await mkdtemp(join(tmpdir(),'cp949-files-'));try{const row=makeRecord('r',body.text,'카페 원문',url,body.date!);row.original_markdown=body.markdown;for(const format of ['md','json'] as const){const text=await readFile(await saveOriginal(row,dir,format),'utf8');expect(text).toContain('확장 한글 뷁 힣 쀍');expect(text).toContain('2026-10-29');}}finally{await rm(dir,{recursive:true,force:true});}});
