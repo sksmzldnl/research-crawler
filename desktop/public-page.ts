@@ -4,12 +4,12 @@ import {publicNaverUrl,articleIdentity} from '../core/original-url.js';
 import {Network,wait} from '../core/network.js';
 export class DesktopOriginalReader implements OriginalSource {
  constructor(private net:Network){}
- async read(raw:string,removeAds:boolean,signal:AbortSignal):Promise<Original>{
+ async read(raw:string,removeAds:boolean,signal:AbortSignal,removeHashtags=false):Promise<Original>{
   const safe=publicNaverUrl(raw);let staticBody:Original|undefined,staticError:unknown;
-  try{staticBody=await new OriginalReader(this.net).read(safe,removeAds,signal);if(staticBody.date)return staticBody;}catch(error){signal.throwIfAborted();staticError=error;}
-  try{return await this.render(safe,removeAds,signal,staticBody);}catch(error){signal.throwIfAborted();if(staticBody)return staticBody;throw Error((error as Error).message+(staticError?' · '+(staticError as Error).message:''));}
+  try{staticBody=await new OriginalReader(this.net).read(safe,removeAds,signal,removeHashtags);if(staticBody.date)return staticBody;}catch(error){signal.throwIfAborted();staticError=error;}
+  try{return await this.render(safe,removeAds,signal,removeHashtags,staticBody);}catch(error){signal.throwIfAborted();if(staticBody)return staticBody;throw Error((error as Error).message+(staticError?' · '+(staticError as Error).message:''));}
  }
- private async render(safe:string,removeAds:boolean,signal:AbortSignal,initial?:Original):Promise<Original>{
+ private async render(safe:string,removeAds:boolean,signal:AbortSignal,removeHashtags:boolean,initial?:Original):Promise<Original>{
   signal.throwIfAborted();const partition='public-original-reader',isolated=session.fromPartition(partition);
   isolated.setPermissionRequestHandler((_w,_p,callback)=>callback(false));isolated.setPermissionCheckHandler(()=>false);
   const win=new BrowserWindow({show:false,webPreferences:{partition,sandbox:true,nodeIntegration:false,contextIsolation:true,webSecurity:true,backgroundThrottling:false}});
@@ -28,7 +28,7 @@ export class DesktopOriginalReader implements OriginalSource {
      try{const u=new URL(params.response.url);if(params.response.status===200&&u.hostname==='apis.naver.com'&&/^\/cafe-web\/cafe-articleapi\//.test(u.pathname)&&u.pathname.includes('/articles/'+articleIdentity(safe).id))pending.set(params.requestId,u.href);}catch{}
     }
     if(method==='Network.loadingFinished'&&pending.delete(params.requestId)){
-     const task=(async()=>{try{const result=await win.webContents.debugger.sendCommand('Network.getResponseBody',{requestId:params.requestId});if(result.body.length>8_000_000)return;const json=JSON.parse(result.base64Encoded?Buffer.from(result.body,'base64').toString('utf8'):result.body);const body=extractCafeResponse(json,safe,removeAds);if(body)responseBody=body;}catch{}})();tasks.add(task);void task.finally(()=>tasks.delete(task));
+     const task=(async()=>{try{const result=await win.webContents.debugger.sendCommand('Network.getResponseBody',{requestId:params.requestId});if(result.body.length>8_000_000)return;const json=JSON.parse(result.base64Encoded?Buffer.from(result.body,'base64').toString('utf8'):result.body);const body=extractCafeResponse(json,safe,removeAds,removeHashtags);if(body)responseBody=body;}catch{}})();tasks.add(task);void task.finally(()=>tasks.delete(task));
     }
    });
   }catch{/* A usable article DOM is sufficient when debugger observation is unavailable. */}
@@ -44,7 +44,7 @@ export class DesktopOriginalReader implements OriginalSource {
       let frameTimer:ReturnType<typeof setTimeout>|undefined;const snapshot=await Promise.race([frame.executeJavaScript(`(()=>{const text=document.body?.innerText||'';return {html:document.documentElement.outerHTML,denied:!document.querySelector(${JSON.stringify(readerSelectors)})&&text.length<2000&&/로그인이 필요|카페 멤버만|멤버공개|권한이 없|접근 권한|삭제된 게시글|존재하지 않는 게시글|forbidden/i.test(text)?text.slice(0,300):''};})()`),new Promise<never>((_resolve,reject)=>{frameTimer=setTimeout(()=>reject(Error('프레임 준비 중')),1500);})]).finally(()=>clearTimeout(frameTimer)) as {html:string;denied:string};
       if(snapshot.denied){denial=snapshot.denied;continue;}const html=snapshot.html;
       if(typeof html!=='string'||!html||html.length>8_000_000)continue;
-      const body=extractOriginal(html,frameUrl,removeAds),signature=body.markdown+'|'+body.date;
+      const body=extractOriginal(html,frameUrl,removeAds,removeHashtags),signature=body.markdown+'|'+body.date;
       if(signature!==lastSignature){stableSince=Date.now();lastSignature=signature;candidate=body;}if(!firstBodyAt)firstBodyAt=Date.now();
      }catch{signal.throwIfAborted();}
     }

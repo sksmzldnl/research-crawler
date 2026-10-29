@@ -1,27 +1,22 @@
-# ZeroWaste Listening Studio 0.9.2 · 지식인 게시일 추출 보완
+# ZeroWaste Listening Studio 0.9.3 · 해시태그 단어 제거
 
-- 질문 본문 밖의 데스크톱·모바일 작성일 메타데이터도 확인.
-- 한 요소에 작성일과 수정일이 함께 있을 때 원래 작성일만 추출.
-- 절대 날짜 툴팁·datetime·data-date·질문 JSON-LD 날짜 읽기.
-- 답변·댓글·추천 질문·프로필 날짜와 질문 본문 속 인용 날짜를 게시일로 사용하지 않음.
-- 절대 날짜 근거가 없는 상대 날짜는 임의로 추정하지 않고 미확인 유지.
-- 기존 카페 MS949 수정·검색·원문 저장·UI 유지.
+작업실의 광고 제거 옆에 **해시태그 단어 제거** 체크박스를 추가했습니다. 켜면 `#제로웨이스트`처럼 해시태그로 쓰인 단어 전체를 본문에서 제거하고, 검색 조건을 검사한 뒤 MD·JSON에 저장합니다. 같은 단어가 일반 문장에 있으면 유지합니다.
 
-[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.9.2)
+기본은 꺼짐입니다. 선택은 앱을 다시 열어도 유지되며 **새 수집에 적용**됩니다. 수집 재개와 ‘원문 다시 읽기’는 해당 수집을 시작할 때의 선택을 따릅니다. 이미 저장한 파일은 바꾸지 않습니다. 블로그·카페·지식인과 동적 페이지·카페 게시글 JSON 응답에 동일하게 적용합니다. Markdown 제목, 일반 링크의 URL 조각, C#와 코드 블록은 유지합니다.
 
-- Apple Silicon: `ZeroWaste-Listening-Studio-0.9.2-mac-arm64.dmg`
-- Intel Mac: `ZeroWaste-Listening-Studio-0.9.2-mac-x64.dmg`
-- Windows x64: `ZeroWaste-Listening-Studio-0.9.2-win-x64.exe`
-- 사용 안내: `Original-Guide-0.9.2-KO.pdf`
+[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.9.3)
 
-앱을 종료하고 새 버전으로 교체합니다. 저장한 네이버 키와 기록은 유지됩니다. 같은 저장 폴더를 다시 선택하고 기존 자료 상세에서 ‘원문 다시 읽기’를 누르거나 새 수집을 시작하세요. 날짜 필터는 질문 게시일에 적용됩니다.
+- Apple Silicon: `ZeroWaste-Listening-Studio-0.9.3-mac-arm64.dmg`
+- Intel Mac: `ZeroWaste-Listening-Studio-0.9.3-mac-x64.dmg`
+- Windows x64: `ZeroWaste-Listening-Studio-0.9.3-win-x64.exe`
+- 사용 안내: `Original-Guide-0.9.3-KO.pdf`
+
+앱을 종료하고 새 버전으로 교체합니다. 저장한 네이버 키와 기록은 유지됩니다. 작업실에서 같은 저장 폴더를 다시 선택하고 원하는 옵션으로 새 수집을 시작하세요.
 
 ## 검증
 
-질문 본문 바깥의 작성일, 작성일/수정일 동시 표기, 상대 날짜의 절대 툴팁, 새 CSS 클래스, dt/dd, Question/QAPage JSON-LD, 답변·댓글·프로필·인용문·다른 질문의 날짜 배제를 검사합니다. Electron 설치 패키지에서 지식인 검색 → 본문·답변·원래 게시일 추출 → 개별 파일 저장과 연결 확인을 검증합니다. 응답은 격리 fixture입니다.
+단위 검사에서 한글·영문·밑줄·연속 태그, 링크 내부 태그, 같은 단어의 일반 문장 유지, Markdown 제목·일반 URL·코드 보존, 카페 JSON·블로그 프레임·지식인 질문과 답변, 필터 적용 순서, MD·JSON 파일 저장 및 원문 다시 읽기를 확인합니다. UI 검사에서 체크박스와 새로고침 후 선택 유지 및 작은 화면 레이아웃을 확인합니다.
 
-사용자가 확인한 질문 작성일 문구는 `조회수 62 작성일2026.04.15`이며 기대 게시일은 `2026-04-15`입니다. 이 문구와 answerNo 매개변수를 고정 회귀 검사에 포함했습니다.
+Electron의 실제 폴더 선택과 IPC를 사용해 기본 상태의 MD·JSON에는 태그가 보존되고, 체크 후에는 본문과 파일에서 제거되는 것을 검증합니다. 동적 페이지, 카페 JSON, 지식인 질문·답변 및 원문 다시 읽기도 확인합니다. 기존 카페 MS949/CP949 원문·확장 한글·게시일, 지식인 질문 작성일과 연결 확인 회귀 검사도 유지합니다. 모든 네트워크 응답은 격리 fixture이며 실제 계정 키를 사용하지 않습니다.
 
-제보 URL은 `https://kin.naver.com/qna/detail.naver?answerNo=1&dirId=1112&docId=493851945`입니다. 개발 클라우드에서 해당 주소를 열려 했으나 프록시 CONNECT 403으로 차단되어 실응답을 직접 확인하지 못했습니다. 현재 수정은 코드에서 확인하고 재현한 누락 경로에 대한 검증이며 특정 실사이트 글에 대한 해결 확인이라고 주장하지 않습니다.
-
-Windows·Intel Mac에서 패키지를 실행 검사합니다. Mac ARM64는 바이너리·서명·코드 일치 검사이며 M 시리즈 실기기 실행은 미검증입니다. macOS 13 이상, ad-hoc 서명·Developer ID 공증 없음. Windows 설치 파일은 서명되지 않았습니다.
+실제 네이버 페이지·계정/API를 이용한 이번 변경의 실수집 및 Apple Silicon 실기기 실행 검증은 수행하지 않았습니다. Apple Silicon 설치 파일은 ARM64 실행 파일·소스 일치·서명 무결성을 검사하고, Intel Mac과 Windows는 설치 패키지의 실행 경로까지 검사합니다. Mac은 ad-hoc 서명이며 Apple Developer ID 서명·공증은 포함하지 않습니다.
