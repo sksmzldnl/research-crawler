@@ -1,0 +1,12 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "success",
+  "channel": "original-ui",
+  "source_sha": "b2db527a87ced52a0e6d26f0a28f97c9be7d7475",
+  "run_id": "40907095910",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40907095910",
+  "updated_at": "2026-10-29T16:00:32.541Z",
+  "release_url": null,
+  "log_tail": "COMMAND: npm run test:ui\n\n> zerowaste-listening-studio@0.11.0 test:ui\n> playwright test\n\n\nRunning 6 tests using 1 worker\n\n  ✓  1 tests/ui/studio.spec.ts:3:1 › keeps two menus, editable Boolean bundles, original format/folder and a one-click popup/banner filter (3.6s)\n  ✓  2 tests/ui/studio.spec.ts:8:1 › settings shows only two Naver fields and no AI page, keys or model controls; small screen fits (950ms)\n  ✓  3 tests/ui/studio.spec.ts:11:1 › shows original dates, saved/error status and full source detail without summary columns (1.4s)\n  ✓  4 tests/ui/studio.spec.ts:16:1 › blocks cross-origin mutations and removed AI endpoints (66ms)\n  ✓  5 tests/ui/studio.spec.ts:17:1 › restored connection table separates API permission, originals and dates, and checks a supplied URL (1.8s)\n  ✓  6 tests/ui/studio.spec.ts:24:1 › Reddit needs no API credentials, keeps the two-menu workspace and sends original-plus-comments collection settings (1.0s)\n\n  6 passed (10.4s)\n"
+}
