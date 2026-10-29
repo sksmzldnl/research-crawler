@@ -1,0 +1,12 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "success",
+  "channel": "original-ui",
+  "source_sha": "496e5d121238078eff4615cc6f3957c4984a1790",
+  "run_id": "40873726789",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40873726789",
+  "updated_at": "2026-10-29T12:30:51.972Z",
+  "release_url": null,
+  "log_tail": "COMMAND: npm run test:ui\n\n> zerowaste-listening-studio@0.9.1 test:ui\n> playwright test\n\n\nRunning 5 tests using 1 worker\n\n  ✓  1 tests/ui/studio.spec.ts:3:1 › keeps two menus, editable Boolean bundles, original format/folder and a one-click popup/banner filter (2.0s)\n  ✓  2 tests/ui/studio.spec.ts:8:1 › settings shows only two Naver fields and no AI page, keys or model controls; small screen fits (1.1s)\n  ✓  3 tests/ui/studio.spec.ts:11:1 › shows original dates, saved/error status and full source detail without summary columns (1.6s)\n  ✓  4 tests/ui/studio.spec.ts:16:1 › blocks cross-origin mutations and removed AI endpoints (83ms)\n  ✓  5 tests/ui/studio.spec.ts:17:1 › restored connection table separates API permission, originals and dates, and checks a supplied URL (1.8s)\n\n  5 passed (8.8s)\n"
+}
