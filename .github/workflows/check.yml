@@ -5,7 +5,7 @@ on:
   pull_request:
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -19,7 +19,10 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:ui
+      - run: node scripts/ci-step.mjs npm run test:ui
+      - name: Record UI verification outcome
+        if: always()
+        run: node scripts/ci-delivery-report.mjs original-ui ${{ job.status }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

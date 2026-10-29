@@ -1,10 +1,11 @@
 # NAVER API Hub 연결 규격과 확인 근거
 
-0.7.0의 연결은 아래 HTTPS 요청을 사용합니다. 주소·헤더는 앱 내부에서 선택하며 사용자 입력을 요구하지 않습니다.
+0.9.0의 연결은 아래 HTTPS 요청을 사용합니다. 주소·헤더는 앱 내부에서 선택하며 사용자 입력을 요구하지 않습니다.
 
 | 검색 종류 | GET 요청 주소 |
 | --- | --- |
 | 블로그 | `https://naverapihub.apigw.ntruss.com/search/v1/blog` |
+| 지식인 | `https://naverapihub.apigw.ntruss.com/search/v1/kin` |
 | 카페글 | `https://naverapihub.apigw.ntruss.com/search/v1/cafearticle` |
 
 - 인증: Application의 Client ID → `X-NCP-APIGW-API-KEY-ID`, Client Secret → `X-NCP-APIGW-API-KEY` 헤더.
@@ -25,6 +26,6 @@
 
 ## 검증 범위
 
-단위 검사에서 두 검색 종류의 요청 URL·헤더·JSON 매개변수·페이지·응답 검증을 확인합니다. Electron 검사에서는 키 등록 → 쿼리 번들 자동 수집 → start=1/101 → 필터 → 401 후 재개를 실행합니다. 별도 연결 테스트 버튼은 없으며 검색 실행이 실제 연결을 확인합니다.
+단위 검사에서 세 검색 종류의 요청 URL·헤더·JSON 매개변수·페이지·응답 검증을 확인합니다. Electron 검사에서는 키 등록 → 쿼리 번들 자동 수집 → start=1/101 → 필터 → 401 후 재개를 실행합니다. 설정의 연결 확인은 종류마다 `display=1`로 실제 검색을 요청한 뒤 첫 결과의 원문과 게시일도 구분해서 확인합니다. 특정 URL 원문 확인은 API 키를 전송하거나 검색하지 않습니다.
 
 명시적인 격리된 테스트 실행만 fixture를 사용합니다. 실제 사용자 키·계정 상품 승인·할당량·청구는 클라우드에서 검증하지 않았습니다. 일반 설치 앱은 사용자의 인터넷 연결과 키로 실제 요청을 보냅니다.

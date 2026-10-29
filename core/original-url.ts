@@ -1,2 +1,3 @@
-const hosts=new Set(['blog.naver.com','m.blog.naver.com','cafe.naver.com','m.cafe.naver.com']);
-export function publicNaverUrl(raw:string){const u=new URL(raw);if(!['http:','https:'].includes(u.protocol)||!hosts.has(u.hostname)||u.username||u.password||u.port)throw Error('네이버 블로그·카페의 공개 게시글 주소만 수집할 수 있습니다.');u.protocol='https:';u.hash='';return u.href;}
+const hosts=new Set(['blog.naver.com','m.blog.naver.com','cafe.naver.com','m.cafe.naver.com','kin.naver.com','m.kin.naver.com']);
+export function publicNaverUrl(raw:string){const u=new URL(raw);if(!['http:','https:'].includes(u.protocol)||!hosts.has(u.hostname)||u.username||u.password||u.port)throw Error('네이버 게시글 주소를 확인하세요.');u.protocol='https:';u.hash='';return u.href;}
+export function articleIdentity(raw:string){const u=new URL(publicNaverUrl(raw));return {kind:u.hostname.includes('cafe.')?'cafe':u.hostname.includes('kin.')?'kin':'blog',id:u.searchParams.get('articleid')||u.searchParams.get('articleId')||u.searchParams.get('docId')||u.pathname.match(/\/(\d+)\/?$/)?.[1]||'',club:u.searchParams.get('clubid')||u.pathname.match(/\/cafes\/(\d+)\//)?.[1]||''};}

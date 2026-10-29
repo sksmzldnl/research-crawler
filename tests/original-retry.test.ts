@@ -1,0 +1,12 @@
+import {it,expect} from 'vitest';
+import {mkdtemp,rm,readFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {Service} from '../core/service.js';
+import {Store} from '../core/store.js';
+import {MemoryVault} from '../core/vault.js';
+import {localResearch,makeRecord} from '../core/record.js';
+import type {Bundle} from '../core/types.js';
+async function setup(startDate=''){const directory=await mkdtemp(join(tmpdir(),'retry-original-')),store=new Store(':memory:'),bundle={...store.list<Bundle>('bundles')[0],expression:'A'};const r=localResearch('기존 실패',1);r.bundles=[bundle];r.apiSearch={version:'naver-original-v2',name:'기존 실패',naverType:'cafearticle',bundleIds:[bundle.id],target:1,pages:1,startDate,endDate:'',includeUnknownDate:false,removeAds:true,outputFormat:'md',outputDirectory:directory};store.put('researches',r);const row=makeRecord(r.id,'','A 경험','https://cafe.naver.com/fmjs5/15641');row.content_status='snippet_only';row.collection_error='이전 버전 실패';row.query_expression='A';row.exclusion_reasons=['원문 수집 실패'];row.review_status='excluded';store.record(row);const service=new Service(store,new MemoryVault(),undefined,{async read(url){return {url,text:'A 원문 마지막',markdown:'A 원문 마지막',date:'2026-10-29T12:30:00+09:00'};}});service.selectDirectory=async()=>directory;await service.call('output.choose',undefined);return {service,store,row,r,async close(){service.close();await service.idle();store.close();await rm(directory,{recursive:true,force:true});}};}
+it('re-reads an existing failed article, fixes its date and saves a complete per-article file',async()=>{const c=await setup();try{await c.service.call('original.retry',c.row.record_id);const row=c.store.records(c.r.id)[0];expect(row.published_at).toBe('2026-10-29T12:30:00+09:00');expect(row.collection_error).toBe('');expect(await readFile(row.saved_path!,'utf8')).toContain('A 원문 마지막');expect(c.store.research(c.r.id)?.valid).toBe(1);}finally{await c.close();}});
+it('reapplies date filters on explicit retry instead of silently including out-of-range posts',async()=>{const c=await setup('2099-01-01');try{await c.service.call('original.retry',c.row.record_id);const row=c.store.records(c.r.id)[0];expect(row.saved_path).toBeUndefined();expect(row.review_status).toBe('excluded');expect(row.exclusion_reasons).toContain('선택 기간 밖');expect(c.store.research(c.r.id)?.valid).toBe(0);}finally{await c.close();}});

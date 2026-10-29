@@ -1,5 +1,5 @@
 import type {NaverType} from './api-types.js';
-export const sources = ['naver_blog','naver_cafearticle'] as const;
+export const sources = ['naver_blog','naver_cafearticle','naver_kin'] as const;
 export type Source = typeof sources[number];
 export type Mode = 'demo'|'live';
 export interface Bundle { id:string; name:string; expression:string; exclusions:string; priority:number; suggestions:string[]; aiApproved?:string[]; }
@@ -15,6 +15,8 @@ export interface ProviderSettings {aiProvider:AiProvider;aiModel:string;}
 export interface LocalJob {id:string;researchId?:string;kind:string;status:'running'|'completed'|'partial'|'cancelled'|'failed';total:number;processed:number;failed:number;message:string;lastError?:string;}
 export interface GeminiCheckStep {id:'catalog'|'text'|'json';title:string;status:'pending'|'running'|'passed'|'failed'|'cancelled';message:string;elapsedMs?:number;}
 export interface GeminiCheckReport {id:string;model:string;status:'running'|'passed'|'failed'|'cancelled';startedAt:string;finishedAt?:string;steps:GeminiCheckStep[];}
-export interface State { geminiCheck?:GeminiCheckReport;localJob?:LocalJob; bundles:Bundle[]; researches:Research[]; records:RecordItem[]; settings:ProviderSettings; credentials:Record<string,boolean>; secureStorage:boolean; }
+export interface ConnectionScope {type:NaverType;manual?:boolean;search:'pending'|'running'|'passed'|'failed'|'skipped'|'cancelled';original:'pending'|'running'|'passed'|'failed'|'empty'|'cancelled';date:string|null;url?:string;error?:string;}
+export interface ConnectionReport {id:string;status:'running'|'completed'|'cancelled';scopes:ConnectionScope[];}
+export interface State {readingOriginal?:boolean;connectionCheck?:ConnectionReport; geminiCheck?:GeminiCheckReport;localJob?:LocalJob; bundles:Bundle[]; researches:Research[]; records:RecordItem[]; settings:ProviderSettings; credentials:Record<string,boolean>; secureStorage:boolean; }
 export type ExportRequest={researchId:string;ids?:string[]};
 export interface Bridge { call<T=unknown>(method:string,args?:unknown):Promise<T>; }
