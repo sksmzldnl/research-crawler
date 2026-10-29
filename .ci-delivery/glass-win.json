@@ -1,0 +1,12 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "success",
+  "channel": "glass-win",
+  "source_sha": "1f2cbc6e5a5c01cb2b4cb1e7f7ccb41a7d39c93a",
+  "run_id": "40895636384",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/40895636384",
+  "updated_at": "2026-10-29T14:54:39.747Z",
+  "release_url": null,
+  "log_tail": "COMMAND: node scripts/release-artifacts.mjs win-x64\nRecorded installer checksums and exact project identity: win-x64\n"
+}
