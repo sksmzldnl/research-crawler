@@ -1,0 +1,4 @@
+import type {ReactNode} from 'react';
+export function GlassToggle({checked,onChange,children,disabled=false}:{checked:boolean;onChange:(checked:boolean)=>void;children:ReactNode;disabled?:boolean}){
+ return <label className={'check glass-toggle'+(disabled?' disabled':'')}><span className="glass-switch-control"><input type="checkbox" role="switch" checked={checked} disabled={disabled} onChange={event=>onChange(event.target.checked)}/><span className="glass-switch-track" aria-hidden="true"><span className="glass-switch-colour"/><svg className="switch-on-mark" viewBox="0 0 8 16"><path d="M4 3v10"/></svg><svg className="switch-off-mark" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/></svg></span><span className="glass-switch-thumb" aria-hidden="true"><span/></span></span><span className="glass-toggle-label">{children}</span></label>;
+}

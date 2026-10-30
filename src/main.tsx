@@ -7,6 +7,7 @@ import {StudioShell} from './shell';
 import {SearchControls} from './search-controls';
 import type {State,Research,RecordItem} from '../core/types';
 import './style.css';
+import './liquid-glass.css';
 type Run=<T=unknown>(method:string,args?:unknown)=>Promise<T|undefined>;
 const stateNames:Record<string,string>={running:'수집 중',paused:'일시정지',stopped:'중지됨',completed:'완료',failed:'확인 필요'};
 function Badge({children}:{children:React.ReactNode}){return <span className="badge">{children}</span>;}

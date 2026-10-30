@@ -1,0 +1,91 @@
+/* Clear lenses over a live, reference-inspired coral / rose / violet / gold scene. */
+:root {
+ --ink:#312c40; --muted:#55445e; --subtle:#67516f;
+ --purple:#9c58be; --purple-deep:#703d91;
+ --glass:rgba(255,255,255,.16); --glass-strong:rgba(255,255,255,.38);
+ --field:rgba(255,255,255,.31); --border:rgba(255,255,255,.7); --blur:8px;
+ --spectrum:conic-gradient(from 150deg,#fff9 0deg,#ffe8b8c9 45deg,#ffb3c3ab 92deg,#e0b5ffb0 135deg,#aab8ffa8 190deg,#d0f4f3b8 230deg,#fff3c5c9 280deg,#fff9 360deg);
+}
+body { background:#fffaf7; color:var(--ink); }
+.glass-definitions { position:fixed; width:1px; height:1px; overflow:hidden; pointer-events:none; }
+.ambient-scene { position:fixed; z-index:-2; inset:0; overflow:hidden; pointer-events:none; background:linear-gradient(125deg,#fffef7 3%,#fff7f5 40%,#fdf0fa 78%,#fffdf3); contain:strict; }
+.ambient-ribbon { position:absolute; will-change:transform; filter:blur(46px); border-radius:48% 52% 57% 43% / 45% 38% 62% 55%; animation:ambient-coral 28s -4s ease-in-out infinite alternate; }
+.ribbon-coral { width:76vw; height:61vh; min-width:650px; top:5%; left:18%; transform:rotate(-34deg); background:radial-gradient(ellipse at 65% 35%,#ff8a8ab0,transparent 65%),linear-gradient(110deg,#ffb08e99,#fc668dba 49%,#ffb6bb57 80%,transparent); opacity:.9; }
+.ribbon-rose { width:77vw; height:48vh; min-width:630px; top:52%; left:-15%; background:linear-gradient(125deg,#ff9c6bc4,#ff65bdc7 45%,#ed98f5a6 73%,transparent); transform:rotate(-32deg); animation:ambient-rose 34s -13s ease-in-out infinite alternate; }
+.ribbon-violet { width:41vw; height:47vh; min-width:330px; top:28%; left:30%; background:radial-gradient(ellipse at 46% 30%,#647df2c2,#b771ffb0 42%,#f788d5a6 67%,transparent 78%); filter:blur(48px); animation:ambient-violet 25s -9s ease-in-out infinite alternate; }
+.ribbon-gold { width:64vw; height:29vh; min-width:500px; left:41%; top:68%; background:linear-gradient(135deg,transparent,#ffe998c7 25%,#ffcc7fbc 52%,#ff91949c 74%,transparent); transform:rotate(-42deg); animation:ambient-gold 31s -5s ease-in-out infinite alternate; }
+.ambient-pearl { position:absolute; inset:-15%; background:radial-gradient(ellipse at 7% 20%,#fffffff0 0,transparent 49%),radial-gradient(ellipse at 92% 100%,#fffdf0dc 0,transparent 46%); animation:ambient-pearl 36s ease-in-out infinite alternate; }
+@keyframes ambient-coral { from{transform:translate(-6%,-10%) rotate(-34deg) scale(.95,1.15)} to{transform:translate(13%,17%) rotate(-54deg) scale(1.18,.86)} }
+@keyframes ambient-rose { from{transform:translate(0,14%) rotate(-35deg) scale(1.05,.86)} to{transform:translate(26%,-18%) rotate(-21deg) scale(.94,1.16)} }
+@keyframes ambient-violet { from{transform:translate(-18%,12%) rotate(-32deg) scale(.85,1.12)} to{transform:translate(36%,-22%) rotate(8deg) scale(1.23,.86)} }
+@keyframes ambient-gold { from{transform:translate(4%,12%) rotate(-42deg) scale(1.1,.9)} to{transform:translate(-37%,-17%) rotate(-29deg) scale(.85,1.3)} }
+@keyframes ambient-pearl { from{transform:translate(-3%,3%) scale(1)} to{transform:translate(4%,-3%) scale(1.07)} }
+
+/* The root stays clear: a blurred parent would flatten the refraction of every child lens. */
+.app.compact-app.focused-app { isolation:isolate; background:linear-gradient(125deg,#ffffff19,#fff9fc12); border:1px solid #ffffffbb; backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:0 22px 70px #5c3a6b19,0 0 0 5px #ffffff38,inset 0 1px 2px #fff; }
+.app::before { background:linear-gradient(115deg,#ffffff24,transparent 45%,#ffffff12); }
+.app::after,.panel::after,.record-dialog::after { content:''; position:absolute; z-index:2; inset:0; border-radius:inherit; padding:1.5px; background:var(--spectrum); -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none; }
+.focused-app .workspace-header { position:relative; background:#fff7; border-bottom:1px solid #fff9; backdrop-filter:blur(12px) saturate(1.3); -webkit-backdrop-filter:blur(12px) saturate(1.3); }
+.focused-app .brand { color:#563c67; }
+.focused-app .brand-icon { background:linear-gradient(140deg,#f6bbac88,#df96c499 45%,#c5b1ef80); color:#75537c; border:1px solid #fffc; box-shadow:inset 1px 2px 4px #ffffffcc,inset -2px -3px 6px #a86c9742,0 4px 12px #a36e8833; }
+.focused-app .app-version { color:#6a5579; }
+.focused-app .page { position:relative; background:transparent; }
+.panel,.record-dialog { background:linear-gradient(125deg,#ffffff39,#fffaff24 58%,#fff5ef33); border-color:#fff9; box-shadow:inset 1px 1px 1px #ffffffeb,inset -1px -1px 1px #fff9,0 12px 30px #6949770d; backdrop-filter:url(#liquid-refraction) blur(8px) saturate(1.38); -webkit-backdrop-filter:url(#liquid-refraction) blur(8px) saturate(1.38); }
+.panel::before { left:5%; right:8%; top:1px; height:2px; opacity:.95; background:linear-gradient(90deg,transparent,#fff,#ffe6ca88,#fff,transparent); }
+.focused-app :is(p,small,.muted,.hint,.folder-path,.cell-preview,.credential-state) { color:var(--muted); }
+.focused-app :is(label,legend) { color:#4f3c5d; }
+.focused-app :is(input:not([type=checkbox]):not([type=radio]),select,textarea) { background:#ffffff57; border-color:#ffffffc4; color:#493752; box-shadow:inset 1px 1px 2px #fff9,inset -1px -1px 2px #b99cb22b,0 3px 8px #825a7a08; backdrop-filter:blur(4px); }
+.focused-app :is(input,textarea)::placeholder { color:#86758e; }
+.focused-app :is(input:not([type=checkbox]):not([type=radio]),select,textarea):focus { background:#ffffffa3; border-color:#b58ac6; outline-color:#b58ac65c; }
+.focused-app button:not(.record-title):not(.text-button) { background:linear-gradient(145deg,#ffffff70,#ffffff30); color:#60446e; border-color:#fff9; box-shadow:inset 1px 1px 1px #fffe,inset -1px -1px 3px #bfa3bb24,0 3px 12px #80596c0c; backdrop-filter:blur(6px) saturate(1.3); }
+.focused-app button:not(.record-title):not(.text-button):hover { background:linear-gradient(145deg,#ffffffb5,#fff7); box-shadow:inset 0 1px 0 #fff,0 5px 18px #8e608729; }
+.focused-app button.primary { background:linear-gradient(115deg,#8c559cf0,#7952a6f0 49%,#99577ef0); color:#fff; border-color:#ffffffbb; text-shadow:0 1px 2px #65367040; box-shadow:inset 0 1px 2px #fff9,inset 0 -2px 3px #7c459c30,0 6px 16px #8d4b9b25; }
+.scope-choice { background:#ffffff32; border-color:#ffffffaa; box-shadow:inset 0 1px 1px #fff9,0 3px 10px #7a4c7308; }
+.scope-choice.active { color:#60397f; background:linear-gradient(130deg,#ffffff80,#e4d1fa63,#ffd9da4f); border-color:#ffffffdf; box-shadow:inset 1px 1px 2px #fff,inset -1px -2px 3px #b591cd40,0 4px 13px #8a5d8a12; }
+.scope-choice input { accent-color:#af75ba; }
+.compact-bundle,.research-strip { background:#ffffff30; border-color:#ffffff80; }
+.badge { background:#fff6; border:1px solid #fff9; color:#725080; }
+.record-dialog::backdrop { background:#70547729; backdrop-filter:blur(12px); }
+
+/* Metaball layer: real transient bridge + a shrinking source droplet during each navigation. */
+.focused-app .workspace-header .liquid-navigation { position:relative; display:grid; grid-template-columns:1fr 1fr; gap:0; flex:0 0 268px; height:60px; padding:0; border:1px solid #ffffff9c; border-radius:32px; background:linear-gradient(135deg,#ffffff2b,#ebdceb29); box-shadow:inset 0 1px 3px #a886a11a,0 1px 0 #fff9; backdrop-filter:blur(5px) saturate(1.3); }
+.navigation-fluid { position:absolute; z-index:0; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; filter:drop-shadow(0 3px 4px #94718729); }
+.focused-app .liquid-navigation button,.focused-app .liquid-navigation button.active { position:relative; z-index:1; width:100%; height:100%; margin:0; padding:0 12px; gap:9px; border:0; border-radius:30px; color:#746079; background:transparent; box-shadow:none; backdrop-filter:none; font-size:13px; font-weight:550; transition:color .25s; }
+.focused-app .liquid-navigation button:hover { background:#ffffff16; box-shadow:none; }
+.focused-app .liquid-navigation button.active { color:#543967; font-weight:680; }
+.focused-app .liquid-navigation button:active { transform:none; }
+.nav-icon-lens { display:grid; place-items:center; width:30px; height:30px; flex-shrink:0; border-radius:11px; border:1px solid #fff7; background:linear-gradient(145deg,#ffffff67,#ffe5e322,#dcceff2e); box-shadow:inset 1px 1px 2px #fff9,inset -1px -2px 3px #ad82ad24,0 2px 5px #87617e15; backdrop-filter:blur(3px); transition:transform .5s cubic-bezier(.2,.9,.3,1.4),box-shadow .4s; }
+.active .nav-icon-lens { transform:scale(1.07); border-color:#fff; background:linear-gradient(140deg,#ffffffb0,#f9d8e05c,#dfd1ff80); box-shadow:inset 1px 1px 2px #fff,inset -1px -2px 3px #d8a4bb66,0 2px 9px #b877b329; }
+.focused-app .liquid-navigation button:focus-visible { outline:3px solid #8c51b5; outline-offset:3px; }
+
+/* Native checkbox semantics underneath an Apple-style projecting glass thumb. */
+.check.glass-toggle { display:flex; align-items:center; gap:15px; min-height:44px; cursor:pointer; margin:12px 0; }
+.glass-toggle-label { min-width:0; line-height:1.6; }
+.glass-switch-control { display:block; position:relative; width:64px; height:34px; flex:0 0 64px; margin:4px 2px; isolation:isolate; }
+.glass-switch-control input[type=checkbox] { position:absolute; z-index:4; inset:-5px; width:calc(100% + 10px); height:44px; opacity:0; margin:0; padding:0; cursor:pointer; border:0; }
+.glass-switch-track { position:absolute; z-index:0; inset:0; overflow:hidden; border-radius:25px; background:linear-gradient(145deg,#b9b0bf77,#ddd6df66); border:1px solid #ffffff80; box-shadow:inset 0 2px 5px #614c702b,inset 0 -1px 0 #fffb,0 1px 1px #896d8521; transition:background .4s; }
+.glass-switch-colour { position:absolute; inset:-1px; border-radius:inherit; background:linear-gradient(115deg,#ffbe8c,#f49abc 45%,#c59af0); opacity:0; transform:scaleX(.3); transform-origin:left; transition:opacity .35s,transform .5s cubic-bezier(.2,.8,.2,1); }
+.glass-switch-track svg { position:absolute; top:9px; height:14px; width:14px; stroke:#ffffffd9; stroke-width:1.7; fill:none; transition:opacity .25s; }
+.glass-switch-track .switch-on-mark { left:10px; width:9px; opacity:0; }
+.glass-switch-track .switch-off-mark { right:8px; stroke:#5c506d8c; }
+.glass-switch-thumb { position:absolute; z-index:2; top:-4px; left:-4px; width:42px; height:42px; border-radius:48% 52% 52% 48% / 49% 49% 51% 51%; background:linear-gradient(145deg,#ffffffab 2%,#ffffff4d 35%,#ffffff20 55%,#ffffff90); border:1px solid #ffffffe0; box-shadow:inset 2px 2px 3px #fffe,inset -3px -4px 5px #9d82994f,inset 1px -1px 2px #ffffffbb,0 3px 6px #62455b30,0 0 0 .6px #bba2be5c; backdrop-filter:url(#liquid-control) blur(1px) saturate(1.6); -webkit-backdrop-filter:url(#liquid-control) blur(1px) saturate(1.6); transform:translateX(0); transition:transform .55s cubic-bezier(.22,1.25,.38,1),border-radius .4s,box-shadow .4s; pointer-events:none; }
+.glass-switch-thumb::before { content:''; position:absolute; inset:0; border-radius:inherit; padding:1px; background:var(--spectrum); -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }
+.glass-switch-thumb>span { position:absolute; inset:3px 5px 20px; border-radius:50%; background:linear-gradient(#ffffffcc,#ffffff00); transform:rotate(-18deg); }
+.glass-switch-control input:checked~.glass-switch-track .glass-switch-colour { opacity:1; transform:scaleX(1); }
+.glass-switch-control input:checked~.glass-switch-track .switch-on-mark { opacity:1; }
+.glass-switch-control input:checked~.glass-switch-track .switch-off-mark { opacity:0; }
+.glass-switch-control input:checked~.glass-switch-thumb { transform:translateX(30px); border-radius:52% 48% 48% 52% / 49% 49% 51% 51%; box-shadow:inset 2px 2px 3px #fffe,inset -3px -4px 6px #b379b14a,0 3px 7px #8f4d7740,0 0 0 .6px #d6abd45c; }
+.glass-switch-control input:active~.glass-switch-thumb { width:46px; }
+.glass-switch-control input:checked:active~.glass-switch-thumb { transform:translateX(26px); }
+.glass-switch-control input:focus-visible~.glass-switch-track { outline:3px solid #884eaf; outline-offset:6px; }
+.glass-toggle.disabled { opacity:.5; cursor:not-allowed; }
+.glass-toggle.disabled input { cursor:not-allowed; }
+.original-output>.glass-toggle { margin:2px 0; }
+.compact-bundle .glass-toggle { flex:1; margin:4px 0; gap:13px; }
+.compact-bundle .glass-switch-control { transform:scale(.88); transform-origin:left center; margin-right:-6px; }
+
+@media(max-width:700px) { .focused-app .workspace-header .liquid-navigation{flex:0 0 244px;height:56px}.focused-app .workspace-header{padding:12px 18px}.focused-app .brand{min-width:0}.focused-app .brand-icon{display:none}.focused-app .brand{font-size:17px}.focused-app .brand small{display:none}.ambient-ribbon{filter:blur(34px)} }
+@media(max-width:500px) { .focused-app .workspace-header{height:76px;min-height:76px;justify-content:center;padding:8px}.focused-app .workspace-header .liquid-navigation{flex:0 0 268px;height:56px}.compact-app main{height:calc(100% - 76px)}.focused-app .workspace-header .brand{display:none}.check.glass-toggle{gap:12px}.panel{padding:19px}.app.compact-app.focused-app{border-radius:25px} }
+@media(prefers-reduced-motion:reduce) { .ambient-scene *{animation:none!important;will-change:auto}.focused-app *{animation:none!important;transition:none!important;scroll-behavior:auto!important} }
+@media(prefers-contrast:more),(prefers-reduced-transparency:reduce) { .ambient-scene{opacity:.16}.panel,.record-dialog{background:#fffefcf5;backdrop-filter:none;-webkit-backdrop-filter:none}.focused-app .workspace-header{background:#fffefcf5;backdrop-filter:none}.panel::after,.app::after{opacity:.2}.focused-app :is(p,small,label,legend,.muted,.hint){color:#44384e}.glass-switch-thumb{background:#fff;backdrop-filter:none}.glass-switch-track{background:#82758e}.glass-switch-colour{background:#8e55a9}.focused-app :is(input:not([type=checkbox]),select,textarea){background:#fff}.navigation-fluid{filter:none} }
+@media(forced-colors:active) { .ambient-scene,.navigation-fluid{display:none}.app.compact-app.focused-app,.panel,.record-dialog{background:Canvas;color:CanvasText;backdrop-filter:none;border:1px solid CanvasText}.focused-app .liquid-navigation button[aria-current=page]{outline:2px solid Highlight}.glass-switch-control{forced-color-adjust:auto}.glass-switch-thumb{background:ButtonFace;border:2px solid ButtonText;backdrop-filter:none;box-shadow:none}.glass-switch-track{background:Canvas;border:2px solid ButtonText}.glass-switch-control input:checked~.glass-switch-track{background:Highlight}.glass-switch-colour{display:none}.glass-switch-thumb::before{display:none} }

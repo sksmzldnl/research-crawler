@@ -1,4 +1,5 @@
 import {forumBrowserSmoke} from './forum-browser-smoke.mjs';
+import {glassMaterialSmoke} from './glass-material-smoke.mjs';
 import {expect} from '@playwright/test';
 import {_electron as electron} from 'playwright';
 import {mkdtemp,mkdir,rm,appendFile,writeFile,readFile,readdir} from 'node:fs/promises';
@@ -22,7 +23,7 @@ for(const route of routes){if(typeof route.body!=='string')continue;if(route.hos
 const fixturePath=join(data,'api-fixtures.json'),logPath=join(data,'api-requests.jsonl');await writeFile(fixturePath,JSON.stringify(routes));let app;
 try{
  await mkdir('test-results',{recursive:true});app=await electron.launch({executablePath:process.env.STUDIO_EXECUTABLE_PATH||undefined,args,timeout:20000,env:{...process.env,STUDIO_TEST_DATA_DIR:data,STUDIO_TEST_API_FIXTURES:'1'}});app.process().stderr?.on('data',c=>{void appendFile('test-results/desktop-stderr.log',c).catch(()=>{});});
- const win=await app.firstWindow();await win.waitForLoadState('domcontentloaded');await win.waitForFunction(()=>document.querySelector('h1')?.textContent==='리서치');assert.equal(await win.getByRole('navigation').getByRole('button').count(),2);
+ const win=await app.firstWindow();await win.waitForLoadState('domcontentloaded');await win.waitForFunction(()=>document.querySelector('h1')?.textContent==='리서치');assert.equal(await win.getByRole('navigation').getByRole('button').count(),2);await glassMaterialSmoke(win);
  // Every renderer request is intercepted in this explicit fixture launch; no live host is contacted.
  await app.evaluate(({session},entries)=>{globalThis.__renderEntries=entries;globalThis.__renderRequests=[];session.fromPartition('public-original-reader').protocol.handle('https',request=>{globalThis.__renderRequests.push(request.url);const u=new URL(request.url),entry=globalThis.__renderEntries.find(r=>r.host===u.hostname&&r.path===u.pathname&&Object.entries(r.params||{}).every(([k,v])=>u.searchParams.get(k)===v));if(!entry||entry.status!==200)return new Response('<h1>403 Forbidden</h1>',{status:403});return new Response(entry.renderBody||(typeof entry.body==='string'?entry.body:JSON.stringify(entry.body)),{headers:{'content-type':typeof entry.body==='string'?'text/html;charset=utf-8':'application/json','Access-Control-Allow-Origin':'*'}});});},routes);
  await app.evaluate(({dialog},path)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[path]});},output);
