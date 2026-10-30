@@ -1,3 +1,4 @@
+import {forumIdentity,isForumType,type ForumType} from './forum.js';
 import {isReddit,redditArticle} from './reddit.js';
 import {publicNaverUrl,articleIdentity} from './original-url.js';
 import {randomUUID} from 'node:crypto';
@@ -9,13 +10,13 @@ export class ConnectionCheck {
  report?:ConnectionReport;private controller?:AbortController;private pending=Promise.resolve();
  constructor(private api:SearchApi,private original:OriginalSource,private secrets:()=>string[]){}
  get busy(){return !!this.controller;}
- start(url?:string,reddit=false){if(this.busy)throw Error('연결 확인 중입니다.');if(url)url=isReddit(url)?redditArticle(url).url:publicNaverUrl(url);else this.api.validate(reddit?'reddit':undefined);const controller=new AbortController(),report:ConnectionReport={id:randomUUID(),status:'running',scopes:url?[{type:isReddit(url)?'reddit':articleIdentity(url).kind==='cafe'?'cafearticle':articleIdentity(url).kind==='kin'?'kin':'blog',manual:true,url,search:'skipped',original:'pending',date:null}]:reddit?[{type:'reddit',search:'pending',original:'pending',date:null}]:naverTypes.map(type=>({type,search:'pending',original:'pending',date:null}))};this.report=report;this.controller=controller;
+ start(url?:string,provider:'naver'|'reddit'|ForumType|boolean='naver'){if(this.busy)throw Error('연결 확인 중입니다.');const selected=provider===true?'reddit':provider===false?'naver':provider,forum=url?forumIdentity(url):undefined;if(url)url=forum?.url||(isReddit(url)?redditArticle(url).url:publicNaverUrl(url));else this.api.validate(selected==='naver'?undefined:selected);const controller=new AbortController(),report:ConnectionReport={id:randomUUID(),status:'running',scopes:url?[{type:forum?.type||(isReddit(url)?'reddit':articleIdentity(url).kind==='cafe'?'cafearticle':articleIdentity(url).kind==='kin'?'kin':'blog'),manual:true,url,search:'skipped',original:'pending',date:null}]:selected!=='naver'?[{type:selected,search:'pending',original:'pending',date:null}]:naverTypes.map(type=>({type,search:'pending',original:'pending',date:null}))};this.report=report;this.controller=controller;
   this.pending=this.run(report,controller.signal).finally(()=>{if(report.status==='running')report.status=controller.signal.aborted?'cancelled':'completed';this.controller=undefined;});return report;
  }
  private safe(error:unknown){let text=error instanceof Error?error.message:String(error);for(const key of this.secrets())if(key)for(const value of [key,encodeURIComponent(key)])text=text.split(value).join('[키 숨김]');return text.slice(0,1200);}
  private async run(report:ConnectionReport,signal:AbortSignal){
   for(const scope of report.scopes){if(signal.aborted)return;let first;if(!scope.manual){scope.search='running';
-   try{first=(await this.api.search(scope.type,scope.type==='reddit'?'reusable':'네이버',1,signal,1)).items[0];if(signal.aborted)return;scope.search='passed';}catch(error){if(signal.aborted)return;scope.search='failed';scope.error=this.safe(error);continue;}
+   try{first=(await this.api.search(scope.type,scope.type==='reddit'||isForumType(scope.type)?'reusable':'네이버',1,signal,1)).items[0];if(signal.aborted)return;scope.search='passed';}catch(error){if(signal.aborted)return;scope.search='failed';scope.error=this.safe(error);continue;}
    if(!first){scope.original='empty';continue;}scope.url=first.url;}scope.original='running';
    try{const result=await this.original.read(scope.url!,true,signal,false,true);if(signal.aborted)return;scope.original='passed';scope.date=result.date||first?.date||null;if(result.comments)scope.comments={status:result.comments.status,count:result.comments.items.length};}catch(error){if(signal.aborted)return;scope.original='failed';scope.error=this.safe(error);}
   }

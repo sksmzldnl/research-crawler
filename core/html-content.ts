@@ -6,6 +6,7 @@ function markdown(node:Node,base:string):string{
  if(['IFRAME','VIDEO','AUDIO','SOURCE','EMBED','OBJECT'].includes(tag)){const url=safeLink(el.getAttribute('src')||el.getAttribute('data')||'',base);return url?'\n[임베디드 콘텐츠]('+url+')\n':'';}
  if(tag==='BR')return '\n';if(tag==='HR')return '\n\n---\n\n';if(tag==='IMG'){const raw=el.getAttribute('data-lazy-src')||el.getAttribute('data-src')||el.getAttribute('src')||'',url=safeLink(raw,base);return url?'\n!['+(el.getAttribute('alt')||'이미지').replace(/[\[\]\n]/g,' ')+']('+url+')\n':'';}
  const content=Array.from(el.childNodes).map(n=>markdown(n,base)).join('');if(tag==='A'){const url=safeLink(el.getAttribute('href')||'',base);return url?'['+(content.trim()||url)+']('+url+')':content;}
+ if(tag==='BLOCKQUOTE')return '\n\n'+content.trim().split('\n').map(line=>'> '+line).join('\n')+'\n\n';
  if(/^H[1-6]$/.test(tag))return '\n\n'+'#'.repeat(Number(tag[1]))+' '+content.trim()+'\n\n';if(tag==='LI')return '\n- '+content.trim();if(tag==='STRONG'||tag==='B')return '**'+content+'**';if(tag==='TD'||tag==='TH')return content+' | ';return blocks.has(tag)?'\n\n'+content.trim()+'\n\n':content;
 }
 function visibleText(root:Element){const copy=root.cloneNode(true) as Element;for(const el of copy.querySelectorAll('br'))el.replaceWith('\n');for(const el of copy.querySelectorAll('p,div,li,h1,h2,h3,h4,tr,blockquote,figcaption')){el.prepend('\n');el.append('\n');}return (copy.textContent||'').replace(/[ \t]+/g,' ').replace(/ *\n */g,'\n').replace(/\n{3,}/g,'\n\n').trim();}

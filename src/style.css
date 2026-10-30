@@ -548,8 +548,8 @@ th { color: #816190; font-size: 11px; }
 .focused-search h2, .focused-results h2 { margin: 0; }
 .focused-search fieldset { border: 0; padding: 0; margin: 0 0 16px; }
 .focused-search legend { font-weight: 600; margin-bottom: 8px; }
-.scope-options { display: flex; gap: 10px; }
-.scope-choice { display: flex; flex: 1; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 15px; background: rgba(255,255,255,.5); border: 1px solid rgba(172,146,223,.18); cursor: pointer; }
+.scope-options { display: flex; flex-wrap: wrap; gap: 10px; }
+.scope-choice { display: flex; flex: 1 1 100px; min-width: 0; overflow-wrap: anywhere; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 15px; background: rgba(255,255,255,.5); border: 1px solid rgba(172,146,223,.18); cursor: pointer; }
 .scope-choice.active { background: rgba(175,131,239,.13); border-color: rgba(149,99,220,.48); color: #7751ae; }
 .scope-choice input { width: auto; }
 .focused-import > summary { font-weight: 650; cursor: pointer; padding: 3px 0; }

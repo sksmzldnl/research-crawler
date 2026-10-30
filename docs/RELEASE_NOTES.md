@@ -1,3 +1,9 @@
+## 0.12.0
+
+- Mumsnet·MoneySavingExpert: Google 쿼리번들 검색, 원문·다중 페이지 댓글, 개별 MD/JSON, 영국 날짜, 사이트별 브라우저 세션과 수동 확인 후 자동 재개.
+- 설정은 커뮤니티 수집 사이트 선택으로 통합하며 작업실·설정 두 메뉴 유지.
+- 신규 사이트의 실사이트 구조·정책·계정 접속은 미검증. 배포 검증은 로컬 fixture로 구분.
+
 > 이전 버전의 기록입니다. 현재 0.5.0의 동작과 설치는 [검색 API 버전 안내](API_RELEASE.md), [최신 README](../README.md)를 참고하세요.
 
 # ZeroWaste Listening Studio · Electron 테스트판

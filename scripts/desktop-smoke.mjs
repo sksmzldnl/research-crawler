@@ -1,3 +1,4 @@
+import {forumBrowserSmoke} from './forum-browser-smoke.mjs';
 import {expect} from '@playwright/test';
 import {_electron as electron} from 'playwright';
 import {mkdtemp,mkdir,rm,appendFile,writeFile,readFile,readdir} from 'node:fs/promises';
@@ -75,6 +76,7 @@ try{
  const browserRequests=await app.evaluate(()=>globalThis.__redditRequests);assert.ok(browserRequests.some(raw=>new URL(raw).hostname==='www.google.com'&&new URL(raw).searchParams.get('start')==='10'));assert.ok(browserRequests.every(raw=>['www.google.com','www.reddit.com'].includes(new URL(raw).hostname)));assert.ok(!browserRequests.some(raw=>/serpapi|oauth|access_token|\.json/.test(raw)));
  // Persist a synthetic, non-sensitive session cookie and verify it survives closing the browser and restarting the app.
  await app.evaluate(async({session},partition)=>{await session.fromPartition(partition).cookies.set({url:'https://www.reddit.com',name:'studio_fixture_session',value:'synthetic-session',expirationDate:Date.now()/1000+3600,secure:true,sameSite:'lax'});await session.fromPartition(partition).cookies.flushStore();},browserPartition);await researchBrowser.close();const reopened=app.waitForEvent('window');await win.evaluate(()=>window.studio.call('reddit.browser.open'));researchBrowser=await reopened;await researchBrowser.waitForLoadState('domcontentloaded');assert.ok(researchBrowser);assert.equal(await app.evaluate(async({session},partition)=>(await session.fromPartition(partition).cookies.get({name:'studio_fixture_session'})).some(cookie=>cookie.value==='synthetic-session'),browserPartition),true);
+ await forumBrowserSmoke(app,win,output);
  // Rejected endpoints prove AI cannot be invoked through the native bridge.
  const removed=await win.evaluate(async()=>{try{await window.studio.call('ai.process',{});return false;}catch{return true;}});assert.ok(removed);
  const requests=(await readFile(logPath,'utf8')).trim().split('\n').map(JSON.parse);assert.ok(requests.every(r=>['naverapihub.apigw.ntruss.com','blog.naver.com','cafe.naver.com','kin.naver.com','apis.naver.com'].includes(r.host)));assert.equal(app.windows().length,2);
