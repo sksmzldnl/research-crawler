@@ -1,25 +1,22 @@
-# ZeroWaste Listening Studio 0.12.2 · 화면 성능과 움직임 수정
+# ZeroWaste Listening Studio 0.12.3 · 커뮤니티 연결 확인 수정
 
-0.12.1의 상시 SVG 배경 굴절·색 분산과 컨트롤마다 겹친 블러를 제거했습니다. 배경은 작은 공유 Canvas에서 움직이고, 가장자리는 같은 배경을 넓고 부드럽게 반사합니다. 토글은 켜고 끄는 약 0.4초 동안만 유리 효과를 보이며 평소에는 단순한 상태로 돌아옵니다.
+Mumsnet·MoneySavingExpert 연결 확인이 검색어 하나에서 글을 못 찾으면 원문 칸에 ‘자료 없음’을 표시하던 문제를 수정했습니다. 검색과 원문 검사를 구분하고, 실제 시도한 검색어와 확인한 글 주소를 결과 표에 표시합니다.
 
-- 배경 최대 800×540·24fps, 반사 최대 12fps. 색상 텍스처·반사 마스크·레이어 캐시 재사용. 화면이 숨겨지면 중지합니다.
-- 고정 무지개 테두리와 상시 SVG backdrop 필터를 없앴습니다. 반사 색은 실제 배경 Canvas에서 가져옵니다.
-- 설정 → 화면 → 배경 움직임에서 직접 켜고 끌 수 있습니다. 기본은 시스템 동작 줄이기 설정을 따르며 명시적으로 배경만 켤 수 있습니다.
-- 네이버·Reddit·Mumsnet·MoneySavingExpert, 원문·댓글, 개별 MD/JSON 저장과 인증정보는 유지합니다.
+- 확인 검색어 reusable → cleaning → saving money 순서로 결과가 있을 때까지 시도합니다. 사용자가 작업실에 입력한 쿼리번들은 바꾸지 않습니다.
+- 확인 검색에서 후보를 최대 3개 확보합니다. 첫 글이 삭제되거나 접근할 수 없으면 다른 후보를 확인하며, 사용자 확인이 필요한 보안·로그인 단계는 그대로 표시합니다.
+- Google 결과의 h3 안쪽 링크·role=heading·main 영역과 리디렉션 링크를 읽습니다. 빈 결과는 잠시 안정화될 때까지 기다려 로딩 도중 결과가 없다고 끝내지 않습니다.
+- 검색 후보가 없으면 검색은 ‘검색 결과 없음’, 원문은 ‘미실행’으로 표시합니다. 원문 추출 실패로 표시하지 않습니다.
+- 기존 0.12.2의 가벼운 배경과 전환할 때만 나타나는 유리 토글을 유지합니다.
 
-[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.12.2)
+[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.12.3)
 
-- Windows: ZeroWaste-Listening-Studio-0.12.2-win-x64.exe
-- Apple Silicon: ZeroWaste-Listening-Studio-0.12.2-mac-arm64.dmg
-- Intel Mac: ZeroWaste-Listening-Studio-0.12.2-mac-x64.dmg
-- 안내서: Original-Guide-0.12.2-KO.pdf
-
-기존 앱을 종료하고 설치 파일로 교체합니다. Windows에서 테스트한 사용자를 위해 Windows 설치 앱에서도 실제 배경 픽셀 변화·반사·토글 복귀와 기존 수집을 검사합니다.
+- Windows: ZeroWaste-Listening-Studio-0.12.3-win-x64.exe
+- Apple Silicon: ZeroWaste-Listening-Studio-0.12.3-mac-arm64.dmg
+- Intel Mac: ZeroWaste-Listening-Studio-0.12.3-mac-x64.dmg
+- 안내서: Original-Guide-0.12.3-KO.pdf
 
 ## 검증 범위
 
-동일한 Linux 개발 환경·1440×1060·Chromium headless 비교에서 UI requestAnimationFrame 측정값은 약 3.12fps→59.51fps, 95백분위 프레임 간격은 약 416.6ms→16.8ms였습니다. 상시 backdrop-filter 요소는 26개→0개입니다. 이는 개발 환경의 비교 결과이며 사용자 Windows PC의 실제 FPS 보장이 아닙니다. 배경 자체는 별도로 최대 24fps로 제한합니다.
+단위·UI·설치 앱 테스트는 로컬 모의 페이지로 수행합니다. 첫 확인 검색이 비어 있는 경우의 대체 검색, 지연 표시되는 Google 결과, 레이아웃 변형, 삭제된 첫 후보, 확인 절차 중단, 원문·댓글·게시일·개별 MD/JSON 저장을 검증합니다. 개발 클라우드의 네트워크 정책으로 Google 및 두 커뮤니티의 실사이트는 직접 확인하지 못했습니다. 이번 변경이 모든 실사이트 원문 수집 문제를 해결했다고 보장하지 않습니다.
 
-UI와 Electron 설치 앱 검사는 배경 Canvas와 화면 캡처의 실제 픽셀 변화, 반사 Canvas의 변화와 넓은 마스크, 중앙 반사 부재, 유리 토글의 단순 상태 복귀, 시스템 동작 줄이기와 사용자의 배경 선택을 확인합니다. 기존 검색→원문·댓글→개별 파일 저장 검사는 로컬 모의 응답으로 수행합니다.
-
-실제 서비스 계정·실사이트의 최신 구조와 정책 검증 범위는 이전 버전과 같습니다. Apple Silicon은 ARM64 패키지·소스·서명을 확인하며 실기기 실행은 미검증입니다. Mac은 ad-hoc 서명이며 Developer ID 공증이 없습니다.
+Mac은 ad-hoc 서명이며 Developer ID 공증이 없습니다. Apple Silicon 패키지·소스·서명은 확인하지만 ARM64 실기기 실행은 미검증입니다.

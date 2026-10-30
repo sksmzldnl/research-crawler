@@ -8,7 +8,7 @@ import {naverEndpoint} from './naver-connection.js';
 import {type SearchType} from './api-types.js';
 import type {RedditBrowser} from './reddit-browser.js';
 import type {Candidate} from './types.js';
-export interface ApiPage {items:Candidate[];next:number|null;}
+export interface ApiPage {items:Candidate[];next:number|null;notice?:string;}
 export interface SearchProvider {validate(type?:SearchType):void;search(type:SearchType,query:string,start:number,signal:AbortSignal,display?:number,community?:string):Promise<ApiPage>;}
 const responseSchema=z.object({total:z.number().nonnegative(),items:z.array(z.object({link:z.string(),title:z.string(),description:z.string().default(''),postdate:z.string().optional(),postDate:z.string().optional(),pubDate:z.string().optional()}))});
 export class SearchApi implements SearchProvider {
