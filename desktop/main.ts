@@ -1,4 +1,3 @@
-import {DesktopForumBrowser} from './forum-browser.js';
 import {DesktopRedditBrowser} from './reddit-browser.js';
 import {DesktopOriginalReader} from './public-page.js';
 import {fixtureTransport} from './test-api.js';
@@ -19,7 +18,7 @@ protocol.handle('studio',request=>{const u=new URL(request.url);const path=resol
 const systemTransport=process.env.HTTPS_PROXY||process.env.HTTP_PROXY||process.env.https_proxy||process.env.http_proxy?undefined:async(url:string,init?:RequestInit)=>net.fetch(url,{...init,cache:'no-store'});
 const data=process.env.STUDIO_TEST_DATA_DIR||app.getPath('userData');let secure=safeStorage.isEncryptionAvailable();if(process.platform==='linux'&&safeStorage.getSelectedStorageBackend()==='basic_text')secure=false;
 const network=new Network(process.env.STUDIO_TEST_DATA_DIR&&process.env.STUDIO_TEST_API_FIXTURES==='1'?fixtureTransport(join(data,'api-fixtures.json'),join(data,'api-requests.jsonl')):systemTransport);
-service=new Service(new Store(join(data,'studio.sqlite')),secure?new EncryptedVault(join(data,'credentials.enc'),safeStorage):new MemoryVault(),network,new DesktopOriginalReader(network),new DesktopRedditBrowser(),{mumsnet:new DesktopForumBrowser('mumsnet'),mse:new DesktopForumBrowser('mse')});
+service=new Service(new Store(join(data,'studio.sqlite')),secure?new EncryptedVault(join(data,'credentials.enc'),safeStorage):new MemoryVault(),network,new DesktopOriginalReader(network),new DesktopRedditBrowser());
 const window=new BrowserWindow({width:1440,height:960,minWidth:860,minHeight:600,title:'ZeroWaste Listening Studio',backgroundColor:'#f5f7f3',webPreferences:{preload:join(root,'build/desktop/preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
 window.webContents.setWindowOpenHandler(({url})=>{void open(url);return {action:'deny'};});window.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith('studio://app/')){event.preventDefault();void open(url);}});
 async function open(raw:string){try{const u=new URL(raw);if(['https:','http:'].includes(u.protocol)&&!u.username&&!u.password)await shell.openExternal(u.href);}catch{}}

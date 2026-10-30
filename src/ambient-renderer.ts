@@ -1,23 +1,19 @@
 import {motionEnabled,motionPreferenceEvent,readMotionPreference} from './motion-preference';
-/** One bounded canvas scene; reflections sample that exact scene instead of filtering the whole UI. */
-type Edge={x:number;y:number;width:number;height:number;mask:HTMLCanvasElement;layer:HTMLCanvasElement};
+import {refractionMap,refract,type RefractionMap} from './refraction-map';
 const canvas=(width:number,height:number)=>{const el=document.createElement('canvas');el.width=width;el.height=height;return el;};
-function glow(colour:string){const el=canvas(256,256),ctx=el.getContext('2d')!,gradient=ctx.createRadialGradient(128,128,0,128,128,126);gradient.addColorStop(0,colour+'d9');gradient.addColorStop(.38,colour+'a8');gradient.addColorStop(.72,colour+'42');gradient.addColorStop(1,colour+'00');ctx.fillStyle=gradient;ctx.fillRect(0,0,256,256);return el;}
-function ringMask(width:number,height:number,radius:number,scale:number,shape:{x:number;y:number;width:number;height:number},reuse?:HTMLCanvasElement){
- const el=reuse||canvas(width,height);if(el.width!==width)el.width=width;if(el.height!==height)el.height=height;const ctx=el.getContext('2d')!,inset=8*scale;ctx.clearRect(0,0,width,height);ctx.strokeStyle='rgba(255,255,255,.72)';ctx.lineWidth=10*scale;ctx.shadowColor='white';ctx.shadowBlur=12*scale;ctx.beginPath();ctx.roundRect(shape.x+inset,shape.y+inset,Math.max(1,shape.width-inset*2),Math.max(1,shape.height-inset*2),Math.max(2,radius-inset));ctx.stroke();return el;
-}
+function glow(colour:string){const el=canvas(256,256),ctx=el.getContext('2d')!,gradient=ctx.createRadialGradient(128,128,0,128,128,126);gradient.addColorStop(0,colour+'e8');gradient.addColorStop(.38,colour+'bd');gradient.addColorStop(.72,colour+'52');gradient.addColorStop(1,colour+'00');ctx.fillStyle=gradient;ctx.fillRect(0,0,256,256);return el;}
 export function startAmbientRenderer(background:HTMLCanvasElement,reflection:HTMLCanvasElement){
- const bg=background.getContext('2d',{alpha:false})!,edge=reflection.getContext('2d')!;
+ const bg=background.getContext('2d',{alpha:false,willReadFrequently:true})!,edge=reflection.getContext('2d')!;
  const colours=[glow('#ff9d91'),glow('#f4a2cc'),glow('#aa9dea'),glow('#f8da9b')],motion=matchMedia('(prefers-reduced-motion: reduce)'),contrast=matchMedia('(prefers-contrast: more), (forced-colors: active)');
- let width=0,height=0,scale=1,edges:Edge[]=[],base=canvas(1,1),dirty=true,frame=0,lastDraw=0,lastEdge=0,draws=0,edgeDraws=0,closed=false,moving=motionEnabled(motion.matches),sceneTime=8000;
- const cache=new Map<Element,{key:string;mask:HTMLCanvasElement;layer:HTMLCanvasElement}>(),observed=new Set<Element>(),resize=new ResizeObserver(()=>{dirty=true;wake();});
+ let width=0,height=0,scale=1,edges:RefractionMap[]=[],base=canvas(1,1),dirty=true,frame=0,lastDraw=0,lastEdge=0,draws=0,edgeDraws=0,closed=false,moving=motionEnabled(motion.matches),sceneTime=8000;
+ let pixels:ImageData;const cache=new Map<Element,{key:string;map:RefractionMap}>(),observed=new Set<Element>(),resize=new ResizeObserver(()=>{dirty=true;wake();});
  function layout(){
   const cssWidth=innerWidth,cssHeight=innerHeight,nextScale=Math.min(.5,800/cssWidth,540/cssHeight),w=Math.max(1,Math.round(cssWidth*nextScale)),h=Math.max(1,Math.round(cssHeight*nextScale));scale=nextScale;
-  if(w!==width||h!==height){width=w;height=h;background.width=reflection.width=w;background.height=reflection.height=h;base=canvas(w,h);const ctx=base.getContext('2d')!,gradient=ctx.createLinearGradient(0,0,w,h);gradient.addColorStop(0,'#fffdf8');gradient.addColorStop(.6,'#fff5f8');gradient.addColorStop(1,'#fffaf0');ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);}
+  if(w!==width||h!==height){width=w;height=h;background.width=reflection.width=w;background.height=reflection.height=h;pixels=edge.createImageData(w,h);base=canvas(w,h);const ctx=base.getContext('2d')!,gradient=ctx.createLinearGradient(0,0,w,h);gradient.addColorStop(0,'#fffdf8');gradient.addColorStop(.6,'#fff5f8');gradient.addColorStop(1,'#fffaf0');ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);}
   const candidates=[...document.querySelectorAll('.app,.panel,.record-dialog[open]')],next=new Set(candidates);for(const el of observed)if(!next.has(el)){resize.unobserve(el);observed.delete(el);cache.delete(el);}for(const el of candidates)if(!observed.has(el)){observed.add(el);resize.observe(el);}
   edges=[];for(const el of candidates){const bounds=el.getBoundingClientRect(),clip=el.closest('.page')?.getBoundingClientRect(),left=Math.max(0,bounds.left,clip?.left??0),top=Math.max(0,bounds.top,clip?.top??0),right=Math.min(cssWidth,bounds.right,clip?.right??cssWidth),bottom=Math.min(cssHeight,bounds.bottom,clip?.bottom??cssHeight);if(bounds.width<40||bounds.height<30||right<=left||bottom<=top)continue;
-   const x=Math.floor(left*scale),y=Math.floor(top*scale),w=Math.max(1,Math.ceil(right*scale)-x),h=Math.max(1,Math.ceil(bottom*scale)-y),radius=(parseFloat(getComputedStyle(el).borderTopLeftRadius)||22)*scale,shape={x:bounds.x*scale-x,y:bounds.y*scale-y,width:bounds.width*scale,height:bounds.height*scale},key=JSON.stringify([w,h,radius,scale,shape]);
-   let material=cache.get(el);if(!material||material.key!==key){const layer=material?.layer||canvas(w,h);if(layer.width!==w)layer.width=w;if(layer.height!==h)layer.height=h;material={key,mask:ringMask(w,h,radius,scale,shape,material?.mask),layer};cache.set(el,material);}edges.push({x,y,width:w,height:h,mask:material.mask,layer:material.layer});if(edges.length>=6)break;
+   const shape={x:bounds.x*scale,y:bounds.y*scale,width:bounds.width*scale,height:bounds.height*scale},clipRect={x:left*scale,y:top*scale,width:(right-left)*scale,height:(bottom-top)*scale},radius=(parseFloat(getComputedStyle(el).borderTopLeftRadius)||22)*scale,key=JSON.stringify([width,height,radius,scale,shape,clipRect]);
+   let material=cache.get(el);if(!material||material.key!==key){material={key,map:refractionMap(width,height,shape,clipRect,radius,scale)};cache.set(el,material);}edges.push(material.map);if(edges.length>=6)break;
   }
   dirty=false;
  }
@@ -32,11 +28,9 @@ export function startAmbientRenderer(background:HTMLCanvasElement,reflection:HTM
   background.dataset.frame=String(++draws);background.dataset.motion=moving?'running':readMotionPreference()==='off'?'paused':'reduced';
  }
  function paintEdges(){
-  edge.clearRect(0,0,width,height);if(!contrast.matches)for(const rect of edges){const scratch=rect.layer,scratchContext=scratch.getContext('2d')!;scratchContext.clearRect(0,0,rect.width,rect.height);
-   // Softly masked sampling of the same frame; no static rainbow and no pixel readback.
-   const bend=26*scale;scratchContext.globalCompositeOperation='source-over';scratchContext.drawImage(background,rect.x-bend,rect.y-bend,rect.width+bend*2,rect.height+bend*2,0,0,rect.width,rect.height);scratchContext.globalCompositeOperation='destination-in';scratchContext.drawImage(rect.mask,0,0);scratchContext.globalCompositeOperation='source-over';edge.globalAlpha=.72;edge.drawImage(scratch,rect.x,rect.y);
-  }edge.globalAlpha=1;reflection.dataset.frame=String(++edgeDraws);
+  pixels.data.fill(0);if(!contrast.matches){const scene=bg.getImageData(0,0,width,height).data;for(const map of edges)refract(pixels.data,scene,map);}edge.putImageData(pixels,0,0);reflection.dataset.frame=String(++edgeDraws);reflection.dataset.material='chromatic-refraction';reflection.dataset.samples=String(edges.reduce((sum,map)=>sum+map.destination.length,0));
  }
+
  function tick(time:number){frame=0;if(closed||document.hidden)return;const changed=dirty;if(dirty)layout();if(changed||!draws||moving&&time-lastDraw>=1000/24){if(moving&&lastDraw)sceneTime+=Math.min(100,time-lastDraw);paintScene(sceneTime);lastDraw=time;if(changed||!edgeDraws||time-lastEdge>=1000/12){paintEdges();lastEdge=time;}}
   if(moving)frame=requestAnimationFrame(tick);
  }

@@ -1,22 +1,21 @@
-# ZeroWaste Listening Studio 0.12.3 · 커뮤니티 연결 확인 수정
+# ZeroWaste Listening Studio 0.12.4 · 프리즘 유리와 전환 효과
 
-Mumsnet·MoneySavingExpert 연결 확인이 검색어 하나에서 글을 못 찾으면 원문 칸에 ‘자료 없음’을 표시하던 문제를 수정했습니다. 검색과 원문 검사를 구분하고, 실제 시도한 검색어와 확인한 글 주소를 결과 표에 표시합니다.
+Mumsnet·MoneySavingExpert의 선택 항목, 설정, IPC, 검색 및 수집 어댑터를 제거했습니다. 네이버 블로그·카페·지식인과 Reddit을 유지합니다. 기존에 저장한 자료와 파일은 삭제하지 않습니다.
 
-- 확인 검색어 reusable → cleaning → saving money 순서로 결과가 있을 때까지 시도합니다. 사용자가 작업실에 입력한 쿼리번들은 바꾸지 않습니다.
-- 확인 검색에서 후보를 최대 3개 확보합니다. 첫 글이 삭제되거나 접근할 수 없으면 다른 후보를 확인하며, 사용자 확인이 필요한 보안·로그인 단계는 그대로 표시합니다.
-- Google 결과의 h3 안쪽 링크·role=heading·main 영역과 리디렉션 링크를 읽습니다. 빈 결과는 잠시 안정화될 때까지 기다려 로딩 도중 결과가 없다고 끝내지 않습니다.
-- 검색 후보가 없으면 검색은 ‘검색 결과 없음’, 원문은 ‘미실행’으로 표시합니다. 원문 추출 실패로 표시하지 않습니다.
-- 기존 0.12.2의 가벼운 배경과 전환할 때만 나타나는 유리 토글을 유지합니다.
+- 엣지: 배경 Canvas의 실제 RGB를 서로 다른 굴절 위치에서 읽습니다. 둥근 표면의 법선과 두께에 따라 굴절·색 분산이 달라지고 배경 움직임에 반응합니다. 고정 무지개 선이나 단순 확대 반사가 아닙니다.
+- 메뉴: 작업실·설정 전환 중 두 물방울 사이 연결부가 늘어나 가늘어지고 떨어집니다. 아이콘 렌즈도 함께 변형됩니다.
+- 스위치: 전환하는 약 0.6초 동안 투명한 굴절 렌즈로 부풀고 늘어납니다. 전환 후 단순한 손잡이로 돌아갑니다.
+- 성능: 최대 800×540 배경, 최대 24fps 배경·12fps 엣지, 캐시된 엣지 좌표, 최대 6개 보이는 표면. 화면 전체 SVG 필터는 쓰지 않습니다. 작은 컨트롤의 backdrop 굴절은 전환 중에만 적용합니다. 화면이 숨겨지면 멈춥니다. 동작 줄이기·대비 설정을 존중합니다.
 
-[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.12.3)
+[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.12.4)
 
-- Windows: ZeroWaste-Listening-Studio-0.12.3-win-x64.exe
-- Apple Silicon: ZeroWaste-Listening-Studio-0.12.3-mac-arm64.dmg
-- Intel Mac: ZeroWaste-Listening-Studio-0.12.3-mac-x64.dmg
-- 안내서: Original-Guide-0.12.3-KO.pdf
+- Windows: ZeroWaste-Listening-Studio-0.12.4-win-x64.exe
+- Apple Silicon: ZeroWaste-Listening-Studio-0.12.4-mac-arm64.dmg
+- Intel Mac: ZeroWaste-Listening-Studio-0.12.4-mac-x64.dmg
+- 안내서: Original-Guide-0.12.4-KO.pdf
 
-## 검증 범위
+## 검증
 
-단위·UI·설치 앱 테스트는 로컬 모의 페이지로 수행합니다. 첫 확인 검색이 비어 있는 경우의 대체 검색, 지연 표시되는 Google 결과, 레이아웃 변형, 삭제된 첫 후보, 확인 절차 중단, 원문·댓글·게시일·개별 MD/JSON 저장을 검증합니다. 개발 클라우드의 네트워크 정책으로 Google 및 두 커뮤니티의 실사이트는 직접 확인하지 못했습니다. 이번 변경이 모든 실사이트 원문 수집 문제를 해결했다고 보장하지 않습니다.
+색 채널 분리·배경 색상 반응·중앙 투명 영역·스크롤된 표면의 클리핑을 검증합니다. 화면 및 설치 앱에서 움직이는 배경과 엣지 픽셀, 전환 중 표면 연결, 투명한 스위치 렌즈와 단순 상태 복귀, 동작 줄이기를 검사합니다. 네이버·Reddit 검색과 원문·댓글·개별 MD/JSON 저장은 모의 응답으로 검증합니다. 이번 작업에서 실사이트 수집은 검증하지 않습니다.
 
-Mac은 ad-hoc 서명이며 Developer ID 공증이 없습니다. Apple Silicon 패키지·소스·서명은 확인하지만 ARM64 실기기 실행은 미검증입니다.
+Mac은 ad-hoc 서명이며 Developer ID 공증이 없습니다. Apple Silicon 패키지·소스·서명은 확인하지만 ARM64 실기기 실행은 미검증입니다. 실제 화면 속도는 PC에 따라 다릅니다.
