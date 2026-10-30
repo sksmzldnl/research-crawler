@@ -1,0 +1,8 @@
+import {expect} from '@playwright/test';
+import assert from 'node:assert/strict';
+export async function minimalUiSmoke(page){
+ await expect(page.locator('canvas,svg')).toHaveCount(0);await expect(page.getByRole('radio')).toHaveCount(4);const nav=page.getByRole('navigation');await expect(nav.getByRole('button')).toHaveCount(2);
+ const ads=page.getByRole('checkbox',{name:'팝업·배너 광고 제거',exact:true});await expect(ads).toBeChecked();await ads.focus();await page.keyboard.press('Space');await expect(ads).not.toBeChecked();await page.keyboard.press('Space');await expect(ads).toBeChecked();
+ await nav.getByRole('button',{name:'설정',exact:true}).click();await expect(page.locator('input[type=password]')).toHaveCount(2);await expect(page.getByText('배경 움직임',{exact:true})).toHaveCount(0);await expect(page.locator('canvas,svg')).toHaveCount(0);await nav.getByRole('button',{name:'작업실',exact:true}).click();await expect(nav.getByRole('button',{name:'작업실',exact:true})).toHaveAttribute('aria-current','page');
+ const effects=await page.evaluate(()=>[...document.querySelectorAll('*')].flatMap(el=>{const s=getComputedStyle(el);return s.backdropFilter!=='none'||s.filter!=='none'||s.backgroundImage!=='none'||s.boxShadow!=='none'||s.animationName!=='none'||s.transitionDuration!=='0s'?[el.tagName+'.'+el.className]:[];}));assert.deepEqual(effects,[],'The minimal interface must not retain visual effects');await page.screenshot({path:'test-results/minimal-workspace.png'});console.log('PASS: static opaque minimal UI; no canvas, SVG, gradients, shadows, filters or animations; native checkboxes and two text tabs');
+}

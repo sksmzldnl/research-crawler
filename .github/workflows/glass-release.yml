@@ -40,7 +40,7 @@ jobs:
         run: node scripts/ci-step.mjs npm run package:win -- --x64
       - name: Verify the packaged app on its native build host
         run: node scripts/ci-step.mjs node scripts/verify-packaged.mjs
-      - name: Inspect both Mac architectures, signatures and actual Liquid Glass assets
+      - name: Inspect both Mac architectures, signatures and minimal interface assets
         if: matrix.target == 'mac'
         run: node scripts/ci-step.mjs node scripts/verify-mac-packages.mjs
       - name: Record Windows installer identity and checksums
