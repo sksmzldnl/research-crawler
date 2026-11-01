@@ -1,8 +1,8 @@
-# ZeroWaste Listening Studio 0.12.5
+# ZeroWaste Listening Studio 0.12.6
 
 네이버 블로그·카페·지식인과 Reddit을 쿼리 번들로 자동 검색하고, **공개 원문 뒤에 댓글·답글을 이어 붙여 글마다 MD/JSON 파일 하나로 저장**하는 macOS/Windows 앱입니다. 단색 배경, 얇은 구분선, 기본 체크박스와 작업실·설정 두 메뉴를 사용합니다. 움직이는 배경·유리·프리즘·물방울 효과와 화면 효과 설정을 제거했습니다.
 
-[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.12.5) · [처음 사용하는 분을 위한 설치·키 발급·수집 안내](docs/ORIGINAL_GUIDE_KO.md) · [배포용 PDF](docs/Original-Guide-0.12.5-KO.pdf)
+[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.12.6) · [처음 사용하는 분을 위한 설치·키 발급·수집 안내](docs/ORIGINAL_GUIDE_KO.md) · [배포용 PDF](docs/Original-Guide-0.12.6-KO.pdf)
 
 1. 설정에 NAVER API HUB의 **Client ID / Client Secret**을 각각 등록합니다. 요청 URL은 자동 적용됩니다.
 2. 작업실에서 블로그·카페·지식인 중 하나, 쿼리 번들, 목표 수량을 선택합니다. 예: `재사용 AND (불편 OR 후기)`.

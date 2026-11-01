@@ -23,7 +23,7 @@ export class ConnectionCheck {
   }
    const targets=scope.manual?[{url:scope.url!,date:null}]:candidates;scope.original='running';
    for(const target of targets){scope.url=target.url;
-    try{const result=await this.original.read(target.url,true,signal,false,true);if(signal.aborted)return;scope.original='passed';scope.error=undefined;scope.date=result.date||target.date||null;if(result.comments)scope.comments={status:result.comments.status,count:result.comments.items.length};break;}catch(error){if(signal.aborted)return;scope.original='failed';scope.error=this.safe(error);if(error instanceof BrowserAttentionError)break;}
+    try{const result=await this.original.read(target.url,true,signal,false,true);if(signal.aborted)return;scope.original='passed';scope.error=undefined;scope.date=result.date||target.date||null;if(result.comments)scope.comments={status:result.comments.status,count:result.comments.items.length,reason:result.comments.reason};break;}catch(error){if(signal.aborted)return;scope.original='failed';scope.error=this.safe(error);if(error instanceof BrowserAttentionError)break;}
    }
   }
  }
