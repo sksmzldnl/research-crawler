@@ -4,7 +4,8 @@ export function redditPageScript(mode:'google'|'reddit',act=false){return `(${re
 function readBrowserPage(mode:'google'|'reddit',act:boolean):BrowserPageSnapshot {
  const address=location.href,body=document.body?.innerText||'',visible=(el:Element)=>{const style=getComputedStyle(el),rect=el.getBoundingClientRect();return style.display!=='none'&&style.visibility!=='hidden'&&rect.width>0&&rect.height>0;};
  const all=(selector:string,root:Document|Element|ShadowRoot=document):Element[]=>{const result=Array.from(root.querySelectorAll(selector));if(root instanceof Element&&root.shadowRoot)result.push(...all(selector,root.shadowRoot));for(const el of root.querySelectorAll('*'))if(el.shadowRoot)result.push(...all(selector,el.shadowRoot));return result;};
- const posts=all('shreddit-post,article[data-post-id],.thing.link,[data-testid="post-container"]'),hasContent=mode==='google'?!!document.querySelector('#search h3,#rso h3'):posts.length>0;
+ const postId=location.pathname.match(/\/comments\/([a-z0-9]+)(?:\/|$)/i)?.[1]||'',allPosts=all('shreddit-post,article[data-post-id],.thing.link,[data-testid="post-container"]');
+ const posts=allPosts.filter(el=>{const id=el.getAttribute('data-fullname')||el.getAttribute('id')||el.getAttribute('data-post-id')||'';if(id)return id.replace(/^thing_/, '').replace(/^t3_/,'')===postId;try{return new URL(el.getAttribute('permalink')||el.getAttribute('content-href')||'',address).pathname.match(/\/comments\/([a-z0-9]+)/i)?.[1]===postId;}catch{return false;}}),hasContent=mode==='google'?!!document.querySelector('#search h3,#rso h3'):posts.length>0;
  let gate='';
  if(location.hostname==='consent.google.com'||/Before you continue to Google|Google을 사용하기 전에/.test(body)&&!hasContent)gate='Google 동의 화면을 브라우저에서 확인하세요.';
  else if(/accounts\.google\.com|accounts\.reddit\.com/.test(location.hostname)||/^\/(?:login|register)(?:\/|$)/.test(location.pathname))gate='브라우저에서 로그인을 완료하세요.';
@@ -12,22 +13,30 @@ function readBrowserPage(mode:'google'|'reddit',act:boolean):BrowserPageSnapshot
  else if(all('[role="dialog"],dialog[open]').some(el=>visible(el)&&(/log in to continue|sign in to continue|로그인.*계속|are you over 18|confirm your age|연령 확인/i.test(el.textContent||'')||!!el.querySelector('input[type="password"]'))))gate='브라우저에 표시된 로그인·확인 절차를 직접 완료하세요.';
  if(gate)return {address,gate,html:'',acted:false,branches:[],pending:true,bottom:false};
  const clone=(node:Node):Node=>{if(node.nodeType!==1)return node.cloneNode(false);const el=node as Element;if(el.matches('script,style,noscript,input,textarea,form,[contenteditable="true"],shreddit-composer,faceplate-textarea-input'))return document.createTextNode('');const style=getComputedStyle(el);if(style.display==='none'||style.visibility==='hidden')return document.createTextNode('');const copy=el.cloneNode(false) as Element;for(const child of el.childNodes)copy.append(clone(child));if(el.shadowRoot){const shadow=document.createElement('div');shadow.setAttribute('data-open-shadow','');for(const child of el.shadowRoot.childNodes)shadow.append(clone(child));copy.append(shadow);}return copy;};
- const selected=mode==='google'?Array.from(document.querySelectorAll('#search,#rso,main,[role="main"],a#pnnext,a[rel="next"],a[aria-label="Next"],a[aria-label="다음"]')):[...posts,...all('shreddit-comment-tree,.commentarea,[data-comment-tree]')];
+ const trees=all('shreddit-comment-tree,.commentarea,[data-comment-tree]').filter(tree=>{const id=tree.getAttribute('post-id')||tree.getAttribute('postid')||tree.getAttribute('link-id');if(id&&id.replace(/^t3_/,'')!==postId)return false;const owner=tree.closest('shreddit-post,article[data-post-id],.thing.link,[data-testid="post-container"]');return !owner||posts.includes(owner);});
+ const selected=mode==='google'?Array.from(document.querySelectorAll('#search,#rso,main,[role="main"],a#pnnext,a[rel="next"],a[aria-label="Next"],a[aria-label="다음"]')):[...posts,...trees];
  const roots=selected.filter((el,i)=>!selected.some((parent,j)=>j!==i&&parent.contains(el))),holder=document.createElement('div');for(const root of roots)holder.append(clone(root));
  if(mode==='google'&&/did not match any documents|No results found|There are no results|검색결과를 찾을 수 없|검색 결과가 없습니다/i.test(body)){const note=document.createElement('p');note.textContent=body.slice(0,4000);holder.append(note);}
  const html='<html><body>'+holder.innerHTML+'</body></html>';
- const trees=all('shreddit-comment-tree,.commentarea,[data-comment-tree]'),branches:string[]=[],buttons:Element[]=[];
+ const branches:string[]=[],buttons:Element[]=[],seenButtons=new Set<Element>();
+ // Keep action attempts tied to actual thread content, not ads/recommendations elsewhere on the page.
+ const threadText=[...posts,...trees].map(el=>el.textContent||'').join('|');let hash=2166136261;for(let i=0;i<threadText.length;i++)hash=Math.imul(hash^threadText.charCodeAt(i),16777619);const progressKey=(hash>>>0).toString(36);
  if(mode==='reddit'){
-  const scopes=[...trees,...posts];for(const root of scopes)for(const el of all('button,a,summary',root)){if(!visible(el)||el.hasAttribute('disabled')||el.getAttribute('aria-disabled')==='true')continue;const label=(el.textContent||'').replace(/\s+/g,' ').trim(),aria=el.getAttribute('aria-label')||'',text=(label+' '+aria).trim();
+  const scopes=[...trees,...posts];for(const root of scopes)for(const el of all('button,a,summary',root)){if(seenButtons.has(el))continue;seenButtons.add(el);if(!visible(el)||el.hasAttribute('disabled')||el.getAttribute('aria-disabled')==='true'||el.closest('form,[contenteditable="true"],shreddit-composer'))continue;const label=(el.textContent||'').replace(/\s+/g,' ').trim(),aria=el.getAttribute('aria-label')||'',text=(label+' '+aria).trim();
    if(/log.?in|sign.?in|register|sign.?up|verify|captcha|accept|agree|consent|confirm|nsfw|mature|age.?restricted|over 18|성인|연령|가입|로그인|인증|동의|확인|신고|삭제|등록|쓰기/i.test(text))continue;
    if(el.tagName==='A'&&/continue this thread|view (?:the )?(?:full|entire) discussion|more comments|이 스레드 계속/i.test(text)){try{const u=new URL(el.getAttribute('href')||'',address);if(u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&['www.reddit.com','reddit.com','old.reddit.com','new.reddit.com'].includes(u.hostname)&&/\/comments\//.test(u.pathname))branches.push(u.href);}catch{}continue;}
    const closedSummary=el.tagName==='SUMMARY'&&!el.closest('details')?.hasAttribute('open');
    if(el.getAttribute('aria-expanded')==='true'||/collapse|show less|접기/i.test(text))continue;
    const readMore=/^(?:read more|show more(?: comments| replies)?|load more(?: comments| replies)?|more comments|view more comments|show more comments|more replies|view replies|show replies|view [\d,]+ (?:more )?repl(?:y|ies)|show [\d,]+ (?:more )?repl(?:y|ies)|\d+ more repl(?:y|ies)|\d+ more comments|continue thread|더 보기|댓글 더보기|답글 더보기)$/i.test(label)||/expand comment|expand thread|show more replies|load more comments/i.test(aria)||el.matches('a.expand')&&label==='[+]'||closedSummary;
-   if(readMore)buttons.push(el);
+   if(readMore&&el.getAttribute('data-studio-expanded')!==progressKey)buttons.push(el);
   }
  }
- let acted=false;if(act&&buttons.length){for(const el of buttons){const key=body.slice(-1200)+'|'+(el.textContent||'');if(el.getAttribute('data-studio-expanded')===key)continue;el.setAttribute('data-studio-expanded',key);(el as HTMLElement).scrollIntoView({block:'center'});(el as HTMLElement).click();acted=true;break;}}
- const bottom=innerHeight+scrollY>=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight)-20;if(mode==='reddit'&&act&&!acted&&!bottom)scrollBy(0,Math.min(innerHeight,1000));
+ let acted=false;if(act&&buttons.length){const el=buttons[0]!;el.setAttribute('data-studio-expanded',progressKey);(el as HTMLElement).scrollIntoView({block:'center',behavior:'instant'});(el as HTMLElement).click();acted=true;}
+ // Reddit can append an endless recommended feed below the thread. Never chase document.scrollHeight.
+ const ends=(trees.length?trees:posts).filter(visible),end=ends.reduce((last,el)=>el.getBoundingClientRect().bottom>last.getBoundingClientRect().bottom?el:last,ends[0]!);
+ let bottom=true;if(mode==='reddit'&&end){let scroller:HTMLElement|null=end.parentElement;while(scroller&&scroller!==document.body&&scroller!==document.documentElement){if(/auto|scroll/.test(getComputedStyle(scroller).overflowY)&&scroller.scrollHeight>scroller.clientHeight+20)break;scroller=scroller.parentElement;}
+  if(scroller&&scroller!==document.body&&scroller!==document.documentElement){bottom=end.getBoundingClientRect().bottom<=scroller.getBoundingClientRect().bottom+20;if(act&&!acted&&!bottom)scroller.scrollBy({top:Math.min(scroller.clientHeight,1000),behavior:'instant'});}
+  else {bottom=end.getBoundingClientRect().bottom<=innerHeight+20;if(act&&!acted&&!bottom)scrollBy({top:Math.min(innerHeight,1000),behavior:'instant'});}
+ }
  return {address,gate:'',html,acted,branches:[...new Set(branches)],pending:buttons.length>0,bottom};
 }
