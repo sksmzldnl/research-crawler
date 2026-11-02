@@ -18,7 +18,7 @@ export class ConnectionCheck {
  private async run(report:ConnectionReport,signal:AbortSignal){
   for(const scope of report.scopes){if(signal.aborted)return;let candidates:Candidate[]=[];if(!scope.manual){scope.search='running';
    const queries=scope.type==='reddit'?['reusable']:['네이버'];let notice='';
-   try{for(const query of queries){scope.query=query;const page=await this.api.search(scope.type,query,1,signal,1);if(signal.aborted)return;candidates=page.items.slice(0,1);notice=page.notice||notice;if(candidates.length)break;}scope.search=candidates.length?'passed':'empty';}catch(error){if(signal.aborted)return;scope.search='failed';scope.original='skipped';scope.error=this.safe(error);continue;}
+   try{for(const query of queries){scope.query=query;let start:number|null=1;for(let attempt=0;start!==null&&attempt<(scope.type==='reddit'?1:3);attempt++){const page=await this.api.search(scope.type,query,start,signal,scope.type==='reddit'?1:20);if(signal.aborted)return;candidates=page.items.slice(0,scope.type==='reddit'?1:3);notice=page.notice||notice;if(candidates.length)break;start=page.next;}if(candidates.length)break;}scope.search=candidates.length?'passed':'empty';}catch(error){if(signal.aborted)return;scope.search='failed';scope.original='skipped';scope.error=this.safe(error);continue;}
    if(!candidates.length){scope.original='skipped';scope.error=notice||'확인용 검색어에서 글을 찾지 못해 원문 읽기는 실행하지 않았습니다. 원문 주소 확인에 글 URL을 넣어 별도로 확인할 수 있습니다.';continue;}
   }
    const targets=scope.manual?[{url:scope.url!,date:null}]:candidates;scope.original='running';
