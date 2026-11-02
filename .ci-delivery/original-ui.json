@@ -1,0 +1,12 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "success",
+  "channel": "original-ui",
+  "source_sha": "4d5a22c07ca79ca4b18b4bc9cd9aa3e21a87e5a8",
+  "run_id": "41537377819",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/41537377819",
+  "updated_at": "2026-11-02T22:28:20.640Z",
+  "release_url": null,
+  "log_tail": "COMMAND: npm run test:ui\n\n> zerowaste-listening-studio@0.12.9 test:ui\n> playwright test\n\n\nRunning 9 tests using 1 worker\n\n  ✓  1 tests/ui/studio.spec.ts:3:1 › keeps two menus, editable Boolean bundles, original format/folder and a one-click popup/banner filter (945ms)\n  ✓  2 tests/ui/studio.spec.ts:8:1 › settings shows only two Naver fields and no AI page, keys or model controls; small screen fits (361ms)\n  ✓  3 tests/ui/studio.spec.ts:11:1 › shows original dates, saved/error status and full source detail without summary columns (542ms)\n  ✓  4 tests/ui/studio.spec.ts:16:1 › blocks cross-origin mutations and removed AI endpoints (52ms)\n  ✓  5 tests/ui/studio.spec.ts:17:1 › restored connection table separates API permission, originals and dates, and checks a supplied URL (502ms)\n  ✓  6 tests/ui/studio.spec.ts:23:1 › Reddit needs no API credentials, keeps the two-menu workspace and sends original-plus-comments collection settings (476ms)\n  ✓  7 tests/ui/studio.spec.ts:28:1 › removed community providers cannot be selected or called and stale local preferences fall back safely (288ms)\n  ✓  8 tests/ui/studio.spec.ts:32:1 › minimal interface removes effects and appearance settings while keeping native keyboard controls (416ms)\n  ✓  9 tests/ui/studio.spec.ts:36:1 › connection check keeps a saved original successful and shows a popup-limited comment reason (275ms)\n\n  9 passed (6.1s)\n"
+}
