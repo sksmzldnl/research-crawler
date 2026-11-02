@@ -1,8 +1,8 @@
-# ZeroWaste Listening Studio 0.12.8
+# ZeroWaste Listening Studio 0.12.9
 
 네이버 블로그·카페·지식인과 Reddit을 쿼리 번들로 자동 검색하고, **공개 원문 뒤에 댓글·답글을 이어 붙여 글마다 MD/JSON 파일 하나로 저장**하는 macOS/Windows 앱입니다. 단색 배경, 얇은 구분선, 기본 체크박스와 작업실·설정 두 메뉴를 사용합니다. 움직이는 배경·유리·프리즘·물방울 효과와 화면 효과 설정을 제거했습니다.
 
-[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.12.8) · [처음 사용하는 분을 위한 설치·키 발급·수집 안내](docs/ORIGINAL_GUIDE_KO.md) · [배포용 PDF](docs/Original-Guide-0.12.8-KO.pdf)
+[설치 파일](https://github.com/sksmzldnl/research-crawler/releases/tag/studio-api-v0.12.9) · [처음 사용하는 분을 위한 설치·키 발급·수집 안내](docs/ORIGINAL_GUIDE_KO.md) · [배포용 PDF](docs/Original-Guide-0.12.9-KO.pdf)
 
 1. 설정에 NAVER API HUB의 **Client ID / Client Secret**을 각각 등록합니다. 요청 URL은 자동 적용됩니다.
 2. 작업실에서 블로그·카페·지식인 중 하나, 쿼리 번들, 목표 수량을 선택합니다. 예: `재사용 AND (불편 OR 후기)`.
@@ -22,6 +22,8 @@ AI 요약 화면·모델 설정·API 호출과 CSV 가져오기/AI 내보내기�
 
 
 **Reddit**: Google 검색과 Reddit의 일반 브라우저 페이지를 읽습니다. SerpApi 가입·검색 API 키·Reddit API 승인은 필요하지 않습니다. 앱의 **브라우저 열기**에서 필요할 때 직접 로그인하면 이 컴퓨터의 앱 전용 프로필에 유효한 세션을 유지합니다. 로그인·동의·보안 확인이 나타나면 창을 보여 주고 대기하며, 사용자가 정상적으로 완료하면 자동으로 같은 작업을 이어갑니다. CAPTCHA·보안 확인의 자동 해결이나 우회는 하지 않습니다. 브라우저를 닫거나 확인 대기 시간이 끝나면 일시정지하며 수집 재개로 이어갈 수 있습니다. **세션 지우기**는 이 앱의 Google·Reddit 브라우저 프로필에만 적용됩니다. [상세 안내](docs/ORIGINAL_GUIDE_KO.md#8-reddit-브라우저-준비).
+
+Reddit 본문을 정상적으로 읽을 수 있을 때 reCAPTCHA 배지를 확인 화면으로 오인해 멈추지 않습니다. 실제 화면에 표시된 로그인·보안 확인은 직접 완료한 뒤 자동으로 이어갑니다.
 
 Reddit 댓글 수집은 추천 피드가 아니라 해당 글의 댓글 영역을 기준으로 종료합니다. 8초 동안 추가 내용이 없으면 확보한 본문·댓글을 저장하고 다음 글로 넘어가며, 부족한 댓글은 상태·사유를 남깁니다. 본문을 30초 안에 읽지 못한 글은 개별 실패로 남기고 다음 글을 시도합니다. 로그인·보안 확인은 기존대로 사용자 확인을 기다립니다.
 
