@@ -1,8 +1,9 @@
+import {release} from 'node:os';
 import {DesktopRedditBrowser} from './reddit-browser.js';
 import {DesktopOriginalReader} from './public-page.js';
 import {fixtureTransport} from './test-api.js';
 import {Network} from '../core/network.js';
-import { app,BrowserWindow,ipcMain,safeStorage,shell,dialog,net,protocol } from 'electron';
+import { app,BrowserWindow,ipcMain,safeStorage,shell,dialog,net,protocol,clipboard } from 'electron';
 import { fileURLToPath,pathToFileURL } from 'node:url';
 import { dirname,join,resolve,relative,isAbsolute } from 'node:path';
 import { Store } from '../core/store.js';
@@ -19,6 +20,7 @@ const systemTransport=process.env.HTTPS_PROXY||process.env.HTTP_PROXY||process.e
 const data=process.env.STUDIO_TEST_DATA_DIR||app.getPath('userData');let secure=safeStorage.isEncryptionAvailable();if(process.platform==='linux'&&safeStorage.getSelectedStorageBackend()==='basic_text')secure=false;
 const network=new Network(process.env.STUDIO_TEST_DATA_DIR&&process.env.STUDIO_TEST_API_FIXTURES==='1'?fixtureTransport(join(data,'api-fixtures.json'),join(data,'api-requests.jsonl')):systemTransport);
 service=new Service(new Store(join(data,'studio.sqlite')),secure?new EncryptedVault(join(data,'credentials.enc'),safeStorage):new MemoryVault(),network,new DesktopOriginalReader(network),new DesktopRedditBrowser());
+service.runtimeInfo={version:app.getVersion(),platform:process.platform,arch:process.arch,electron:process.versions.electron,chrome:process.versions.chrome,osRelease:release(),gpuAcceleration:app.isHardwareAccelerationEnabled()};service.copyText=text=>clipboard.writeText(text);
 const window=new BrowserWindow({width:1440,height:960,minWidth:860,minHeight:600,title:'ZeroWaste Listening Studio',backgroundColor:'#f5f7f3',webPreferences:{preload:join(root,'build/desktop/preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
 window.webContents.setWindowOpenHandler(({url})=>{void open(url);return {action:'deny'};});window.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith('studio://app/')){event.preventDefault();void open(url);}});
 async function open(raw:string){try{const u=new URL(raw);if(['https:','http:'].includes(u.protocol)&&!u.username&&!u.password)await shell.openExternal(u.href);}catch{}}

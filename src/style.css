@@ -4,3 +4,5 @@
 @media(max-width:800px){.search-setup-grid{grid-template-columns:1fr;gap:24px}.workspace-header{padding:0 24px}.page{padding:24px 20px 40px}.original-output{grid-template-columns:160px minmax(0,1fr)}}
 @media(max-width:500px){.workspace-header{padding:0 18px;gap:24px;height:58px}.workspace-header nav{gap:20px}.app-version{display:none}.page{padding:22px 14px 32px}.panel{padding:18px}.table-panel{padding:0}.original-output{grid-template-columns:1fr}.original-output>.check{grid-column:auto}.inline-fields{gap:12px}.section-title{gap:10px}.section-title>button{font-size:12px;padding:6px 9px}.credential{gap:8px}.credential-state{display:none}.alert{margin:14px}.export-bar .button-row{width:100%}.export-bar .button-row>label{flex:1}.scope-options{gap:6px 16px}}
 @media(forced-colors:active){button,.panel,.compact-bundle,.record-dialog{border:1px solid ButtonText}.workspace-header nav button.active{border-bottom-color:Highlight}}
+
+.collection-progress{width:100%;min-width:0}.collection-progress .folder-path{display:block;overflow-wrap:anywhere}.collection-progress[open]{padding-top:8px}

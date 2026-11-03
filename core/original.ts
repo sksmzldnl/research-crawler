@@ -6,7 +6,9 @@ import {kinPublishedDate} from './kin-date.js';
 import {articleDate} from './article-date.js';
 import {publicNaverUrl,articleIdentity} from './original-url.js';
 export interface Original {text:string;markdown:string;date:string|null;url:string;postText?:string;postMarkdown?:string;comments?:CommentReport;}
-export interface OriginalSource {read(url:string,removeAds:boolean,signal:AbortSignal,removeHashtags?:boolean,includeComments?:boolean):Promise<Original>;}
+export interface ReadProgress {phase:'loading'|'body'|'comments'|'verification';message:string;url?:string;comments?:number;original?:Original;}
+export type ReadObserver=(progress:ReadProgress)=>void;
+export interface OriginalSource {read(url:string,removeAds:boolean,signal:AbortSignal,removeHashtags?:boolean,includeComments?:boolean,observe?:ReadObserver):Promise<Original>;}
 export class OriginalUnavailable extends Error {}
 export const articleSelectors=['.ArticleContentBox .article_viewer','.article_viewer','.ContentRenderer','#postViewArea','.post-view','.se_doc_viewer','.se-main-container','.NHN_Writeform_Main','#tbody','#postContent','#articleContent','#articleBody','.post_content'];
 const questionSelectors=['.question-content .c-heading__content','._questionContentsArea','.questionDetail','.question-content__body','.question-content'];

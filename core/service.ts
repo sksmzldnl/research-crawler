@@ -1,3 +1,5 @@
+import {bounded} from './operation.js';
+import {researchDiagnostics,type RuntimeInfo} from './diagnostics.js';
 import {isReddit} from './reddit.js';
 import type {RedditBrowser} from './reddit-browser.js';
 import {ConnectionCheck} from './connection-check.js';
@@ -18,18 +20,20 @@ const bundleSchema=z.object({id:z.string().max(200).optional(),name:z.string().t
 export class Service {
  api:SearchApi;search:SearchCollector;connection:ConnectionCheck;private original:OriginalSource;private directories=new Set<string>();private retry?:{controller:AbortController;pending:Promise<boolean>};
  selectDirectory?:()=>Promise<string|undefined>;
- constructor(public store:Store,public vault:Vault,net=new Network(),original?:OriginalSource,private browser?:RedditBrowser){this.api=new SearchApi(net,vault,browser);const naver=original||new OriginalReader(net);this.original={read:(url,ads,signal,tags,comments)=>{if(isReddit(url)){if(!this.browser)throw Error('Reddit 수집은 설치된 데스크톱 앱에서 사용할 수 있습니다.');return this.browser.read(url,ads,signal,tags,comments);}return naver.read(url,ads,signal,tags,comments);}};this.search=new SearchCollector(store,this.api,undefined,this.original);this.connection=new ConnectionCheck(this.api,this.original,()=>['naverId','naverSecret'].map(name=>vault.get(name)));}
- state():State{const all=this.vault.status();return {redditBrowser:this.browser?.state(),readingOriginal:!!this.retry,connectionCheck:this.connection.report,bundles:this.store.list<Bundle>('bundles'),researches:this.store.list<Research>('researches'),records:this.store.list<RecordItem>('records').reverse(),settings:this.store.settings(),credentials:Object.fromEntries(['naverId','naverSecret'].map(name=>[name,!!all[name]])),secureStorage:this.vault.available};}
+ copyText?:(text:string)=>void;runtimeInfo:RuntimeInfo={version:'development',platform:process.platform,arch:process.arch};
+ constructor(public store:Store,public vault:Vault,net=new Network(),original?:OriginalSource,private browser?:RedditBrowser){this.api=new SearchApi(net,vault,browser);const naver=original||new OriginalReader(net);this.original={read:(url,ads,signal,tags,comments,observe)=>{if(isReddit(url)){if(!this.browser)throw Error('Reddit 수집은 설치된 데스크톱 앱에서 사용할 수 있습니다.');return observe?this.browser.read(url,ads,signal,tags,comments,observe):this.browser.read(url,ads,signal,tags,comments);}return observe?naver.read(url,ads,signal,tags,comments,observe):naver.read(url,ads,signal,tags,comments);}};this.search=new SearchCollector(store,this.api,undefined,this.original);this.connection=new ConnectionCheck(this.api,this.original,()=>['naverId','naverSecret'].map(name=>vault.get(name)));}
+ state(recordsRevision?:number,recordsEpoch?:string):State{const all=this.vault.status(),recordsUnchanged=recordsRevision!==undefined&&(recordsEpoch===undefined||recordsEpoch===this.store.recordsEpoch)&&recordsRevision===this.store.recordsRevision;return {recordsRevision:this.store.recordsRevision,recordsEpoch:this.store.recordsEpoch,recordsUnchanged,redditBrowser:this.browser?.state(),readingOriginal:!!this.retry,connectionCheck:this.connection.report,bundles:this.store.list<Bundle>('bundles'),researches:this.store.list<Research>('researches'),records:recordsUnchanged?[]:this.store.list<RecordItem>('records').reverse(),settings:this.store.settings(),credentials:Object.fromEntries(['naverId','naverSecret'].map(name=>[name,!!all[name]])),secureStorage:this.vault.available};}
  async call(method:string,args:unknown):Promise<unknown>{switch(method){
-  case 'state':return this.state();
+  case 'state':{const poll=z.object({recordsRevision:z.number().int().nonnegative().optional(),recordsEpoch:z.string().max(100).optional()}).strict().optional().parse(args);return this.state(poll?.recordsRevision,poll?.recordsEpoch);}
   case 'reddit.browser.open':if(!this.browser)throw Error('설치된 데스크톱 앱에서 브라우저를 열 수 있습니다.');await this.browser.open();return true;
   case 'reddit.browser.clear':if(this.search.active.size||this.connection.busy||this.retry)throw Error('진행 중인 작업을 먼저 중지하세요.');if(!this.browser)throw Error('설치된 데스크톱 앱에서 사용할 수 있습니다.');await this.browser.clear();if(this.connection.report?.scopes.some(scope=>scope.type==='reddit'))this.connection.invalidate();return true;
-  case 'output.choose':{if(!this.selectDirectory)throw Error('폴더 선택은 설치된 데스크톱 앱에서 사용할 수 있습니다.');const directory=await this.selectDirectory();if(directory){await checkDirectory(directory);this.directories.add(directory);}return {directory:directory||''};}
+  case 'output.choose':{if(!this.selectDirectory)throw Error('폴더 선택은 설치된 데스크톱 앱에서 사용할 수 있습니다.');const directory=await this.selectDirectory();if(directory){await bounded(()=>checkDirectory(directory),8000,'저장 폴더가 응답하지 않습니다. 이 PC의 로컬 폴더를 선택하세요.');this.directories.add(directory);}return {directory:directory||''};}
   case 'connection.check':{if(this.search.active.size||this.retry)throw Error('수집을 중지한 뒤 확인하세요.');const a=z.object({url:z.string().max(4000).optional(),provider:z.enum(['naver','reddit']).optional()}).strict().optional().parse(args||undefined);return this.connection.start(a?.url,a?.provider||'naver');}
   case 'connection.cancel':return this.connection.cancel();
   case 'search.start':{if(this.connection.busy||this.retry)throw Error('연결 확인을 마친 뒤 수집하세요.');const directory=z.object({outputDirectory:z.string()}).passthrough().parse(args).outputDirectory;await this.directory(directory);if(this.connection.busy||this.retry)throw Error('진행 중인 확인을 마치세요.');return this.search.start(args);}
   case 'search.pause':return this.search.pause(id.parse(args));
   case 'search.stop':return this.search.pause(id.parse(args),true);
+  case 'research.diagnostics.copy':{const key=id.parse(args),r=this.store.research(key);if(!r)throw Error('자료 모음을 선택하세요.');const report=researchDiagnostics(r,this.store.records(key),this.runtimeInfo,this.browser?.state().status);if(this.copyText){this.copyText(report);return {copied:true};}return {copied:false,report};}
   case 'search.resume':{if(this.connection.busy||this.retry)throw Error('진행 중인 확인을 마치세요.');const key=id.parse(args),r=this.store.research(key);if(r?.apiSearch?.version==='naver-original-v2')await this.directory(r.apiSearch.outputDirectory||'');if(this.connection.busy||this.retry)throw Error('진행 중인 확인을 마치세요.');return this.search.resume(key);}
   case 'search.plan':return {queries:browserQueries(z.string().max(3000).parse(args))};
   case 'bundle.save':{const b=bundleSchema.parse(args);plan(b.expression);const value={...b,id:b.id||randomUUID()};this.store.put('bundles',value);return value;}
@@ -53,7 +57,7 @@ export class Service {
    row.processing_status=row.saved_path?'file_saved':'original_collected';this.store.record(row);const rows=this.store.records(r.id);r.valid=rows.filter(x=>x.saved_path&&x.review_status!=='excluded').length;r.excluded=rows.length-r.valid;if(r.status==='failed'&&r.valid){r.status='completed';r.stage='수집 완료';}r.stage=r.stage.replace(/ · 댓글 확인 \d+건$/,'');const partial=rows.filter(x=>x.comments&&x.comments.status!=='complete').length;if(partial)r.stage+=` · 댓글 확인 ${partial}건`;this.store.put('researches',r);return true;
   })().finally(()=>{if(this.retry===entry)this.retry=undefined;});return entry.pending;
  }
- private async directory(path:string){if(!this.directories.has(path))throw Error('폴더 선택 버튼으로 저장 폴더를 지정하세요. 앱을 다시 실행한 경우 같은 폴더를 다시 선택하세요.');await checkDirectory(path);}
+ private async directory(path:string){if(!this.directories.has(path))throw Error('폴더 선택 버튼으로 저장 폴더를 지정하세요. 앱을 다시 실행한 경우 같은 폴더를 다시 선택하세요.');await bounded(()=>checkDirectory(path),8000,'저장 폴더가 응답하지 않습니다. 이 PC의 로컬 폴더를 선택하세요.');}
  async idle(){await Promise.all([this.search.idle(),this.connection.idle(),this.retry?.pending.catch(()=>{})]);}
  close(){this.search.close();this.connection.cancel();this.retry?.controller.abort(Error('중지'));this.browser?.close();}
 }

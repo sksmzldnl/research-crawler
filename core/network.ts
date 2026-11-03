@@ -52,7 +52,7 @@ export class Network {
  constructor(private send:Transport=transport,private sleep=wait,private deadline=(ms:number)=>AbortSignal.timeout(ms)){}
  private async timed<T>(provider:string,signal:AbortSignal|undefined,policy:RequestPolicy,action:(signal:AbortSignal)=>Promise<T>):Promise<T>{
   const ms=policy.timeoutMs??25000,timer=this.deadline(ms),combined=signal?AbortSignal.any([signal,timer]):timer;
-  try{combined.throwIfAborted();return await action(combined);}catch(error){if(signal?.aborted)throw signal.reason;if(timer.aborted)throw new NetworkFailure('timeout',provider,'',ms);throw error;}
+  let stop:()=>void=()=>{};try{combined.throwIfAborted();const aborted=new Promise<never>((_resolve,reject)=>{stop=()=>reject(combined.reason);combined.addEventListener('abort',stop,{once:true});});return await Promise.race([action(combined),aborted]);}catch(error){if(signal?.aborted)throw signal.reason;if(timer.aborted)throw new NetworkFailure('timeout',provider,'',ms);throw error;}finally{combined.removeEventListener('abort',stop);}
  }
  async page(raw:string,signal:AbortSignal):Promise<{html:string;url:string}>{return this.timed('원문 수집',signal,{timeoutMs:45000},async combined=>{
   let url=publicNaverUrl(raw);

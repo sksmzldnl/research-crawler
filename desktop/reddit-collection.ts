@@ -10,6 +10,7 @@ interface Reader {
  navigate(url:string):void;
  userCheck(snapshot:BrowserPageSnapshot):Promise<number>;
  progress(message:string):void;
+ content?(original:Original):void;
 }
 /** Only new article/comment content resets the idle deadline, never clicks or page height. */
 export async function collectRedditOriginal(url:string,removeAds:boolean,removeHashtags:boolean,includeComments:boolean,signal:AbortSignal,reader:Reader):Promise<Original>{
@@ -24,7 +25,7 @@ export async function collectRedditOriginal(url:string,removeAds:boolean,removeH
    if(same&&snapshot.html.length<=8_000_000){
     if(snapshot.html!==lastHtml||snapshot.address!==lastAddress){
      lastHtml=snapshot.html;lastAddress=snapshot.address;const parsed=parseRedditOriginal(snapshot.html,snapshot.address,removeAds,removeHashtags);
-     if(parsed){body=parsed.original;if(!includeComments)return body;comments=mergeComments(comments,parsed.comments);const nextSignature=JSON.stringify([body.text,comments.items]);if(nextSignature!==signature){signature=nextSignature;lastProgress=Date.now();reader.progress(`Reddit 댓글 ${comments.items.length}개 수집 중`);}}
+     if(parsed){body=parsed.original;if(!includeComments){reader.content?.(body);return body;}comments=mergeComments(comments,parsed.comments);const nextSignature=JSON.stringify([body.text,comments.items]);if(nextSignature!==signature){signature=nextSignature;lastProgress=Date.now();reader.progress(`Reddit 댓글 ${comments.items.length}개 수집 중`);reader.content?.(attachComments(body,comments));}}
     }
     if(body&&comments){
      for(const raw of snapshot.branches){try{const u=new URL(raw);if(redditArticle(u.href).id!==article.id)continue;const parts=u.pathname.split('/').filter(Boolean),index=parts.indexOf('comments'),comment=parts[index+3]||'';if(comment&&!/^[a-z0-9]+$/i.test(comment))continue;if(visited.has(comment))continue;u.hash='';for(const key of [...u.searchParams.keys()])if(!['context','depth','sort','show','limit'].includes(key))u.searchParams.delete(key);if(!branches.has(comment))branches.set(comment,u.href);}catch{}}
