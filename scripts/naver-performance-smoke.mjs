@@ -1,0 +1,21 @@
+import {writeFile,readFile} from 'node:fs/promises';
+import {expect} from '@playwright/test';
+import assert from 'node:assert/strict';
+export async function naverPerformanceSmoke(app,win,routes,fixturePath,config){
+ const api=routes.find(route=>route.path==='/search/v1/blog'&&route.params.query==='"A" "B"'),previous=api.body;
+ const posts=Array.from({length:3},(_,i)=>({link:'https://blog.naver.com/fixture/speed-'+i,title:'A B parallel original '+i,description:'Short snippet'}));
+ for(const [i,post] of posts.entries()){const markup='<span class="se_publishDate">2026. 11. 1. 10:00</span><div class="se-main-container"><p>A B full parallel body '+i+'</p><p>UNIQUE PARALLEL END '+i+'</p></div><div class="CommentBox" data-comment-count="0"></div>';routes.push({host:'blog.naver.com',path:new URL(post.link).pathname,params:{},status:200,body:'<p>Loading</p>',renderBody:'<script>setTimeout(()=>{document.body.innerHTML='+JSON.stringify(markup)+';},100)</script>'});}
+ api.body={total:3,items:posts};await writeFile(fixturePath,JSON.stringify(routes));await app.evaluate((_electron,entries)=>{globalThis.__renderEntries=entries;globalThis.__renderPeak=0;},routes);
+ const started=Date.now(),id=await win.evaluate(async cfg=>(await window.studio.call('search.start',{...cfg,naverType:'blog',target:3})).id,config);
+ await expect.poll(()=>win.evaluate(async id=>(await window.studio.call('state')).researches.find(r=>r.id===id)?.status,id),{timeout:20000}).toBe('completed');
+ const result=await win.evaluate(async id=>{const s=await window.studio.call('state');return {r:s.researches.find(r=>r.id===id),rows:s.records.filter(r=>r.research_id===id)};},id);assert.equal(result.r.valid,3);assert.equal(result.rows.length,3);
+ const peak=await app.evaluate(()=>globalThis.__renderPeak);assert.equal(peak,4,'One main window plus exactly three concurrent original readers');for(const row of result.rows){const i=Number(row.source_url.split('-').at(-1));assert.ok(row.original_full_text.includes('UNIQUE PARALLEL END '+i));assert.equal(row.comments.status,'complete');assert.ok((await readFile(row.saved_path,'utf8')).includes('UNIQUE PARALLEL END '+i));}
+ const parallelMs=Date.now()-started,stall='https://blog.naver.com/fixture/comment-stall';
+ const markup='<span class="se_publishDate">2026. 11. 1. 10:00</span><div class="se-main-container"><p>A B original must remain complete</p><p>STALL BODY FULL END</p></div><div class="CommentBox"><h3 class="comment_title">댓글 2</h3><div class="CommentItem" data-comment-id="only"><div class="comment_text_view">COLLECTED COMMENT FULL END</div></div><button class="u_cbox_btn_more">더보기</button></div>';
+ routes.push({host:'blog.naver.com',path:new URL(stall).pathname,params:{},status:200,body:'<p>Loading</p>',renderBody:'<html><body><script>document.body.innerHTML='+JSON.stringify(markup)+';setInterval(()=>{document.querySelector(".u_cbox_btn_more").outerHTML="<button class=\\"u_cbox_btn_more\\">더보기</button>";},400);</script></body></html>'});
+ api.body={total:1,items:[{link:stall,title:'A B stalled comments',description:'snippet'}]};await writeFile(fixturePath,JSON.stringify(routes));await app.evaluate((_electron,entries)=>{globalThis.__renderEntries=entries;},routes);
+ const stallStarted=Date.now(),stalledId=await win.evaluate(async cfg=>(await window.studio.call('search.start',{...cfg,naverType:'blog',target:1})).id,config);await expect.poll(()=>win.evaluate(async id=>(await window.studio.call('state')).researches.find(r=>r.id===id)?.status,stalledId),{timeout:15000}).toBe('completed');
+ const row=await win.evaluate(async id=>(await window.studio.call('state')).records.find(r=>r.research_id===id),stalledId);assert.equal(row.comments.status,'partial');assert.equal(row.comments.items.length,1);assert.ok(row.comments.reason.includes('현재까지'));assert.ok((await readFile(row.saved_path,'utf8')).includes('COLLECTED COMMENT FULL END'));assert.ok(row.original_full_text.includes('STALL BODY FULL END'));
+ api.body=previous;await writeFile(fixturePath,JSON.stringify(routes));await app.evaluate((_electron,entries)=>{globalThis.__renderEntries=entries;},routes);
+ console.log(JSON.stringify({naver_parallel_fixture:{articles:3,peakReaders:peak-1,elapsedMs:parallelMs},naver_stalled_comments_fixture:{elapsedMs:Date.now()-stallStarted,originalAndCollectedCommentsSaved:true}}));
+}

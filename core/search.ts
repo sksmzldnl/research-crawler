@@ -1,5 +1,7 @@
 import {BrowserAttentionError} from './reddit-browser.js';
 import {browserQueries} from './search-plan.js';
+import {SearchWork,collectPage} from './search-work.js';
+import {naverArticleKey} from './original-url.js';
 import {randomUUID,createHash} from 'node:crypto';
 import {z} from 'zod';
 import {Store} from './store.js';
@@ -14,8 +16,15 @@ import {searchTypes,searchLabels} from './api-types.js';
 import type {SearchProvider} from './search-api.js';
 import type {Bundle,Research,Candidate,SearchConfig} from './types.js';
 const date=z.string().regex(/^$|^\d{4}-\d{2}-\d{2}$/).refine(s=>!s||(!isNaN(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s),'날짜를 확인하세요.');
-export const searchSchema=z.object({version:z.literal('naver-original-v2').default('naver-original-v2'),name:z.string().trim().min(1).max(100),naverType:z.enum(searchTypes),redditCommunity:z.string().regex(/^$|^[A-Za-z0-9_]{1,50}$/).default(''),bundleIds:z.array(z.string()).min(1).max(30),target:z.number().int().min(1).max(1000),pages:z.number().int().min(1).max(10),startDate:date.default(''),endDate:date.default(''),includeUnknownDate:z.boolean().default(true),removeAds:z.boolean().default(true),removeHashtags:z.boolean().default(false),includeComments:z.boolean().default(true),outputFormat:z.enum(['md','json']).default('md'),outputDirectory:z.string().min(1).max(4096)}).strict().refine(s=>!s.startDate||!s.endDate||s.startDate<=s.endDate,'시작일과 종료일을 확인하세요.');
+export const searchSchema=z.object({version:z.literal('naver-original-v2').default('naver-original-v2'),name:z.string().trim().min(1).max(100),naverType:z.enum(searchTypes),naverSort:z.enum(['sim','date']).default('sim'),redditCommunity:z.string().regex(/^$|^[A-Za-z0-9_]{1,50}$/).default(''),bundleIds:z.array(z.string()).min(1).max(30),target:z.number().int().min(1).max(1000),pages:z.number().int().min(1).max(10),startDate:date.default(''),endDate:date.default(''),includeUnknownDate:z.boolean().default(true),removeAds:z.boolean().default(true),removeHashtags:z.boolean().default(false),includeComments:z.boolean().default(true),outputFormat:z.enum(['md','json']).default('md'),outputDirectory:z.string().min(1).max(4096)}).strict().refine(s=>!s.startDate||!s.endDate||s.startDate<=s.endDate,'시작일과 종료일을 확인하세요.');
 export function resumable(r:Research){return r.apiSearch?.version==='naver-original-v2'&&searchTypes.includes(r.apiSearch.naverType);}
+/** Only reject what the full article/comments can never rescue. A missing positive word in a snippet is not proof. */
+export function preflightReasons(item:Candidate,b:Bundle,config:SearchConfig){
+ const expression=plan(b.expression).expression,title=item.title.normalize('NFKC').toLocaleLowerCase();
+ function possible(e:import('./query.js').Expr):{yes:boolean;no:boolean}{if(e.op==='term')return {yes:true,no:!title.includes(e.value.normalize('NFKC').toLocaleLowerCase())};if(e.op==='not'){const p=possible(e.child);return {yes:p.no,no:p.yes};}const a=possible(e.left),c=possible(e.right);return e.op==='and'?{yes:a.yes&&c.yes,no:a.no||c.no}:{yes:a.yes||c.yes,no:a.no&&c.no};}
+ const reasons:string[]=[];if(!possible(expression).yes)reasons.push('번들 논리식 불일치');const excluded=b.exclusions.split(/[,\n]/).map(s=>s.trim()).filter(Boolean).filter(word=>item.title.toLowerCase().includes(word.toLowerCase()));if(excluded.length)reasons.push('제외어: '+excluded.join(', '));
+ const date=normalizedDate(item.date);if(date){const reason=dateReason(date,config.startDate,config.endDate);if(reason)reasons.push(reason);}return reasons;
+}
 export function applySearchFilters(row:import('./types.js').RecordItem,b:Bundle,config:SearchConfig){row.exclusion_reasons=[];const combined=[row.title,row.original_post_text??row.original_full_text,...(row.comments?.items.map(comment=>comment.text)||[])].join(' '),ast=plan(b.expression).expression;row.matched_keywords=terms(ast).filter(t=>combined.toLowerCase().includes(t.toLowerCase()));row.evidence=matchedContext(combined,row.matched_keywords);
   if(!matches(ast,combined))row.exclusion_reasons.push('번들 논리식 불일치');row.excluded_keywords=b.exclusions.split(/[,\n]/).map(s=>s.trim()).filter(Boolean).filter(t=>combined.toLowerCase().includes(t.toLowerCase()));if(row.excluded_keywords.length)row.exclusion_reasons.push('제외어: '+row.excluded_keywords.join(', '));
   if(row.published_at||!config.includeUnknownDate){const reason=dateReason(row.published_at,config.startDate,config.endDate);if(reason)row.exclusion_reasons.push(reason);}
@@ -30,31 +39,38 @@ export class SearchCollector {
   const r=localResearch(config.name,config.target);r.id=randomUUID();r.bundles=bundles;r.apiSearch=config;r.config={...r.config,bundleIds:config.bundleIds,sources:[(config.naverType==='reddit'?config.naverType:'naver_'+config.naverType) as import('./types.js').Source],target:config.target,startDate:config.startDate,endDate:config.endDate,removeAds:config.removeAds};
   r.totalTasks=bundles.reduce((n,b)=>n+browserQueries(b.expression).length,0)*config.pages;r.processed=0;r.valid=0;r.status='running';r.stage='검색 준비';r.notes=['공개 게시글의 본문 전체를 수집해 지정 폴더에 개별 파일로 저장합니다. 이미지·첨부는 원문 링크로 남깁니다. 접근 제한은 원문 수집 상태에 기록합니다.'];this.store.put('researches',r);this.launch(r);return r;
  }
- private launch(r:Research){if(this.active.size)throw Error('다른 수집이 진행 중입니다.');const controller=new AbortController();r.status='running';const entry={r,controller,pending:Promise.resolve()};this.active.set(r.id,entry);entry.pending=this.run(r,controller.signal).catch(e=>{if(controller.signal.aborted)return;r.status='paused';r.stage=e instanceof BrowserAttentionError?'브라우저 확인 후 재개':'수집 일시정지';r.errors=[...r.errors,(e as Error).message].slice(-100);}).finally(()=>{this.save(r);this.active.delete(r.id);});}
+ private launch(r:Research){if(this.active.size)throw Error('다른 수집이 진행 중입니다.');const controller=new AbortController();r.status='running';r.errors=[];const entry={r,controller,pending:Promise.resolve()};this.active.set(r.id,entry);entry.pending=this.run(r,controller.signal).catch(e=>{if(controller.signal.aborted)return;r.status='paused';r.stage=e instanceof BrowserAttentionError?'브라우저 확인 후 재개':'수집 일시정지';r.errors=[...r.errors,(e as Error).message].slice(-100);}).finally(()=>{this.save(r);this.active.delete(r.id);});}
  private save(r:Research){const rows=this.store.records(r.id);r.valid=rows.filter(row=>!!row.saved_path&&row.review_status!=='excluded').length;r.excluded=rows.length-r.valid;r.updatedAt=new Date().toISOString();this.store.put('researches',r);}
- private async run(r:Research,signal:AbortSignal){const config=r.apiSearch!;let first=true;
+ private async run(r:Research,signal:AbortSignal){const config=r.apiSearch!,work=new SearchWork();let first=true;
   outer:for(const bundle of r.bundles)for(const query of browserQueries(bundle.expression)){
    const key=JSON.stringify([config.naverType,bundle.id,query]);if(r.cursors[key]==='done')continue;let page=Number(r.cursors[key]||1);
    for(;page<=config.pages;page++){
     signal.throwIfAborted();this.save(r);if(r.valid>=config.target)break outer;if(this.store.records(r.id).length>=5000){r.notes.push('자료 5,000건 보존 한도에 도달했습니다.');break outer;}
-    if(!first)await this.sleep(2500,signal);first=false;r.stage=`${searchLabels[config.naverType]} · ${bundle.name} · ${page}페이지`;this.save(r);
-    const found=await this.provider.search(config.naverType,query,Number(r.cursors[key+':start']||1),signal,undefined,config.redditCommunity);
-    for(const item of found.items){signal.throwIfAborted();await this.consume(r,bundle,query,page,item,signal);this.save(r);if(r.valid>=config.target||this.store.records(r.id).length>=5000)break;}
+    if(!first&&config.naverType==='reddit')await this.sleep(2500,signal);first=false;r.stage=`${searchLabels[config.naverType]} · ${bundle.name} · ${page}페이지`;this.save(r);
+    const start=Number(r.cursors[key+':start']||1),sort=config.naverSort||'date',request=JSON.stringify([config.naverType,query,start,config.redditCommunity,sort]);
+    const found=await work.page(request,()=>config.naverType==='reddit'?this.provider.search(config.naverType,query,start,signal,undefined,config.redditCommunity):this.provider.search(config.naverType,query,start,signal,undefined,config.redditCommunity,sort));
+    const unique=[...new Map(found.items.map(item=>[this.sourceKey(item.url,config.naverType),item])).values()];
+    await collectPage(unique,config.naverType==='reddit'?1:3,signal,()=>r.valid>=config.target||this.store.records(r.id).length>=5000,(item,itemSignal)=>this.consume(r,bundle,query,page,item,itemSignal,work));
     r.processed++;r.cursors[key]=found.next===null||page===config.pages?'done':page+1;if(found.next!==null)r.cursors[key+':start']=found.next;this.save(r);if(found.next===null)break;
    }
   }
   this.save(r);const failures=this.store.records(r.id).filter(row=>!!row.collection_error).length;r.status=!r.valid&&failures?'failed':'completed';r.stage=r.status==='failed'?'원문 수집 실패':r.valid?'수집 완료':'수집 종료 · 조건 일치 없음';const partial=this.store.records(r.id).filter(row=>row.comments&&row.comments.status!=='complete').length;if(partial)r.stage+=` · 댓글 확인 ${partial}건`;this.save(r);if(r.valid<config.target){r.notes.push(`목표 ${config.target}건 중 ${r.valid}건을 확보했습니다. 검색 결과·필터·페이지 한도에 따라 수량이 달라집니다.`);this.save(r);}
  }
- private async consume(r:Research,b:Bundle,query:string,page:number,item:Candidate,signal:AbortSignal){
-  const url=canonicalUrl(item.url),config=r.apiSearch!,type=config.naverType,path=`${searchLabels[type]} / ${b.name} / ${query} / ${page}페이지`,id=createHash('sha256').update(JSON.stringify([r.id,url])).digest('hex');
-  const existing=this.store.records(r.id).find(x=>x.record_id===id);
+ private sourceKey(url:string,type:SearchConfig['naverType']){return type==='reddit'?canonicalUrl(url):naverArticleKey(url);}
+ private async consume(r:Research,b:Bundle,query:string,page:number,item:Candidate,signal:AbortSignal,work:SearchWork){
+  const url=canonicalUrl(item.url),config=r.apiSearch!,type=config.naverType,path=`${searchLabels[type]} / ${b.name} / ${query} / ${page}페이지`,sourceKey=this.sourceKey(url,type),hash=createHash('sha256').update(JSON.stringify([r.id,sourceKey])).digest('hex');
+  const existing=this.store.records(r.id).find(x=>x.record_id===hash||this.sourceKey(x.source_url,type)===sourceKey),id=existing?.record_id||hash;
   if(existing){existing.discovery_paths=[...new Set([...existing.discovery_paths,path])];this.store.record(existing);if(existing.saved_path)return;}
   const row=existing||makeRecord(r.id,'',item.title,url,'',type==='reddit'?'en':'ko',type==='reddit'?type:'naver_'+type);row.record_id=id;row.native_id=item.id;row.source_search_engine=searchLabels[type];row.query_bundle_name=b.name;row.query_expression=b.expression;row.search_snippet=item.text;row.discovery_paths=[...new Set([...(existing?.discovery_paths||[]),path])];row.exclusion_reasons=[];row.collection_error='';
+  if(!existing)row.content_status='snippet_only';
+  const commit=(action:()=>Promise<void>)=>work.commit(async()=>{signal.throwIfAborted();if(r.valid>=config.target||this.store.records(r.id).length>=5000)return;await action();this.save(r);});
+  if(type!=='reddit'&&(row.content_status!=='full_text'||!row.original_markdown)){const reasons=preflightReasons(item,b,config);if(reasons.length){row.published_at=normalizedDate(item.date);row.published_at_confidence=row.published_at?'provider_reported':'unknown';row.exclusion_reasons=reasons;row.review_status='excluded';row.processing_status='search_filtered';await commit(async()=>{this.store.record(row);});return;}}
   try{
-   if(row.content_status!=='full_text'||!row.original_markdown){r.stage=`원문 수집 · ${item.title}`;this.save(r);const body=await this.original.read(url,config.removeAds,signal,config.removeHashtags,config.includeComments??true);row.original_full_text=body.text;row.original_markdown=body.markdown;row.original_post_text=body.postText;row.original_post_markdown=body.postMarkdown;row.comments=body.comments;row.content_status='full_text';row.published_at=normalizedDate(item.date)||body.date;row.published_at_confidence=normalizedDate(item.date)?'provider_reported':body.date?'page_reported':'unknown';}
-  }catch(error){signal.throwIfAborted();if(error instanceof BrowserAttentionError)throw error;row.content_status='snippet_only';row.processing_status='collection_failed';row.collection_error=(error as Error).message;row.exclusion_reasons=['원문 수집 실패'];row.review_status='excluded';this.store.record(row);return;}
-  signal.throwIfAborted();applySearchFilters(row,b,config);this.store.record(row);
+   if(row.content_status!=='full_text'||!row.original_markdown){r.stage=`원문·댓글 수집 · ${item.title}`;this.save(r);const body=await work.body(sourceKey,()=>this.original.read(url,config.removeAds,signal,config.removeHashtags,config.includeComments??true));row.original_full_text=body.text;row.original_markdown=body.markdown;row.original_post_text=body.postText;row.original_post_markdown=body.postMarkdown;row.comments=body.comments;row.content_status='full_text';row.published_at=normalizedDate(item.date)||body.date;row.published_at_confidence=normalizedDate(item.date)?'provider_reported':body.date?'page_reported':'unknown';}
+  }catch(error){signal.throwIfAborted();if(error instanceof BrowserAttentionError)throw error;row.content_status='snippet_only';row.processing_status='collection_failed';row.collection_error=(error as Error).message;row.exclusion_reasons=['원문 수집 실패'];row.review_status='excluded';await commit(async()=>{this.store.record(row);});return;}
+  await commit(async()=>{applySearchFilters(row,b,config);this.store.record(row);
   if(!row.exclusion_reasons.length){try{row.saved_path=await saveOriginal(row,config.outputDirectory!,config.outputFormat||'md');row.processing_status='file_saved';this.store.record(row);}catch(error){row.processing_status='save_failed';row.collection_error='파일 저장 실패: '+(error as Error).message;row.review_status='excluded';row.exclusion_reasons=['파일 저장 실패'];this.store.record(row);throw Error(row.collection_error);}}
+  });
  }
 
  pause(id:string,stop=false){const entry=this.active.get(id),r=entry?.r||this.store.research(id);if(!r||!resumable(r))throw Error('현재 버전의 수집 기록이 아닙니다.');r.status=stop?'stopped':'paused';r.stage=stop?'수집 중지':'일시정지';entry?.controller.abort();this.save(r);return r;}
