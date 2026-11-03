@@ -1,0 +1,12 @@
+{
+  "product": "ZeroWaste Listening Studio",
+  "implementation": "Electron",
+  "state": "success",
+  "channel": "original-ui",
+  "source_sha": "9d37ee928d8e74f66017641888fb5f358d95462d",
+  "run_id": "41608403441",
+  "run_url": "https://github.com/sksmzldnl/research-crawler/actions/runs/41608403441",
+  "updated_at": "2026-11-03T09:08:10.246Z",
+  "release_url": null,
+  "log_tail": "COMMAND: npm run test:ui\n\n> zerowaste-listening-studio@0.13.1 test:ui\n> playwright test\n\n\nRunning 11 tests using 1 worker\n\n  ✓   1 tests/ui/studio.spec.ts:3:1 › keeps two menus, editable Boolean bundles, original format/folder and a one-click popup/banner filter (850ms)\n  ✓   2 tests/ui/studio.spec.ts:9:1 › settings shows only two Naver fields and no AI page, keys or model controls; small screen fits (276ms)\n  ✓   3 tests/ui/studio.spec.ts:12:1 › shows original dates, saved/error status and full source detail without summary columns (438ms)\n  ✓   4 tests/ui/studio.spec.ts:17:1 › blocks cross-origin mutations and removed AI endpoints (40ms)\n  ✓   5 tests/ui/studio.spec.ts:18:1 › restored connection table separates API permission, originals and dates, and checks a supplied URL (418ms)\n  ✓   6 tests/ui/studio.spec.ts:24:1 › Reddit needs no API credentials, keeps the two-menu workspace and sends original-plus-comments collection settings (364ms)\n  ✓   7 tests/ui/studio.spec.ts:29:1 › removed community providers cannot be selected or called and stale local preferences fall back safely (229ms)\n  ✓   8 tests/ui/studio.spec.ts:33:1 › minimal interface removes effects and appearance settings while keeping native keyboard controls (349ms)\n  ✓   9 tests/ui/studio.spec.ts:37:1 › connection check keeps a saved original successful and shows a popup-limited comment reason (217ms)\n  ✓  10 tests/ui/studio.spec.ts:41:1 › shows the current query, waiting phase and a copyable diagnostic in the existing workspace (293ms)\n  ✓  11 tests/ui/studio.spec.ts:45:1 › does not queue repeated status requests while a slow PC is still answering the previous one (6.0s)\n\n  11 passed (11.4s)\n"
+}
